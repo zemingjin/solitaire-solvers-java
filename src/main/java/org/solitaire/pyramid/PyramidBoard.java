@@ -30,8 +30,10 @@ import static org.solitaire.model.CardHelper.isCleared;
 public class PyramidBoard implements GameSolver<Card[]> {
     public static final int LAST_BOARD = 28;
     public static final int LAST_DECK = 52;
+
     private Card[] cards;
     private List<Card[]> wastePile;
+    private int recycleCount;
 
     @Override
     public List<List<Card[]>> solve() {
@@ -45,12 +47,23 @@ public class PyramidBoard implements GameSolver<Card[]> {
     }
 
     private List<List<Card[]>> clickDeck() {
-        return getTopDeckCard()
+        if (cards[LAST_BOARD] == null && recycleCount > 0) {
+            recycle();
+        }
+        return drawCard()
                 .map(this::clickCard)
                 .orElseGet(Collections::emptyList);
     }
 
-    protected Optional<Card[]> getTopDeckCard() {
+    private void recycle() {
+        wastePile.stream()
+                .flatMap(Stream::of)
+                .filter(it -> it.getAt() >= LAST_BOARD)
+                .forEach(it -> cards[it.getAt()] = it);
+        recycleCount--;
+    }
+
+    protected Optional<Card[]> drawCard() {
         return IntStream.range(LAST_BOARD, LAST_DECK)
                 .map(i -> LAST_BOARD + (LAST_DECK - i - 1))
                 .filter(this::isOpenDeckCard)
@@ -84,6 +97,7 @@ public class PyramidBoard implements GameSolver<Card[]> {
         return PyramidBoard.builder()
                 .cards(cloneArray(cards))
                 .wastePile(cloneList(wastePile))
+                .recycleCount(recycleCount)
                 .build();
     }
 
@@ -182,7 +196,7 @@ public class PyramidBoard implements GameSolver<Card[]> {
     }
 
     private static PyramidBoard buildBoard(Card[] cards) {
-        return PyramidBoard.builder().cards(cards).wastePile(new ArrayList<>()).build();
+        return PyramidBoard.builder().cards(cards).recycleCount(3).wastePile(new ArrayList<>()).build();
     }
 
     @Override
