@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -55,7 +56,7 @@ public class PyramidBoard implements GameSolver<Card[]> {
                 .orElseGet(Collections::emptyList);
     }
 
-    private void recycle() {
+    protected void recycle() {
         wastePile.stream()
                 .flatMap(Stream::of)
                 .filter(it -> it.getAt() >= LAST_BOARD)
@@ -63,12 +64,13 @@ public class PyramidBoard implements GameSolver<Card[]> {
         recycleCount--;
     }
 
+    private final IntUnaryOperator reverse = i -> LAST_BOARD + (LAST_DECK - i - 1);
+
     protected Optional<Card[]> drawCard() {
         return IntStream.range(LAST_BOARD, LAST_DECK)
-                .map(i -> LAST_BOARD + (LAST_DECK - i - 1))
+                .map(reverse)
                 .filter(this::isOpenDeckCard)
-                .mapToObj(i -> cards[i])
-                .map(it -> new Card[]{it})
+                .mapToObj(i -> new Card[]{cards[i]})
                 .findFirst();
     }
 
@@ -104,10 +106,10 @@ public class PyramidBoard implements GameSolver<Card[]> {
     protected List<Card[]> findClickableCards() {
         var collect = new LinkedList<Card[]>();
         Consumer<Card> checkSingleCard = card -> {
-            if (isK(card)) {
+            if (isKing(card)) {
                 if (collect.isEmpty()) {
                     collect.add(new Card[]{card});
-                } else if (isK(collect.get(0)[0])) {
+                } else if (isKing(collect.get(0)[0])) {
                     collect.set(0, combine(collect.get(0), card));
                 } else {
                     collect.add(0, new Card[]{card});
@@ -128,7 +130,7 @@ public class PyramidBoard implements GameSolver<Card[]> {
         return collect;
     }
 
-    private boolean isK(Card card) {
+    private boolean isKing(Card card) {
         return card.getValue() == 'K';
     }
 
@@ -206,6 +208,7 @@ public class PyramidBoard implements GameSolver<Card[]> {
                 .map(PyramidBoard.class::cast)
                 .filter(it -> Arrays.equals(cards, it.cards))
                 .filter(it -> wastePile.equals(it.wastePile))
+                .filter(it -> recycleCount == it.recycleCount)
                 .isPresent();
     }
 }

@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.CardHelper.buildCard;
 import static org.solitaire.pyramid.PyramidBoard.LAST_BOARD;
+import static org.solitaire.pyramid.PyramidBoard.LAST_DECK;
 import static org.solitaire.pyramid.PyramidBoard.build;
 
 class PyramidBoardTest {
@@ -24,7 +25,7 @@ class PyramidBoardTest {
 
     @BeforeEach
     public void setup() {
-        board = (PyramidBoard) build(IOHelper.loadFile(TEST_FILE));
+        board = build(IOHelper.loadFile(TEST_FILE));
     }
 
     @Test
@@ -45,6 +46,18 @@ class PyramidBoardTest {
         assertNull(board.getCards()[0]);
         assertNull(board.getCards()[30]);
         assertTrue(board.getWastePile().contains(c));
+    }
+
+    @Test
+    public void test_recycle() {
+        var tmp = new Card[LAST_DECK - LAST_BOARD];
+        System.arraycopy(board.getCards(), LAST_BOARD, tmp, 0, LAST_DECK - LAST_BOARD);
+        board.click(tmp);
+
+        assertFalse(board.drawCard().isPresent());
+
+        board.recycle();
+        assertTrue(board.drawCard().isPresent());
     }
 
     @Test

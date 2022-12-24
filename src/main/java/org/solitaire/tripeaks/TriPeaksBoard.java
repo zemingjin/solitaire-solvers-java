@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
@@ -61,9 +62,11 @@ public class TriPeaksBoard implements GameSolver<Card> {
                 .toList();
     }
 
+    private final IntUnaryOperator reverse = i -> LAST_BOARD + (LAST_DECK - i - 1);
+
     private Card getTopDeckCard() {
         return IntStream.range(LAST_BOARD, LAST_DECK)
-                .map(i -> LAST_BOARD + (LAST_DECK - i - 1))
+                .map(reverse)
                 .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)
                 .findFirst()
