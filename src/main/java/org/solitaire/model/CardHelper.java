@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 import static java.util.Arrays.stream;
@@ -52,12 +53,9 @@ public class CardHelper {
     public static Card buildCard(int at, String value) {
         assert VALUES.indexOf(value.charAt(0)) >= 0;
 
-        if (useSuit) {
-            value = value.charAt(0) + SUITS_MAP.get(value.charAt(1));
-        }
         return Card.builder()
                 .at(at)
-                .raw(value)
+                .raw(useSuit ? value.charAt(0) + getSuit(value.charAt(1)) : value)
                 .value(value.charAt(0))
                 .build();
     }
@@ -69,7 +67,30 @@ public class CardHelper {
                 .isEmpty();
     }
 
-    public static String string(List<Card> cards) {
-        return cards.stream().map(Card::getRaw).collect(Collectors.joining(" "));
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static String string(List cards) {
+        return ((List<Object>) cards).stream()
+                .map(CardHelper::toString)
+                .collect(Collectors.joining(" "));
     }
+
+    protected static String toString(Object obj) {
+        return obj instanceof Card ? ((Card) obj).getRaw() : toString((Card[]) obj);
+    }
+
+    private static String toString(Card[] cards) {
+        return Optional.of(cards)
+                .filter(it -> it.length > 1)
+                .map(it -> "[" + Stream.of(cards).map(Card::getRaw).collect(Collectors.joining(":")) + "]")
+                .orElseGet(cards[0]::getRaw);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static void checkShortestPath(List<List> results) {
+        requireNonNull(results);
+
+        Optional.of(results.stream().reduce(results.get(0), (a, b) -> a.size() < b.size() ? a : b))
+                .ifPresent(it -> System.out.printf("Shortest Path(%d): %s\n", it.size(), string(it)));
+    }
+
 }

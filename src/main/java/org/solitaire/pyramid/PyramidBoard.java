@@ -13,13 +13,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.VALUES;
 import static org.solitaire.model.CardHelper.cloneArray;
@@ -28,35 +29,49 @@ import static org.solitaire.model.CardHelper.isCleared;
 
 @Getter
 @Builder
-public class PyramidBoard implements GameSolver<Card[]> {
+public class PyramidBoard implements GameSolver {
     public static final int LAST_BOARD = 28;
     public static final int LAST_DECK = 52;
+    public static final char KING = 'K';
 
     private Card[] cards;
     private List<Card[]> wastePile;
     private int recycleCount;
 
+    @SuppressWarnings("rawtypes")
     @Override
-    public List<List<Card[]>> solve() {
+    public List<List> solve() {
         if (isCleared(cards, LAST_BOARD)) {
             return singletonList(wastePile);
         }
-        return Optional.of(findClickableCards())
+        return Optional.of(findCardsOf13())
                 .filter(it -> !it.isEmpty())
                 .map(this::clickCards)
                 .orElseGet(this::clickDeck);
     }
 
-    private List<List<Card[]>> clickDeck() {
-        if (cards[LAST_BOARD] == null && recycleCount > 0) {
-            recycle();
-        }
+    @SuppressWarnings("rawtypes")
+    @Override
+    public List<List> showDetails(List<List> results) {
+        CardHelper.checkShortestPath(results);
+        return results;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private List<List> clickDeck() {
+        checkDeck();
         return drawCard()
                 .map(this::clickCard)
                 .orElseGet(Collections::emptyList);
     }
 
-    protected void recycle() {
+    protected void checkDeck() {
+        if (isNull(cards[LAST_BOARD]) && getRecycleCount() > 0) {
+            recycleDeck();
+        }
+    }
+
+    private void recycleDeck() {
         wastePile.stream()
                 .flatMap(Stream::of)
                 .filter(it -> it.getAt() >= LAST_BOARD)
@@ -64,7 +79,7 @@ public class PyramidBoard implements GameSolver<Card[]> {
         recycleCount--;
     }
 
-    private final IntUnaryOperator reverse = i -> LAST_BOARD + (LAST_DECK - i - 1);
+    private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
 
     protected Optional<Card[]> drawCard() {
         return IntStream.range(LAST_BOARD, LAST_DECK)
@@ -74,7 +89,8 @@ public class PyramidBoard implements GameSolver<Card[]> {
                 .findFirst();
     }
 
-    private List<List<Card[]>> clickCards(List<Card[]> clickable) {
+    @SuppressWarnings("rawtypes")
+    private List<List> clickCards(List<Card[]> clickable) {
         return clickable.stream()
                 .map(this::clickCard)
                 .filter(it -> !it.isEmpty())
@@ -82,8 +98,8 @@ public class PyramidBoard implements GameSolver<Card[]> {
                 .toList();
     }
 
-    @Override
-    public List<List<Card[]>> clickCard(Card[] cards) {
+    @SuppressWarnings("rawtypes")
+    public List<List> clickCard(Card[] cards) {
         return cloneBoard()
                 .click(cards)
                 .solve();
@@ -103,45 +119,48 @@ public class PyramidBoard implements GameSolver<Card[]> {
                 .build();
     }
 
-    protected List<Card[]> findClickableCards() {
+    protected List<Card[]> findCardsOf13() {
         var collect = new LinkedList<Card[]>();
-        Consumer<Card> checkSingleCard = card -> {
-            if (isKing(card)) {
-                if (collect.isEmpty()) {
-                    collect.add(new Card[]{card});
-                } else if (isKing(collect.get(0)[0])) {
-                    collect.set(0, combine(collect.get(0), card));
-                } else {
-                    collect.add(0, new Card[]{card});
-                }
-            }
-        };
         var openCards = findOpenCards();
 
-        for (int i = 0; i < openCards.length - 1; i++) {
-            for (int j = i + 1; j < openCards.length; j++) {
-                if (isMatchingPair(openCards[i], openCards[j])) {
-                    collect.add(new Card[]{openCards[i], openCards[j]});
-                }
-            }
-            checkSingleCard.accept(openCards[i]);
-        }
-        checkSingleCard.accept(openCards[openCards.length - 1]);
+        IntStream.range(0, openCards.length - 1)
+                .peek(i -> checkKing(openCards[i], collect))
+                .forEach(i -> findPairsOf13(collect, openCards, i));
+
+        checkKing(openCards[openCards.length - 1], collect);
         return collect;
     }
 
-    private boolean isKing(Card card) {
-        return card.getValue() == 'K';
+    private void findPairsOf13(LinkedList<Card[]> collect, Card[] openCards, int i) {
+        IntStream.range(i + 1, openCards.length)
+                .filter(j -> isAddingTo13(openCards[i], openCards[j]))
+                .forEach(j -> collect.add(new Card[]{openCards[i], openCards[j]}));
     }
 
-    protected Card[] combine(Card[] cards, Card card) {
-        var buf = new Card[cards.length + 1];
-        System.arraycopy(cards, 0, buf, 0, cards.length);
-        buf[cards.length] = card;
+    private void checkKing(Card card, List<Card[]> collect) {
+        if (isKing(card)) {
+            if (collect.isEmpty()) {
+                collect.add(new Card[]{card});
+            } else if (isKing(collect.get(0)[0])) {
+                collect.set(0, merge(collect.get(0), card));
+            } else {
+                collect.add(0, new Card[]{card});
+            }
+        }
+    }
+
+    private boolean isKing(Card card) {
+        return card.getValue() == KING;
+    }
+
+    protected Card[] merge(Card[] mergeTo, Card toMerge) {
+        var buf = new Card[mergeTo.length + 1];
+        System.arraycopy(mergeTo, 0, buf, 0, mergeTo.length);
+        buf[mergeTo.length] = toMerge;
         return buf;
     }
 
-    private boolean isMatchingPair(Card a, Card b) {
+    private boolean isAddingTo13(Card a, Card b) {
         requireNonNull(a);
         requireNonNull(b);
 
@@ -168,7 +187,7 @@ public class PyramidBoard implements GameSolver<Card[]> {
         var row = getRow(at);
         var coveredBy = at + row;
 
-        return row == 7 || (cards[coveredBy] == null && cards[coveredBy + 1] == null);
+        return row == 7 || (isNull(cards[coveredBy]) && isNull(cards[coveredBy + 1]));
     }
 
     protected int getRow(int at) {
@@ -187,7 +206,8 @@ public class PyramidBoard implements GameSolver<Card[]> {
     }
 
     protected boolean isOpenDeckCard(int at) {
-        return LAST_BOARD <= at && at < LAST_DECK && cards[at] != null && (at == LAST_DECK - 1 || cards[at + 1] == null);
+        return LAST_BOARD <= at && at < LAST_DECK && nonNull(cards[at]) &&
+                (at == LAST_DECK - 1 || isNull(cards[at + 1]));
     }
 
     public static PyramidBoard build(String[] cards) {

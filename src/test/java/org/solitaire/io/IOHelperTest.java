@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.solitaire.io.IOHelper.loadFile;
 
 public class IOHelperTest {
-    private static final String TEST_FILE = "src/test/resources/tripeaks-easy.txt";
+    public static final String TEST_FILE = "src/test/resources/tripeaks-easy.txt";
 
     @Test
     public void test_loadFile() {

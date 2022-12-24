@@ -2,8 +2,9 @@ package org.solitaire.model;
 
 import java.util.List;
 
-public interface GameSolver<R> {
-    List<List<R>> solve();
+@SuppressWarnings("rawtypes")
+public interface GameSolver {
+    List<List> solve();
 
-    List<List<R>> clickCard(R r);
+    List<List> showDetails(List<List> results);
 }

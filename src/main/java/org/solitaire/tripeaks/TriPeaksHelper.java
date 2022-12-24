@@ -19,7 +19,7 @@ public class TriPeaksHelper {
     public static final int INI_COVERED = 18;
     public static final int LAST_DECK = 51;
 
-    public static GameSolver<Card> build(String[] cards) {
+    public static GameSolver build(String[] cards) {
         return TriPeaksBoard.builder()
                 .cards(toCards(cards))
                 .wastePile(toWastePile(cards))
@@ -43,20 +43,15 @@ public class TriPeaksHelper {
         return 28 <= card.getAt();
     }
 
-    public static void checkMaxScore(List<List<Card>> results) {
+    @SuppressWarnings("rawtypes, unchecked")
+    public static void checkMaxScore(List<List> results) {
         requireNonNull(results);
 
         Optional.of(results.stream()
+                        .map(it -> (List<Card>) it)
                         .map(TriPeaksHelper::getScore)
-                        .reduce(Pair.of(0, null), (a, b) -> a.getLeft() > b.getLeft() ? a : b))
+                        .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b))
                 .ifPresent(it -> System.out.printf("Max Score(%d): %s\n", it.getLeft(), string(it.getRight())));
-    }
-
-    public static void checkShortestPath(List<List<Card>> results) {
-        requireNonNull(results);
-
-        Optional.of(results.stream().reduce(results.get(0), (a, b) -> a.size() < b.size() ? a : b))
-                .ifPresent(it -> System.out.printf("Shortest Path(%d): %s\n", it.size(), string(it)));
     }
 
     protected static Pair<Integer, List<Card>> getScore(List<Card> cards) {

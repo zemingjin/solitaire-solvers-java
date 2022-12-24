@@ -56,7 +56,7 @@ class PyramidBoardTest {
 
         assertFalse(board.drawCard().isPresent());
 
-        board.recycle();
+        board.checkDeck();
         assertTrue(board.drawCard().isPresent());
     }
 
@@ -67,8 +67,8 @@ class PyramidBoardTest {
     }
 
     @Test
-    public void test_findClickableCards() {
-        var cards = board.findClickableCards();
+    public void test_findCardsAddingTo13() {
+        var cards = board.findCardsOf13();
 
         assertNotNull(cards);
         assertEquals(3, cards.size());
