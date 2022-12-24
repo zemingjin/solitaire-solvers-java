@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static java.lang.Math.min;
+import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 
 public class CardHelper {
@@ -38,6 +42,13 @@ public class CardHelper {
     public static final String VALUES = "A23456789TJQK";
     public static boolean useSuit = true;
 
+    public static Card[] toCards(String[] cards) {
+        requireNonNull(cards);
+        return IntStream.range(0, cards.length)
+                .mapToObj(i -> buildCard(i, cards[i]))
+                .toArray(Card[]::new);
+    }
+
     public static Card buildCard(int at, String value) {
         assert VALUES.indexOf(value.charAt(0)) >= 0;
 
@@ -49,6 +60,13 @@ public class CardHelper {
                 .raw(value)
                 .value(value.charAt(0))
                 .build();
+    }
+
+    public static boolean isCleared(Card[] cards, int endExclusive) {
+        return stream(cards, 0, min(cards.length, endExclusive))
+                .filter(Objects::nonNull)
+                .findAny()
+                .isEmpty();
     }
 
     public static String string(List<Card> cards) {

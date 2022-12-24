@@ -2,10 +2,10 @@ package org.solitaire.tripeaks;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
+import org.solitaire.model.GameSolver;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -19,7 +19,7 @@ public class TriPeaksHelper {
     public static final int INI_COVERED = 18;
     public static final int LAST_DECK = 51;
 
-    public static TriPeaksBoard build(String[] cards) {
+    public static GameSolver<Card> build(String[] cards) {
         return TriPeaksBoard.builder()
                 .cards(toCards(cards))
                 .wastePile(toWastePile(cards))
@@ -28,8 +28,8 @@ public class TriPeaksHelper {
 
     protected static List<Card> toWastePile(String[] cards) {
         assert 0 < cards.length && cards.length <= 52;
-        return Stream.of(buildCard(51, cards[cards.length - 1]))
-                .collect(Collectors.toList());
+
+        return Stream.of(buildCard(51, cards[cards.length - 1])).toList();
     }
 
     protected static Card[] toCards(String[] cards) {

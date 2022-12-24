@@ -1,5 +1,6 @@
 package org.solitaire.tripeaks;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
 
@@ -9,23 +10,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.io.IOHelper.loadFile;
-import static org.solitaire.io.IOHelperTest.TEST_FILE;
 import static org.solitaire.model.CardHelper.buildCard;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
 
 class TriPeaksBoardTest {
-    private final String[] cards = loadFile(TEST_FILE);
+    public static final String TEST_FILE = "src/test/resources/tripeaks-easy.txt";
 
-    @Test
-    public void test_isCleared() {
-        assertTrue(TriPeaksBoard.builder().cards(new Card[0]).build().isCleared());
-        assertTrue(TriPeaksBoard.builder().cards(new Card[]{null}).build().isCleared());
+    private final String[] cards = loadFile(TEST_FILE);
+    private TriPeaksBoard board;
+
+    @BeforeEach
+    public void setup() {
+        board = (TriPeaksBoard) build(cards);
     }
 
     @Test
     public void test_findAdjacentCards() {
-        var openCards = build(cards).findBoardCards();
+        var openCards = board.findBoardCards();
 
         assertNotNull(openCards);
         assertFalse(openCards.isEmpty());

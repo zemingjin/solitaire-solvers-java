@@ -8,53 +8,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
-import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.min;
 import static java.util.Arrays.stream;
 import static org.solitaire.model.CardHelper.cloneArray;
 import static org.solitaire.model.CardHelper.cloneList;
+import static org.solitaire.model.CardHelper.isCleared;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 
 @Builder
-public class TriPeaksBoard implements GameSolver<List<Card>> {
-    private static int limit = MAX_VALUE;
-    private static int count;
-
-    public static int getLimit() {
-        return limit;
-    }
-
-    public static void setLimit(int limit) {
-        TriPeaksBoard.limit = limit;
-    }
-
+public class TriPeaksBoard implements GameSolver<Card> {
     private Card[] cards;
     private List<Card> wastePile;
 
-    public boolean isCleared() {
-        return stream(cards, 0, min(cards.length, LAST_BOARD))
-                .filter(Objects::nonNull)
-                .findAny()
-                .isEmpty();
-    }
-
     public List<List<Card>> solve() {
-        if (isCleared()) {
-            count++;
+        if (isCleared(cards, LAST_BOARD)) {
             return Collections.singletonList(wastePile);
         }
-        if (count < limit) {
-            return Optional.of(findBoardCards())
-                    .filter(it -> !it.isEmpty())
-                    .map(this::clickBoardCards)
-                    .orElseGet(this::clickDeckCard);
-        }
-        return Collections.emptyList();
+        return Optional.of(findBoardCards())
+                .filter(it -> !it.isEmpty())
+                .map(this::clickBoardCards)
+                .orElseGet(this::clickDeckCard);
     }
 
     private List<List<Card>> clickDeckCard() {
@@ -67,7 +45,7 @@ public class TriPeaksBoard implements GameSolver<List<Card>> {
         return cards.stream()
                 .map(this::clickCard)
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     protected List<Card> findBoardCards() {
@@ -81,21 +59,24 @@ public class TriPeaksBoard implements GameSolver<List<Card>> {
                 .filter(Objects::nonNull)
                 .filter(this::isOpenCard)
                 .filter(target::isAdjacent)
-                .collect(Collectors.toList());
+                .toList();
     }
+
+    private final IntUnaryOperator reverse = i -> LAST_BOARD + (LAST_DECK - i - 1);
 
     private Card getTopDeckCard() {
         return IntStream.range(LAST_BOARD, LAST_DECK)
-                .map(i -> LAST_BOARD + (LAST_DECK - i - 1))
+                .map(reverse)
                 .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
     }
 
-    private List<List<Card>> clickCard(Card target) {
+    @Override
+    public List<List<Card>> clickCard(Card target) {
         return cloneBoard()
-                .moveCardToWastePile(target)
+                .click(target)
                 .solve();
     }
 
@@ -106,9 +87,9 @@ public class TriPeaksBoard implements GameSolver<List<Card>> {
                 .build();
     }
 
-    private TriPeaksBoard moveCardToWastePile(Card card) {
-        wastePile.add(card);
+    private TriPeaksBoard click(Card card) {
         cards[card.getAt()] = null;
+        wastePile.add(card);
         return this;
     }
 

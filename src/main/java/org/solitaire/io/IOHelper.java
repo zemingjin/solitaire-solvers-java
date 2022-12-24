@@ -16,10 +16,13 @@ public class IOHelper {
             StringBuilder content = new StringBuilder();
 
             for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
-                if (!content.isEmpty()) {
-                    content.append(" ");
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    if (!content.isEmpty()) {
+                        content.append(" ");
+                    }
+                    content.append(line.trim());
                 }
-                content.append(line.trim());
             }
             return content.toString().split(" ");
         } catch (IOException ex) {
