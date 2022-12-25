@@ -24,13 +24,13 @@ import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 
+@SuppressWarnings("rawtypes")
 @Builder
 public class TriPeaksBoard implements GameSolver {
     private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
     private Card[] cards;
     private List<Card> wastePile;
 
-    @SuppressWarnings("rawtypes")
     public List<List> solve() {
         if (isCleared(cards, LAST_BOARD)) {
             return Collections.singletonList(wastePile);
@@ -42,14 +42,12 @@ public class TriPeaksBoard implements GameSolver {
                 .orElseGet(this::clickDeckCard);
     }
 
-    @SuppressWarnings("rawtypes")
     private List<List> clickDeckCard() {
         return Optional.ofNullable(getTopDeckCard())
                 .map(this::clickCard)
                 .orElseGet(Collections::emptyList);
     }
 
-    @SuppressWarnings("rawtypes")
     private List<List> clickBoardCards(List<Card> cards) {
         return cards.stream()
                 .map(this::clickCard)
@@ -57,7 +55,6 @@ public class TriPeaksBoard implements GameSolver {
                 .toList();
     }
 
-    @SuppressWarnings("rawtypes")
     protected List findBoardCards() {
         return Optional.of(wastePile.get(wastePile.size() - 1))
                 .map(this::findAdjacentCardsFromBoard)
@@ -81,16 +78,15 @@ public class TriPeaksBoard implements GameSolver {
                 .orElse(null);
     }
 
-    @SuppressWarnings("rawtypes")
     public List<List> clickCard(Card target) {
         return cloneBoard()
                 .click(target)
                 .solve();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    @SuppressWarnings("rawtypes, unchecked")
-    public Pair<Integer, List<Card>> getMaxScore(List<List> results) {
+    public Pair<Integer, List> getMaxScore(List<List> results) {
         requireNonNull(results);
 
         return results.stream()
@@ -99,7 +95,7 @@ public class TriPeaksBoard implements GameSolver {
                 .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
     }
 
-    protected Pair<Integer, List<Card>> getScore(List<Card> cards) {
+    protected Pair<Integer, List> getScore(List<Card> cards) {
         int score = 0;
         int sequenceCount = 0;
 

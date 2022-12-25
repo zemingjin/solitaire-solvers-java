@@ -19,13 +19,21 @@ import static org.solitaire.pyramid.PyramidBoard.LAST_DECK;
 import static org.solitaire.pyramid.PyramidBoard.build;
 
 class PyramidBoardTest {
-    private static final String TEST_FILE = "src/test/resources/pyramid-easy.txt";
+    private static final String TEST_FILE = "src/test/resources/pyramid-expert.txt";
 
     private PyramidBoard board;
 
     @BeforeEach
     public void setup() {
         board = build(IOHelper.loadFile(TEST_FILE));
+    }
+
+    @Test
+    public void test_getMaxScore() {
+        var result = board.getMaxScore(board.solve());
+
+        assertNotNull(result);
+        assertEquals(1290, result.getLeft());
     }
 
     @Test

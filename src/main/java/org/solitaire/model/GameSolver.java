@@ -8,5 +8,5 @@ import java.util.List;
 public interface GameSolver {
     List<List> solve();
 
-    Pair<Integer, List<Card>> getMaxScore(List<List> results);
+    Pair<Integer, List> getMaxScore(List<List> results);
 }
