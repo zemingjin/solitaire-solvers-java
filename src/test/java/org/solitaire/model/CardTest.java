@@ -1,14 +1,19 @@
 package org.solitaire.model;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.model.CardHelper.getSuit;
 
 public class CardTest {
+    @BeforeEach
+    public void setUp() {
+        CardHelper.useSuit = false;
+    }
+
     @Test
     public void test_Card() {
         assertThrows(AssertionError.class, () -> buildCard("ab"));
@@ -28,7 +33,7 @@ public class CardTest {
     public void test_getters() {
         var card = buildCard("Ah");
         assertEquals(30, card.getAt());
-        assertEquals("A" + getSuit('h'), card.getRaw());
+        assertEquals("Ah", card.getRaw());
     }
 
     @Test
