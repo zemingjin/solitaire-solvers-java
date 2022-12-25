@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class SolitaireApp {
@@ -73,11 +74,9 @@ public class SolitaireApp {
     }
 
     protected void checkArgs(String[] args) {
-        for (int i = 1; i < args.length; i++) {
-            if (args[i].equals("-n")) {
-                CardHelper.useSuit = false;
-                break;
-            }
-        }
+        CardHelper.useSuit = IntStream.range(1, args.length)
+                .filter(i -> args[i].equals("-n"))
+                .findFirst()
+                .isEmpty();
     }
 }

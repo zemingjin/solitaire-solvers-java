@@ -29,4 +29,15 @@ class SolitaireAppTest {
         assertEquals(7983, result.size());
     }
 
+    @Test
+    public void test_run_pyramid() {
+        ARGS[0] = "src/test/resources/pyramid-easy.txt";
+        ARGS[2] = "-p";
+        var result = app.run(ARGS);
+
+
+        assertNotNull(result);
+        assertEquals(40, result.size());
+    }
+
 }
