@@ -16,6 +16,11 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static org.solitaire.model.CardHelper.checkLongestPath;
+import static org.solitaire.model.CardHelper.checkMaxScore;
+import static org.solitaire.model.CardHelper.checkShortestPath;
+import static org.solitaire.model.CardHelper.getTotalScenarios;
+
 @SuppressWarnings("rawtypes")
 public class SolitaireApp {
     public static final String TRIPEAKS = "-t";
@@ -46,8 +51,11 @@ public class SolitaireApp {
                 .orElseThrow();
         stopWatch.stop();
 
-        System.out.printf("Found %d solutions in %s\n", results.getRight().size(), stopWatch.formatTime());
-        results.getLeft().showDetails(results.getRight());
+        System.out.printf("Found %d solutions in %d scenarios - total time: %s.\n",
+                results.getRight().size(), getTotalScenarios(), stopWatch.formatTime());
+        checkShortestPath(results.getRight());
+        checkLongestPath(results.getRight());
+        checkMaxScore(results);
         return results.getRight();
     }
 

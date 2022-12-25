@@ -1,8 +1,8 @@
 package org.solitaire.tripeaks;
 
 import lombok.Builder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
-import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameSolver;
 
 import java.util.Collections;
@@ -15,8 +15,10 @@ import java.util.stream.IntStream;
 import static java.lang.Math.min;
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.cloneArray;
 import static org.solitaire.model.CardHelper.cloneList;
+import static org.solitaire.model.CardHelper.incTotal;
 import static org.solitaire.model.CardHelper.isCleared;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
@@ -33,6 +35,7 @@ public class TriPeaksBoard implements GameSolver {
         if (isCleared(cards, LAST_BOARD)) {
             return Collections.singletonList(wastePile);
         }
+        incTotal();
         return Optional.of(findBoardCards())
                 .filter(it -> !it.isEmpty())
                 .map(this::clickBoardCards)
@@ -86,11 +89,29 @@ public class TriPeaksBoard implements GameSolver {
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
-    public List<List> showDetails(List<List> results) {
-        CardHelper.checkShortestPath(results);
-        TriPeaksHelper.checkMaxScore(results);
-        return results;
+    @SuppressWarnings("rawtypes, unchecked")
+    public Pair<Integer, List<Card>> getMaxScore(List<List> results) {
+        requireNonNull(results);
+
+        return results.stream()
+                .map(it -> (List<Card>) it)
+                .map(this::getScore)
+                .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
+    }
+
+    protected Pair<Integer, List<Card>> getScore(List<Card> cards) {
+        int score = 0;
+        int sequenceCount = 0;
+
+        for (Card card : cards) {
+            if (TriPeaksHelper.isFromDeck(card)) {
+                sequenceCount = 0;
+            } else {
+                sequenceCount++;
+                score += (sequenceCount * 2 - 1) * 100;
+            }
+        }
+        return Pair.of(score, cards);
     }
 
     private TriPeaksBoard cloneBoard() {

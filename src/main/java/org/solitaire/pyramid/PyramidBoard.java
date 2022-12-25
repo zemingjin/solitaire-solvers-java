@@ -2,6 +2,7 @@ package org.solitaire.pyramid;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameSolver;
@@ -25,6 +26,7 @@ import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.VALUES;
 import static org.solitaire.model.CardHelper.cloneArray;
 import static org.solitaire.model.CardHelper.cloneList;
+import static org.solitaire.model.CardHelper.incTotal;
 import static org.solitaire.model.CardHelper.isCleared;
 
 @Getter
@@ -55,6 +57,7 @@ public class PyramidBoard implements GameSolver {
         if (isCleared(cards, LAST_BOARD)) {
             return singletonList(wastePile);
         }
+        incTotal();
         return Optional.of(findCardsOf13())
                 .filter(it -> !it.isEmpty())
                 .map(this::clickCards)
@@ -63,9 +66,8 @@ public class PyramidBoard implements GameSolver {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public List<List> showDetails(List<List> results) {
-        CardHelper.checkShortestPath(results);
-        return results;
+    public Pair<Integer, List<Card>> getMaxScore(List<List> results) {
+        return Pair.of(0, null);
     }
 
     @SuppressWarnings("rawtypes")

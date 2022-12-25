@@ -54,4 +54,16 @@ class TriPeaksBoardTest {
         assertEquals("Invalid card: " + card.toString(), ex.getMessage());
     }
 
+    @Test
+    public void test_checks() {
+        var p = board.getMaxScore(board.solve());
+
+        assertNotNull(p);
+        assertEquals(17800, p.getLeft());
+    }
+
+    @Test
+    public void test_checks_null() {
+        assertNotNull(assertThrows(NullPointerException.class, () -> board.getMaxScore(null)));
+    }
 }

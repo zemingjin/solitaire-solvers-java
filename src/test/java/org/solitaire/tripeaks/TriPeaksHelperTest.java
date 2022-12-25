@@ -4,17 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.CardHelper.buildCard;
-import static org.solitaire.tripeaks.TriPeaksHelper.checkMaxScore;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 import static org.solitaire.tripeaks.TriPeaksHelper.toCards;
 
@@ -39,17 +32,5 @@ class TriPeaksHelperTest {
     public void test_isFromDeck() {
         assertTrue(isFromDeck(cards[0]));
         assertFalse(isFromDeck(cards[1]));
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Test
-    public void test_checks() {
-        List<List> solves = Collections.singletonList(Arrays.asList(cards));
-        checkMaxScore(solves);
-    }
-
-    @Test
-    public void test_checks_null() {
-        assertNotNull(assertThrows(NullPointerException.class, () -> checkMaxScore(null)));
     }
 }
