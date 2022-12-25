@@ -101,13 +101,13 @@ public class TriPeaksBoard implements GameSolver {
     }
 
     private TriPeaksBoard click(Card card) {
-        cards[card.getAt()] = null;
+        cards[card.at()] = null;
         wastePile.add(card);
         return this;
     }
 
     protected boolean isOpenCard(Card card) {
-        var at = card.getAt();
+        var at = card.at();
 
         return switch (toRow(at)) {
             case 4 -> true;

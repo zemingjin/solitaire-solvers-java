@@ -40,7 +40,7 @@ public class TriPeaksHelper {
     }
 
     public static boolean isFromDeck(Card card) {
-        return 28 <= card.getAt();
+        return 28 <= card.at();
     }
 
     @SuppressWarnings("rawtypes, unchecked")

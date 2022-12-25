@@ -85,8 +85,8 @@ public class PyramidBoard implements GameSolver {
     private void recycleDeck() {
         wastePile.stream()
                 .flatMap(Stream::of)
-                .filter(it -> it.getAt() >= LAST_BOARD)
-                .forEach(it -> cards[it.getAt()] = it);
+                .filter(it -> it.at() >= LAST_BOARD)
+                .forEach(it -> cards[it.at()] = it);
         recycleCount--;
     }
 
@@ -115,7 +115,7 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected PyramidBoard click(Card[] clickable) {
-        Stream.of(clickable).forEach(it -> cards[it.getAt()] = null);
+        Stream.of(clickable).forEach(it -> cards[it.at()] = null);
         wastePile.add(clickable);
         return this;
     }
@@ -159,7 +159,7 @@ public class PyramidBoard implements GameSolver {
     }
 
     private boolean isKing(Card card) {
-        return card.getValue() == KING;
+        return card.value() == KING;
     }
 
     protected Card[] merge(Card[] mergeTo, Card toMerge) {
@@ -173,7 +173,7 @@ public class PyramidBoard implements GameSolver {
         requireNonNull(a);
         requireNonNull(b);
 
-        return VALUES.indexOf(a.getValue()) + VALUES.indexOf(b.getValue()) == 11;
+        return VALUES.indexOf(a.value()) + VALUES.indexOf(b.value()) == 11;
     }
 
     protected Card[] findOpenCards() {
@@ -184,7 +184,7 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected boolean isOpen(Card card) {
-        var at = card.getAt();
+        var at = card.at();
         return isOpenBoardCard(at) || isOpenDeckCard(at);
     }
 

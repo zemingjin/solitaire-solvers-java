@@ -78,14 +78,14 @@ public class CardHelper {
     }
 
     protected static String toString(Object obj) {
-        return obj instanceof Card ? ((Card) obj).getRaw() : toString((Card[]) obj);
+        return obj instanceof Card ? ((Card) obj).raw() : toString((Card[]) obj);
     }
 
     private static String toString(Card[] cards) {
         return Optional.of(cards)
                 .filter(it -> it.length > 1)
-                .map(it -> Stream.of(cards).map(Card::getRaw).collect(Collectors.joining(":")))
-                .orElseGet(cards[0]::getRaw);
+                .map(it -> Stream.of(cards).map(Card::raw).collect(Collectors.joining(":")))
+                .orElseGet(cards[0]::raw);
     }
 
     @SuppressWarnings("rawtypes")

@@ -31,8 +31,8 @@ class TriPeaksHelperTest {
         cards = toCards(new String[]{"Ad", "As"});
 
         assertEquals(2, cards.length);
-        assertEquals("0:" + cards[0].getRaw(), cards[0].toString());
-        assertEquals("1:" + cards[1].getRaw(), cards[1].toString());
+        assertEquals("0:" + cards[0].raw(), cards[0].toString());
+        assertEquals("1:" + cards[1].raw(), cards[1].toString());
     }
 
     @Test

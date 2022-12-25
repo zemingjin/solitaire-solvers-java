@@ -1,7 +1,6 @@
 package org.solitaire.model;
 
 import lombok.Builder;
-import lombok.Getter;
 
 import java.util.Optional;
 
@@ -9,18 +8,8 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static org.solitaire.model.CardHelper.VALUES;
 
-@Getter
 @Builder
-public class Card {
-    private int at;
-    private char value;
-    private String raw;
-
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
+public record Card(int at, char value, String raw) {
     @Override
     public boolean equals(Object obj) {
         return Optional.ofNullable(obj)
@@ -37,7 +26,7 @@ public class Card {
 
     public boolean isAdjacent(Card card) {
         return Optional.ofNullable(card)
-                .map(Card::getValue)
+                .map(Card::value)
                 .map(this::isAdjacentValue)
                 .orElse(false);
     }

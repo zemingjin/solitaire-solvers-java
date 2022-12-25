@@ -36,8 +36,8 @@ public class CardTest {
     @Test
     public void test_getters() {
         var card = buildCard("Ah");
-        assertEquals(30, card.getAt());
-        assertEquals("Ah", card.getRaw());
+        assertEquals(30, card.at());
+        assertEquals("Ah", card.raw());
     }
 
     @Test
