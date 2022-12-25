@@ -9,6 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CardTest {
+    private static Card buildCard(String value) {
+        return CardHelper.buildCard(30, value);
+    }
+
     @BeforeEach
     public void setUp() {
         CardHelper.useSuit = false;
@@ -59,9 +63,5 @@ public class CardTest {
 
         b = CardHelper.buildCard(31, "Ah");
         assertNotEquals(a.hashCode(), b.hashCode());
-    }
-
-    private static Card buildCard(String value) {
-        return CardHelper.buildCard(30, value);
     }
 }

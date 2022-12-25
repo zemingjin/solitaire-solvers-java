@@ -33,10 +33,21 @@ public class PyramidBoard implements GameSolver {
     public static final int LAST_BOARD = 28;
     public static final int LAST_DECK = 52;
     public static final char KING = 'K';
-
+    private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
     private Card[] cards;
     private List<Card[]> wastePile;
     private int recycleCount;
+
+    public static PyramidBoard build(String[] cards) {
+        return Optional.of(cards)
+                .map(CardHelper::toCards)
+                .map(PyramidBoard::buildBoard)
+                .orElseThrow();
+    }
+
+    private static PyramidBoard buildBoard(Card[] cards) {
+        return PyramidBoard.builder().cards(cards).recycleCount(3).wastePile(new ArrayList<>()).build();
+    }
 
     @SuppressWarnings("rawtypes")
     @Override
@@ -78,8 +89,6 @@ public class PyramidBoard implements GameSolver {
                 .forEach(it -> cards[it.getAt()] = it);
         recycleCount--;
     }
-
-    private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
 
     protected Optional<Card[]> drawCard() {
         return IntStream.range(LAST_BOARD, LAST_DECK)
@@ -208,17 +217,6 @@ public class PyramidBoard implements GameSolver {
     protected boolean isOpenDeckCard(int at) {
         return LAST_BOARD <= at && at < LAST_DECK && nonNull(cards[at]) &&
                 (at == LAST_DECK - 1 || isNull(cards[at + 1]));
-    }
-
-    public static PyramidBoard build(String[] cards) {
-        return Optional.of(cards)
-                .map(CardHelper::toCards)
-                .map(PyramidBoard::buildBoard)
-                .orElseThrow();
-    }
-
-    private static PyramidBoard buildBoard(Card[] cards) {
-        return PyramidBoard.builder().cards(cards).recycleCount(3).wastePile(new ArrayList<>()).build();
     }
 
     @Override

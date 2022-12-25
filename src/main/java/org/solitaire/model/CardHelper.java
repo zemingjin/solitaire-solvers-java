@@ -15,12 +15,18 @@ import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 
 public class CardHelper {
+    public static final String DIAMOND = "♦";
+    public static final String SPADE = "♠";
+    public static final String CLUB = "♣";
+    public static final String HEART = "♥";
+    public static final String VALUES = "A23456789TJQK";
     private static final Map<Character, String> SUITS_MAP = new HashMap<>() {{
-        put('d', "♦");
-        put('s', "♠");
-        put('c', "♣");
-        put('h', "♥");
+        put('d', DIAMOND);
+        put('s', SPADE);
+        put('c', CLUB);
+        put('h', HEART);
     }};
+    public static boolean useSuit = true;
 
     public static String getSuit(char c) {
         return SUITS_MAP.get(c);
@@ -39,9 +45,6 @@ public class CardHelper {
                 .map(ArrayList::new)
                 .orElse(null);
     }
-
-    public static final String VALUES = "A23456789TJQK";
-    public static boolean useSuit = true;
 
     public static Card[] toCards(String[] cards) {
         requireNonNull(cards);
@@ -81,7 +84,7 @@ public class CardHelper {
     private static String toString(Card[] cards) {
         return Optional.of(cards)
                 .filter(it -> it.length > 1)
-                .map(it -> "[" + Stream.of(cards).map(Card::getRaw).collect(Collectors.joining(":")) + "]")
+                .map(it -> Stream.of(cards).map(Card::getRaw).collect(Collectors.joining(":")))
                 .orElseGet(cards[0]::getRaw);
     }
 

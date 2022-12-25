@@ -9,17 +9,16 @@ import org.solitaire.model.GameSolver;
 import org.solitaire.pyramid.PyramidBoard;
 import org.solitaire.tripeaks.TriPeaksHelper;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class SolitaireApp {
-    private static final String TRIPEAKS = "-t";
-    private static final String PYRAMID = "-p";
+    public static final String TRIPEAKS = "-t";
+    public static final String PYRAMID = "-p";
+    public static final String NOSUITS = "-n";
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
         put(TRIPEAKS, TriPeaksHelper::build);
         put(PYRAMID, PyramidBoard::build);
@@ -31,7 +30,7 @@ public class SolitaireApp {
 
     @SuppressWarnings("rawtypes")
     public List<List> run(String[] args) {
-        checkArgs(args);
+        checkUseSuits(args);
         var stopWatch = new StopWatch();
 
         stopWatch.start();
@@ -41,6 +40,7 @@ public class SolitaireApp {
                 .map(this::solve)
                 .orElseThrow();
         stopWatch.stop();
+
         System.out.printf("Found %d solutions in %s\n", results.getRight().size(), stopWatch.formatTime());
         results.getLeft().showDetails(results.getRight());
         return results.getRight();
@@ -61,22 +61,21 @@ public class SolitaireApp {
                 .orElseThrow();
     }
 
-    private static final List<String> TYPES = Arrays.asList(TRIPEAKS, PYRAMID);
-
     private String getType(String[] args) {
         return Optional.of(args)
-                .filter(it -> it.length > 1)
-                .stream()
-                .flatMap(Stream::of)
-                .filter(TYPES::contains)
-                .findFirst()
+                .filter(it -> checkArgs(args, TRIPEAKS))
+                .map(it -> TRIPEAKS)
                 .orElse(PYRAMID);
     }
 
-    protected void checkArgs(String[] args) {
-        CardHelper.useSuit = IntStream.range(1, args.length)
-                .filter(i -> args[i].equals("-n"))
+    protected void checkUseSuits(String[] args) {
+        CardHelper.useSuit = !checkArgs(args, NOSUITS);
+    }
+
+    private boolean checkArgs(String[] args, String target) {
+        return IntStream.range(1, args.length)
+                .filter(i -> args[i].equalsIgnoreCase(target))
                 .findFirst()
-                .isEmpty();
+                .isPresent();
     }
 }
