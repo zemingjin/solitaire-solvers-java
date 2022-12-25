@@ -24,6 +24,7 @@ import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 
 @Builder
 public class TriPeaksBoard implements GameSolver {
+    private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
     private Card[] cards;
     private List<Card> wastePile;
 
@@ -67,8 +68,6 @@ public class TriPeaksBoard implements GameSolver {
                 .filter(target::isAdjacent)
                 .toList();
     }
-
-    private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
 
     private Card getTopDeckCard() {
         return IntStream.range(LAST_BOARD, LAST_DECK)
