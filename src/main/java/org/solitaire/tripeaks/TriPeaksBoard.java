@@ -32,7 +32,7 @@ public class TriPeaksBoard implements GameSolver {
     private List<Card> wastePile;
 
     public List<List> solve() {
-        if (isCleared(cards, LAST_BOARD)) {
+        if (isCleared(cards)) {
             return Collections.singletonList(wastePile);
         }
         incTotal();

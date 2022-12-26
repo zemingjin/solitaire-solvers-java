@@ -1,20 +1,21 @@
 package org.solitaire.pyramid;
 
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameSolver;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.IntUnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -25,38 +26,55 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.VALUES;
 import static org.solitaire.model.CardHelper.cloneArray;
-import static org.solitaire.model.CardHelper.cloneList;
+import static org.solitaire.model.CardHelper.cloneStack;
 import static org.solitaire.model.CardHelper.incTotal;
 import static org.solitaire.model.CardHelper.isCleared;
+import static org.solitaire.model.CardHelper.resizeArray;
 
 @SuppressWarnings("rawtypes")
-@Getter
+@Data
 @Builder
 public class PyramidBoard implements GameSolver {
     public static final int LAST_BOARD = 28;
     public static final int LAST_DECK = 52;
     public static final char KING = 'K';
     private static final int[] ROW_SCORES = new int[]{500, 250, 150, 100, 75, 50, 25};
-    private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
+    private static final IntUnaryOperator reverse = i -> LAST_BOARD - i - 1;
     private Card[] cards;
-    private List<Card[]> wastePile;
+    private Stack<Card> deck;
+    private Stack<Card> flippedDeck;
+    private List<Card[]> path;
     private int recycleCount;
 
     public static PyramidBoard build(String[] cards) {
         return Optional.of(cards)
                 .map(CardHelper::toCards)
                 .map(PyramidBoard::buildBoard)
+                .map(PyramidBoard::buildDeck)
                 .orElseThrow();
     }
 
     private static PyramidBoard buildBoard(Card[] cards) {
-        return PyramidBoard.builder().cards(cards).recycleCount(3).wastePile(new ArrayList<>()).build();
+        return PyramidBoard.builder()
+                .cards(cards)
+                .recycleCount(3)
+                .path(new ArrayList<>())
+                .flippedDeck(new Stack<>())
+                .build();
+    }
+
+    private PyramidBoard buildDeck() {
+        deck = new Stack<>();
+        stream(cards, LAST_BOARD, LAST_DECK).forEach(card -> deck.push(card));
+
+        cards = resizeArray(cards, LAST_BOARD);
+        return this;
     }
 
     @Override
     public List<List> solve() {
-        if (isCleared(cards, LAST_BOARD)) {
-            return singletonList(wastePile);
+        if (isCleared(cards)) {
+            return singletonList(path);
         }
         incTotal();
         return Optional.of(findCardsOf13())
@@ -82,25 +100,21 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected void checkDeck() {
-        if (isNull(cards[LAST_BOARD]) && getRecycleCount() > 0) {
+        if (deck.isEmpty() && getRecycleCount() > 0) {
             recycleDeck();
         }
     }
 
     private void recycleDeck() {
-        wastePile.stream()
-                .flatMap(Stream::of)
-                .filter(it -> it.at() >= LAST_BOARD)
-                .forEach(it -> cards[it.at()] = it);
+        while (!flippedDeck.isEmpty()) deck.push(flippedDeck.pop());
         recycleCount--;
     }
 
     protected Optional<Card[]> drawCard() {
-        return IntStream.range(LAST_BOARD, LAST_DECK)
-                .map(reverse)
-                .filter(this::isOpenDeckCard)
-                .mapToObj(i -> new Card[]{cards[i]})
-                .findFirst();
+        return Optional.of(deck)
+                .filter(it -> !it.isEmpty())
+                .map(Stack::peek)
+                .map(it -> new Card[]{it});
     }
 
     private List<List> clickCards(List<Card[]> clickable) {
@@ -118,15 +132,29 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected PyramidBoard click(Card[] clickable) {
-        Stream.of(clickable).forEach(it -> cards[it.at()] = null);
-        wastePile.add(clickable);
+        stream(clickable).forEach(this::handleClick);
+        path.add(clickable);
         return this;
+    }
+
+    private void handleClick(Card clickedCard) {
+        if (isBoardCard(clickedCard)) {
+            cards[clickedCard.at()] = null;
+        } else if (isDeckCard(clickedCard)) {
+            if (!deck.isEmpty() && clickedCard.equals(deck.peek())) {
+                if (!isKing(deck.pop())) flippedDeck.push(clickedCard);
+            } else if (!flippedDeck.isEmpty()) {
+                flippedDeck.pop();
+            }
+        }
     }
 
     protected PyramidBoard cloneBoard() {
         return PyramidBoard.builder()
                 .cards(cloneArray(cards))
-                .wastePile(cloneList(wastePile))
+                .path(new ArrayList<>(path))
+                .flippedDeck(cloneStack(flippedDeck))
+                .deck(cloneStack(deck))
                 .recycleCount(recycleCount)
                 .build();
     }
@@ -136,10 +164,10 @@ public class PyramidBoard implements GameSolver {
         var openCards = findOpenCards();
 
         IntStream.range(0, openCards.length - 1)
-                .peek(i -> checkKing(openCards[i], collect))
+                .peek(i -> checkKing(collect, openCards[i]))
                 .forEach(i -> findPairsOf13(collect, openCards, i));
 
-        checkKing(openCards[openCards.length - 1], collect);
+        checkKing(collect, openCards[openCards.length - 1]);
         return collect;
     }
 
@@ -149,13 +177,13 @@ public class PyramidBoard implements GameSolver {
                 .forEach(j -> collect.add(new Card[]{openCards[i], openCards[j]}));
     }
 
-    private void checkKing(Card card, List<Card[]> collect) {
+    private void checkKing(List<Card[]> collect, Card card) {
         if (isKing(card)) {
             collect.add(0, new Card[]{card});
         }
     }
 
-    private boolean isKing(Card card) {
+    protected boolean isKing(Card card) {
         return card.value() == KING;
     }
 
@@ -167,19 +195,39 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected Card[] findOpenCards() {
-        return stream(cards)
+        return Optional.of(getBoardOpenCards())
+                .map(this::checkDeckCards)
+                .map(it -> it.toArray(Card[]::new))
+                .orElseThrow();
+    }
+
+    private List<Card> checkDeckCards(List<Card> list) {
+        if (!deck.isEmpty()) list.add(deck.peek());
+        if (!flippedDeck.isEmpty()) list.add(flippedDeck.peek());
+        return list;
+    }
+
+    private List<Card> getBoardOpenCards() {
+        return IntStream.range(0, cards.length)
+                .map(reverse)
+                .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)
                 .filter(this::isOpen)
-                .toArray(Card[]::new);
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     protected boolean isOpen(Card card) {
-        var at = card.at();
-        return isOpenBoardCard(at) || isOpenDeckCard(at);
+        return isOpenBoardCard(card.at()) || isOpenDeckCard(card);
+    }
+
+    protected boolean isOpenDeckCard(Card card) {
+        assert nonNull(card) : "Null is invalid value for card";
+
+        return !deck.isEmpty() && card.equals(deck.peek());
     }
 
     protected boolean isOpenBoardCard(int at) {
-        return 0 <= at && at < LAST_BOARD && isOpenAt(at);
+        return 0 <= at && at < LAST_BOARD && nonNull(cards[at]) && isOpenAt(at);
     }
 
     protected boolean isOpenAt(int at) {
@@ -204,43 +252,12 @@ public class PyramidBoard implements GameSolver {
         return 0;
     }
 
-    protected boolean isOpenDeckCard(int at) {
-        return isDeckCard(at) && nonNull(cards[at]) &&
-                (at == LAST_DECK - 1 || isNull(cards[at + 1]));
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return Optional.ofNullable(obj)
-                .filter(it -> it instanceof PyramidBoard)
-                .map(PyramidBoard.class::cast)
-                .filter(it -> Arrays.equals(cards, it.cards))
-                .filter(it -> wastePile.equals(it.wastePile))
-                .filter(it -> recycleCount == it.recycleCount)
-                .isPresent();
-    }
-
     private Pair<Integer, List> getScore(List<Card[]> list) {
-        var distinct = removeMultiples(list);
         return Pair.of(
-                IntStream.range(0, distinct.size())
-                        .map(i -> getClickScore(i, distinct))
+                IntStream.range(0, list.size())
+                        .map(i -> getClickScore(i, list))
                         .reduce(0, Integer::sum),
                 list);
-    }
-
-    private List<Card[]> removeMultiples(List<Card[]> list) {
-        var distinct = new ArrayList<>(list);
-
-        for (int i = 0; i < distinct.size() - 1; i++) {
-            for (int j = i + 1; j < distinct.size(); j++) {
-                if (Arrays.equals(distinct.get(i), distinct.get(j))) {
-                    distinct.remove(j);
-                    break;
-                }
-            }
-        }
-        return distinct;
     }
 
     /*
@@ -258,30 +275,41 @@ public class PyramidBoard implements GameSolver {
         var item = list.get(at);
         return Optional.of(item)
                 .filter(it -> it.length == 1)
-                .map(it -> isDeckCard(it[0].at()) && isKing(it[0]) ? 5 : 0)
+                .map(it -> isKing(it[0]) ? 5 : 0)
                 .orElseGet(() -> getRowClearingScore(at, list));
     }
 
     private int getRowClearingScore(int at, List<Card[]> list) {
         return Optional.ofNullable(getCardAt(list.get(at)))
+                .filter(this::isBoardCard)
                 .map(it -> getRow(it.at()))
                 .map(row -> getScore(row, at, list))
-                .orElse(0);
+                .orElse(5);
     }
 
     private int getScore(int row, int at, List<Card[]> list) {
-        return 5 + ((IntStream.rangeClosed(0, at)
+        return 5 + (isRowCleared(row, at, list) ? scoreByRow(row) : 0);
+    }
+
+    private boolean isRowCleared(int row, int at, List<Card[]> list) {
+        return IntStream.rangeClosed(0, at)
                 .mapToObj(list::get)
                 .flatMap(Stream::of)
                 .filter(this::isBoardCard)
                 .filter(it -> getRow(it.at()) == row)
-                .count() == row) ? scoreByRow(row) : 0);
+                .count() == row;
     }
 
     private Card getCardAt(Card[] cards) {
-        return Stream.of(cards)
-                .filter(this::isBoardCard)
-                .reduce(cards[0], (a, b) -> a.at() >= b.at() ? a : b);
+        var a = cards[0];
+        var b = cards[1];
+        return isBoardCard(a)
+                ? isBoardCard(b)
+                ? a.at() >= b.at() ? a : b
+                : a
+                : isBoardCard(b)
+                ? b
+                : a.at() >= b.at() ? a : b;
     }
 
     private boolean isBoardCard(Card card) {
@@ -292,8 +320,8 @@ public class PyramidBoard implements GameSolver {
         return 0 <= at && at < LAST_BOARD;
     }
 
-    private boolean isDeckCard(int at) {
-        return !isBoardCard(at);
+    private boolean isDeckCard(Card card) {
+        return !isBoardCard(card);
     }
 
     private int scoreByRow(int row) {

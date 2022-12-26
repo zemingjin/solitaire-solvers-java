@@ -1,25 +1,25 @@
 package org.solitaire.pyramid;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.io.IOHelper;
 import org.solitaire.model.Card;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.model.CardHelper.buildCard;
 import static org.solitaire.pyramid.PyramidBoard.LAST_BOARD;
-import static org.solitaire.pyramid.PyramidBoard.LAST_DECK;
 import static org.solitaire.pyramid.PyramidBoard.build;
 
 class PyramidBoardTest {
-    private static final String TEST_FILE = "src/test/resources/pyramid-expert.txt";
+    private static final String TEST_FILE = "src/test/resources/pyramid-easy.txt";
 
     private PyramidBoard board;
 
@@ -28,12 +28,22 @@ class PyramidBoardTest {
         board = build(IOHelper.loadFile(TEST_FILE));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void test_getMaxScore() {
         var result = board.getMaxScore(board.solve());
+        var counts = getItemCounts((List<Card[]>) result.getRight());
 
         assertNotNull(result);
-        assertEquals(1290, result.getLeft());
+        assertEquals(1285, result.getLeft());
+    }
+
+    private List<String> getItemCounts(List<Card[]> list) {
+        return IntStream.range(0, list.size())
+                .filter(i -> list.get(i).length > 1 || board.isKing(list.get(i)[0]))
+                .mapToObj(i -> Pair.of(board.getClickScore(i, list), list.get(i)))
+                .map(it -> Arrays.toString(it.getRight()) + ": " + it.getLeft())
+                .toList();
     }
 
     @Test
@@ -45,23 +55,36 @@ class PyramidBoardTest {
 
     @Test
     public void test_click() {
-        var a = buildCard(0, "Ad");
-        var b = buildCard(30, "Ac");
-        var c = new Card[]{a, b};
+        var card = board.getDeck().peek();
+        var c = new Card[]{card};
+
+        assertEquals(51, card.at());
+        assertFalse(board.isKing(card));
 
         board.click(c);
 
-        assertNull(board.getCards()[0]);
-        assertNull(board.getCards()[30]);
-        assertTrue(board.getWastePile().contains(c));
+        assertFalse(board.isOpen(card));
+        assertEquals(1, board.getFlippedDeck().size());
+        assertTrue(board.getPath().contains(c));
+
+        card = board.getDeck().peek();
+        c = new Card[]{card, board.getCards()[LAST_BOARD - 1]};
+
+        assertEquals(50, card.at());
+        assertFalse(board.isKing(card));
+
+        board.click(c);
+
+        assertFalse(board.isOpen(card));
+        assertEquals(2, board.getFlippedDeck().size());
+        assertTrue(board.getPath().contains(c));
     }
 
     @Test
     public void test_recycle() {
-        var tmp = new Card[LAST_DECK - LAST_BOARD];
-        System.arraycopy(board.getCards(), LAST_BOARD, tmp, 0, LAST_DECK - LAST_BOARD);
-        board.click(tmp);
-
+        while (!board.getDeck().isEmpty()) {
+            board.getFlippedDeck().push(board.getDeck().pop());
+        }
         assertFalse(board.drawCard().isPresent());
 
         board.checkDeck();
@@ -79,7 +102,7 @@ class PyramidBoardTest {
         var cards = board.findCardsOf13();
 
         assertNotNull(cards);
-        assertEquals(3, cards.size());
+        assertEquals(5, cards.size());
     }
 
     @Test
@@ -92,8 +115,8 @@ class PyramidBoardTest {
 
     @Test
     void test_isOpenDeckCard() {
-        assertTrue(board.isOpenDeckCard(51));
-        assertFalse(board.isOpenDeckCard(50));
+        assertTrue(board.isOpenDeckCard(board.getDeck().peek()));
+        assertFalse(board.isOpenDeckCard(board.getDeck().get(0)));
     }
 
     @Test

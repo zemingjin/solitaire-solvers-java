@@ -8,15 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.lang.Math.min;
 import static java.util.Arrays.stream;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.math.NumberUtils.min;
 
+@SuppressWarnings("rawtypes")
 public class CardHelper {
     public static final String DIAMOND = "♦";
     public static final String SPADE = "♠";
@@ -53,6 +56,24 @@ public class CardHelper {
         return buf;
     }
 
+    public static <R> Stack<R> cloneStack(Stack<R> stack) {
+        var clone = new Stack<R>();
+
+        if (nonNull(stack) && !stack.isEmpty()) {
+            for (R item : stack) {
+                clone.push(item);
+            }
+        }
+        return clone;
+    }
+
+    public static Card[] resizeArray(Card[] origin, int newSize) {
+        var target = new Card[newSize];
+
+        System.arraycopy(origin, 0, target, 0, min(origin.length, newSize));
+        return target;
+    }
+
     public static <T> List<T> cloneList(List<T> list) {
         return Optional.ofNullable(list)
                 .map(ArrayList::new)
@@ -76,14 +97,14 @@ public class CardHelper {
                 .build();
     }
 
-    public static boolean isCleared(Card[] cards, int endExclusive) {
-        return stream(cards, 0, min(cards.length, endExclusive))
+    public static boolean isCleared(Card[] cards) {
+        return stream(cards, 0, cards.length)
                 .filter(Objects::nonNull)
                 .findAny()
                 .isEmpty();
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings("unchecked")
     public static String string(List cards) {
         return ((List<Object>) cards).stream()
                 .map(CardHelper::toString)
@@ -101,24 +122,20 @@ public class CardHelper {
                 .orElseGet(cards[0]::raw);
     }
 
-    @SuppressWarnings("rawtypes")
     public static void checkShortestPath(List<List> results) {
         checkPath(results, (a, b) -> a.size() <= b.size() ? a : b, "Shortest");
     }
 
-    @SuppressWarnings("rawtypes")
     public static void checkLongestPath(List<List> results) {
         checkPath(results, (a, b) -> a.size() >= b.size() ? a : b, "Longest");
     }
 
-    @SuppressWarnings("rawtypes")
     public static void checkMaxScore(Pair<GameSolver, List<List>> pair) {
         Optional.of(pair.getLeft().getMaxScore(pair.getRight()))
                 .filter(p -> p.getLeft() > 0)
-                .ifPresent(p -> System.out.printf("Max Score(%d): %s", p.getLeft(), string(p.getRight())));
+                .ifPresent(p -> System.out.printf("Max Score(%d): %s\n", p.getLeft(), string(p.getRight())));
     }
 
-    @SuppressWarnings("rawtypes")
     private static void checkPath(List<List> results, BinaryOperator<List> accumulator, String type) {
         requireNonNull(results);
 
