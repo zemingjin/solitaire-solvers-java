@@ -1,18 +1,15 @@
 package org.solitaire.tripeaks;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.buildCard;
-import static org.solitaire.model.CardHelper.string;
 
 public class TriPeaksHelper {
     public static final int LAST_BOARD = 28;
@@ -40,32 +37,7 @@ public class TriPeaksHelper {
     }
 
     public static boolean isFromDeck(Card card) {
-        return 28 <= card.getAt();
+        return 28 <= card.at();
     }
 
-    @SuppressWarnings("rawtypes, unchecked")
-    public static void checkMaxScore(List<List> results) {
-        requireNonNull(results);
-
-        Optional.of(results.stream()
-                        .map(it -> (List<Card>) it)
-                        .map(TriPeaksHelper::getScore)
-                        .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b))
-                .ifPresent(it -> System.out.printf("Max Score(%d): %s\n", it.getLeft(), string(it.getRight())));
-    }
-
-    protected static Pair<Integer, List<Card>> getScore(List<Card> cards) {
-        int score = 0;
-        int sequenceCount = 0;
-
-        for (Card card : cards) {
-            if (isFromDeck(card)) {
-                sequenceCount = 0;
-            } else {
-                sequenceCount++;
-                score += (sequenceCount * 2 - 1) * 100;
-            }
-        }
-        return Pair.of(score, cards);
-    }
 }

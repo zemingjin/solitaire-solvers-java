@@ -1,11 +1,14 @@
 package org.solitaire.model;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -27,6 +30,16 @@ public class CardHelper {
         put('h', HEART);
     }};
     public static boolean useSuit = true;
+    private static int totalScenarios;
+
+    public static void incTotal() {
+        totalScenarios++;
+    }
+
+    public static int getTotalScenarios() {
+        return totalScenarios;
+    }
+
 
     public static String getSuit(char c) {
         return SUITS_MAP.get(c);
@@ -78,22 +91,38 @@ public class CardHelper {
     }
 
     protected static String toString(Object obj) {
-        return obj instanceof Card ? ((Card) obj).getRaw() : toString((Card[]) obj);
+        return obj instanceof Card ? ((Card) obj).raw() : toString((Card[]) obj);
     }
 
     private static String toString(Card[] cards) {
         return Optional.of(cards)
                 .filter(it -> it.length > 1)
-                .map(it -> Stream.of(cards).map(Card::getRaw).collect(Collectors.joining(":")))
-                .orElseGet(cards[0]::getRaw);
+                .map(it -> Stream.of(cards).map(Card::raw).collect(Collectors.joining(":")))
+                .orElseGet(cards[0]::raw);
     }
 
     @SuppressWarnings("rawtypes")
     public static void checkShortestPath(List<List> results) {
-        requireNonNull(results);
-
-        Optional.of(results.stream().reduce(results.get(0), (a, b) -> a.size() < b.size() ? a : b))
-                .ifPresent(it -> System.out.printf("Shortest Path(%d): %s\n", it.size(), string(it)));
+        checkPath(results, (a, b) -> a.size() <= b.size() ? a : b, "Shortest");
     }
 
+    @SuppressWarnings("rawtypes")
+    public static void checkLongestPath(List<List> results) {
+        checkPath(results, (a, b) -> a.size() >= b.size() ? a : b, "Longest");
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static void checkMaxScore(Pair<GameSolver, List<List>> pair) {
+        Optional.of(pair.getLeft().getMaxScore(pair.getRight()))
+                .filter(p -> p.getLeft() > 0)
+                .ifPresent(p -> System.out.printf("Max Score(%d): %s", p.getLeft(), string(p.getRight())));
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void checkPath(List<List> results, BinaryOperator<List> accumulator, String type) {
+        requireNonNull(results);
+
+        Optional.of(results.stream().reduce(results.get(0), accumulator))
+                .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), string(it)));
+    }
 }

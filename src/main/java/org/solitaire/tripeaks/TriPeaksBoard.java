@@ -1,8 +1,8 @@
 package org.solitaire.tripeaks;
 
 import lombok.Builder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
-import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameSolver;
 
 import java.util.Collections;
@@ -15,38 +15,39 @@ import java.util.stream.IntStream;
 import static java.lang.Math.min;
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.cloneArray;
 import static org.solitaire.model.CardHelper.cloneList;
+import static org.solitaire.model.CardHelper.incTotal;
 import static org.solitaire.model.CardHelper.isCleared;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 
+@SuppressWarnings("rawtypes")
 @Builder
 public class TriPeaksBoard implements GameSolver {
     private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
     private Card[] cards;
     private List<Card> wastePile;
 
-    @SuppressWarnings("rawtypes")
     public List<List> solve() {
         if (isCleared(cards, LAST_BOARD)) {
             return Collections.singletonList(wastePile);
         }
+        incTotal();
         return Optional.of(findBoardCards())
                 .filter(it -> !it.isEmpty())
                 .map(this::clickBoardCards)
                 .orElseGet(this::clickDeckCard);
     }
 
-    @SuppressWarnings("rawtypes")
     private List<List> clickDeckCard() {
         return Optional.ofNullable(getTopDeckCard())
                 .map(this::clickCard)
                 .orElseGet(Collections::emptyList);
     }
 
-    @SuppressWarnings("rawtypes")
     private List<List> clickBoardCards(List<Card> cards) {
         return cards.stream()
                 .map(this::clickCard)
@@ -54,7 +55,6 @@ public class TriPeaksBoard implements GameSolver {
                 .toList();
     }
 
-    @SuppressWarnings("rawtypes")
     protected List findBoardCards() {
         return Optional.of(wastePile.get(wastePile.size() - 1))
                 .map(this::findAdjacentCardsFromBoard)
@@ -78,19 +78,36 @@ public class TriPeaksBoard implements GameSolver {
                 .orElse(null);
     }
 
-    @SuppressWarnings("rawtypes")
     public List<List> clickCard(Card target) {
         return cloneBoard()
                 .click(target)
                 .solve();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    @SuppressWarnings("rawtypes")
-    public List<List> showDetails(List<List> results) {
-        CardHelper.checkShortestPath(results);
-        TriPeaksHelper.checkMaxScore(results);
-        return results;
+    public Pair<Integer, List> getMaxScore(List<List> results) {
+        requireNonNull(results);
+
+        return results.stream()
+                .map(it -> (List<Card>) it)
+                .map(this::getScore)
+                .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
+    }
+
+    protected Pair<Integer, List> getScore(List<Card> cards) {
+        int score = 0;
+        int sequenceCount = 0;
+
+        for (Card card : cards) {
+            if (TriPeaksHelper.isFromDeck(card)) {
+                sequenceCount = 0;
+            } else {
+                sequenceCount++;
+                score += (sequenceCount * 2 - 1) * 100;
+            }
+        }
+        return Pair.of(score, cards);
     }
 
     private TriPeaksBoard cloneBoard() {
@@ -101,13 +118,13 @@ public class TriPeaksBoard implements GameSolver {
     }
 
     private TriPeaksBoard click(Card card) {
-        cards[card.getAt()] = null;
+        cards[card.at()] = null;
         wastePile.add(card);
         return this;
     }
 
     protected boolean isOpenCard(Card card) {
-        var at = card.getAt();
+        var at = card.at();
 
         return switch (toRow(at)) {
             case 4 -> true;

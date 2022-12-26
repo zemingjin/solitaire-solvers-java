@@ -13,12 +13,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static org.solitaire.model.CardHelper.checkLongestPath;
+import static org.solitaire.model.CardHelper.checkMaxScore;
+import static org.solitaire.model.CardHelper.checkShortestPath;
+import static org.solitaire.model.CardHelper.getTotalScenarios;
+
+@SuppressWarnings("rawtypes")
 public class SolitaireApp {
     public static final String TRIPEAKS = "-t";
     public static final String PYRAMID = "-p";
     public static final String NOSUITS = "-n";
+    private static final Function<GameSolver, Pair<GameSolver, List<List>>> solveIt = it -> Pair.of(it, it.solve());
+
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
         put(TRIPEAKS, TriPeaksHelper::build);
         put(PYRAMID, PyramidBoard::build);
@@ -28,27 +37,26 @@ public class SolitaireApp {
         new SolitaireApp().run(args);
     }
 
-    @SuppressWarnings("rawtypes")
     public List<List> run(String[] args) {
-        checkUseSuits(args);
+        Function<String[], GameSolver> buildSolver = it -> getGameBuilder(args).apply(it);
+
         var stopWatch = new StopWatch();
 
         stopWatch.start();
+        checkUseSuits(args);
         var results = Optional.of(getPath(args))
                 .map(IOHelper::loadFile)
-                .map(it -> getGameBuilder(args).apply(it))
-                .map(this::solve)
+                .map(buildSolver)
+                .map(solveIt)
                 .orElseThrow();
         stopWatch.stop();
 
-        System.out.printf("Found %d solutions in %s\n", results.getRight().size(), stopWatch.formatTime());
-        results.getLeft().showDetails(results.getRight());
+        System.out.printf("Found %d solutions in %d scenarios - total time: %s.\n",
+                results.getRight().size(), getTotalScenarios(), stopWatch.formatTime());
+        checkShortestPath(results.getRight());
+        checkLongestPath(results.getRight());
+        checkMaxScore(results);
         return results.getRight();
-    }
-
-    @SuppressWarnings("rawtypes")
-    private Pair<GameSolver, List<List>> solve(GameSolver solver) {
-        return Pair.of(solver, solver.solve());
     }
 
     private String getPath(String[] args) {
@@ -63,7 +71,7 @@ public class SolitaireApp {
 
     private String getType(String[] args) {
         return Optional.of(args)
-                .filter(it -> checkArgs(args, TRIPEAKS))
+                .filter(it -> checkArgs(it, TRIPEAKS))
                 .map(it -> TRIPEAKS)
                 .orElse(PYRAMID);
     }

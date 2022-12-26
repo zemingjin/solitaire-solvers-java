@@ -2,6 +2,7 @@ package org.solitaire.pyramid;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameSolver;
@@ -25,14 +26,17 @@ import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.VALUES;
 import static org.solitaire.model.CardHelper.cloneArray;
 import static org.solitaire.model.CardHelper.cloneList;
+import static org.solitaire.model.CardHelper.incTotal;
 import static org.solitaire.model.CardHelper.isCleared;
 
+@SuppressWarnings("rawtypes")
 @Getter
 @Builder
 public class PyramidBoard implements GameSolver {
     public static final int LAST_BOARD = 28;
     public static final int LAST_DECK = 52;
     public static final char KING = 'K';
+    private static final int[] ROW_SCORES = new int[]{500, 250, 150, 100, 75, 50, 25};
     private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
     private Card[] cards;
     private List<Card[]> wastePile;
@@ -49,26 +53,27 @@ public class PyramidBoard implements GameSolver {
         return PyramidBoard.builder().cards(cards).recycleCount(3).wastePile(new ArrayList<>()).build();
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public List<List> solve() {
         if (isCleared(cards, LAST_BOARD)) {
             return singletonList(wastePile);
         }
+        incTotal();
         return Optional.of(findCardsOf13())
                 .filter(it -> !it.isEmpty())
                 .map(this::clickCards)
                 .orElseGet(this::clickDeck);
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings("unchecked")
     @Override
-    public List<List> showDetails(List<List> results) {
-        CardHelper.checkShortestPath(results);
-        return results;
+    public Pair<Integer, List> getMaxScore(List<List> results) {
+        return results.stream()
+                .map(it -> (List<Card[]>) it)
+                .map(this::getScore)
+                .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
     }
 
-    @SuppressWarnings("rawtypes")
     private List<List> clickDeck() {
         checkDeck();
         return drawCard()
@@ -85,8 +90,8 @@ public class PyramidBoard implements GameSolver {
     private void recycleDeck() {
         wastePile.stream()
                 .flatMap(Stream::of)
-                .filter(it -> it.getAt() >= LAST_BOARD)
-                .forEach(it -> cards[it.getAt()] = it);
+                .filter(it -> it.at() >= LAST_BOARD)
+                .forEach(it -> cards[it.at()] = it);
         recycleCount--;
     }
 
@@ -98,7 +103,6 @@ public class PyramidBoard implements GameSolver {
                 .findFirst();
     }
 
-    @SuppressWarnings("rawtypes")
     private List<List> clickCards(List<Card[]> clickable) {
         return clickable.stream()
                 .map(this::clickCard)
@@ -107,7 +111,6 @@ public class PyramidBoard implements GameSolver {
                 .toList();
     }
 
-    @SuppressWarnings("rawtypes")
     public List<List> clickCard(Card[] cards) {
         return cloneBoard()
                 .click(cards)
@@ -115,7 +118,7 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected PyramidBoard click(Card[] clickable) {
-        Stream.of(clickable).forEach(it -> cards[it.getAt()] = null);
+        Stream.of(clickable).forEach(it -> cards[it.at()] = null);
         wastePile.add(clickable);
         return this;
     }
@@ -148,32 +151,19 @@ public class PyramidBoard implements GameSolver {
 
     private void checkKing(Card card, List<Card[]> collect) {
         if (isKing(card)) {
-            if (collect.isEmpty()) {
-                collect.add(new Card[]{card});
-            } else if (isKing(collect.get(0)[0])) {
-                collect.set(0, merge(collect.get(0), card));
-            } else {
-                collect.add(0, new Card[]{card});
-            }
+            collect.add(0, new Card[]{card});
         }
     }
 
     private boolean isKing(Card card) {
-        return card.getValue() == KING;
-    }
-
-    protected Card[] merge(Card[] mergeTo, Card toMerge) {
-        var buf = new Card[mergeTo.length + 1];
-        System.arraycopy(mergeTo, 0, buf, 0, mergeTo.length);
-        buf[mergeTo.length] = toMerge;
-        return buf;
+        return card.value() == KING;
     }
 
     private boolean isAddingTo13(Card a, Card b) {
         requireNonNull(a);
         requireNonNull(b);
 
-        return VALUES.indexOf(a.getValue()) + VALUES.indexOf(b.getValue()) == 11;
+        return VALUES.indexOf(a.value()) + VALUES.indexOf(b.value()) == 11;
     }
 
     protected Card[] findOpenCards() {
@@ -184,7 +174,7 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected boolean isOpen(Card card) {
-        var at = card.getAt();
+        var at = card.at();
         return isOpenBoardCard(at) || isOpenDeckCard(at);
     }
 
@@ -215,7 +205,7 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected boolean isOpenDeckCard(int at) {
-        return LAST_BOARD <= at && at < LAST_DECK && nonNull(cards[at]) &&
+        return isDeckCard(at) && nonNull(cards[at]) &&
                 (at == LAST_DECK - 1 || isNull(cards[at + 1]));
     }
 
@@ -228,5 +218,86 @@ public class PyramidBoard implements GameSolver {
                 .filter(it -> wastePile.equals(it.wastePile))
                 .filter(it -> recycleCount == it.recycleCount)
                 .isPresent();
+    }
+
+    private Pair<Integer, List> getScore(List<Card[]> list) {
+        var distinct = removeMultiples(list);
+        return Pair.of(
+                IntStream.range(0, distinct.size())
+                        .map(i -> getClickScore(i, distinct))
+                        .reduce(0, Integer::sum),
+                list);
+    }
+
+    private List<Card[]> removeMultiples(List<Card[]> list) {
+        var distinct = new ArrayList<>(list);
+
+        for (int i = 0; i < distinct.size() - 1; i++) {
+            for (int j = i + 1; j < distinct.size(); j++) {
+                if (Arrays.equals(distinct.get(i), distinct.get(j))) {
+                    distinct.remove(j);
+                    break;
+                }
+            }
+        }
+        return distinct;
+    }
+
+    /*
+     * Score Rules:
+     * - 5: each pair
+     * - 25 for row 7
+     * - 50 for row 6
+     * - 75 for row 5
+     * - 100 for row 4
+     * - 150 for row 3
+     * - 250 for row 2
+     * - 500 for clear board
+     */
+    protected int getClickScore(int at, List<Card[]> list) {
+        var item = list.get(at);
+        return Optional.of(item)
+                .filter(it -> it.length == 1)
+                .map(it -> isDeckCard(it[0].at()) && isKing(it[0]) ? 5 : 0)
+                .orElseGet(() -> getRowClearingScore(at, list));
+    }
+
+    private int getRowClearingScore(int at, List<Card[]> list) {
+        return Optional.ofNullable(getCardAt(list.get(at)))
+                .map(it -> getRow(it.at()))
+                .map(row -> getScore(row, at, list))
+                .orElse(0);
+    }
+
+    private int getScore(int row, int at, List<Card[]> list) {
+        return 5 + ((IntStream.rangeClosed(0, at)
+                .mapToObj(list::get)
+                .flatMap(Stream::of)
+                .filter(this::isBoardCard)
+                .filter(it -> getRow(it.at()) == row)
+                .count() == row) ? scoreByRow(row) : 0);
+    }
+
+    private Card getCardAt(Card[] cards) {
+        return Stream.of(cards)
+                .filter(this::isBoardCard)
+                .reduce(cards[0], (a, b) -> a.at() >= b.at() ? a : b);
+    }
+
+    private boolean isBoardCard(Card card) {
+        return isBoardCard(card.at());
+    }
+
+    private boolean isBoardCard(int at) {
+        return 0 <= at && at < LAST_BOARD;
+    }
+
+    private boolean isDeckCard(int at) {
+        return !isBoardCard(at);
+    }
+
+    private int scoreByRow(int row) {
+        assert 0 < row && row <= ROW_SCORES.length : "Invalid row number: " + row;
+        return ROW_SCORES[row - 1];
     }
 }
