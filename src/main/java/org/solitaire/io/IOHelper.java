@@ -3,11 +3,14 @@ package org.solitaire.io;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 public class IOHelper {
+    private static final String SINGLE = " ";
+
     public static String[] loadFile(String path) {
         requireNonNull(path);
         assert !path.isBlank();
@@ -16,17 +19,23 @@ public class IOHelper {
             StringBuilder content = new StringBuilder();
 
             for (String line = reader.readLine(); nonNull(line); line = reader.readLine()) {
-                line = line.trim();
-                if (!line.isEmpty()) {
+                if (!line.isBlank()) {
                     if (!content.isEmpty()) {
-                        content.append(" ");
+                        content.append(SINGLE);
                     }
-                    content.append(line.trim());
+                    content.append(line);
                 }
             }
-            return content.toString().split(" ");
+            return toArray(content.toString());
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private static String[] toArray(String line) {
+        return Stream.of(line.split(SINGLE))
+                .map(String::trim)
+                .filter(it -> !it.isEmpty())
+                .toArray(String[]::new);
     }
 }
