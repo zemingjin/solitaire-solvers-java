@@ -6,20 +6,22 @@ import org.junit.jupiter.api.Test;
 import org.solitaire.io.IOHelper;
 import org.solitaire.model.Card;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.pyramid.PyramidBoard.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidBoard.build;
 
 class PyramidBoardTest {
-    private static final String TEST_FILE = "src/test/resources/pyramid-easy.txt";
+    private static final String TEST_FILE = "src/test/resources/pyramid-121922-medium.txt";
 
     private PyramidBoard board;
 
@@ -34,16 +36,30 @@ class PyramidBoardTest {
         var result = board.getMaxScore(board.solve());
         var counts = getItemCounts((List<Card[]>) result.getRight());
 
+        assertEquals(23, counts.size());
         assertNotNull(result);
-        assertEquals(1285, result.getLeft());
+        assertEquals(1265, result.getLeft());
     }
 
     private List<String> getItemCounts(List<Card[]> list) {
         return IntStream.range(0, list.size())
                 .filter(i -> list.get(i).length > 1 || board.isKing(list.get(i)[0]))
                 .mapToObj(i -> Pair.of(board.getClickScore(i, list), list.get(i)))
-                .map(it -> Arrays.toString(it.getRight()) + ": " + it.getLeft())
+                .map(it -> Pair.of(it.getLeft(), stream(it.getRight()).map(Card::raw).collect(joining(","))))
+                .map(it -> it.getRight() + ": " + it.getLeft())
                 .toList();
+    }
+
+    @Test
+    public void test_getCardAt() {
+        var a = board.getCards()[27];
+        var b = board.getDeck().peek();
+        var card = board.getCardAt(new Card[]{ a, b });
+
+        assertSame(a, card);
+
+        card = board.getCardAt(new Card[]{ b, a });
+        assertSame(a, card);
     }
 
     @Test
@@ -66,6 +82,7 @@ class PyramidBoardTest {
         assertFalse(board.isOpen(card));
         assertEquals(1, board.getFlippedDeck().size());
         assertTrue(board.getPath().contains(c));
+        assertEquals(1, board.getPath().size());
 
         card = board.getDeck().peek();
         c = new Card[]{card, board.getCards()[LAST_BOARD - 1]};
@@ -76,8 +93,9 @@ class PyramidBoardTest {
         board.click(c);
 
         assertFalse(board.isOpen(card));
-        assertEquals(2, board.getFlippedDeck().size());
+        assertEquals(1, board.getFlippedDeck().size());
         assertTrue(board.getPath().contains(c));
+        assertEquals(2, board.getPath().size());
     }
 
     @Test
@@ -102,7 +120,7 @@ class PyramidBoardTest {
         var cards = board.findCardsOf13();
 
         assertNotNull(cards);
-        assertEquals(5, cards.size());
+        assertEquals(3, cards.size());
     }
 
     @Test
