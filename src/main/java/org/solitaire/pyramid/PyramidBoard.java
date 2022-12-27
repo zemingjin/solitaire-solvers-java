@@ -1,5 +1,6 @@
 package org.solitaire.pyramid;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
@@ -55,6 +56,8 @@ public class PyramidBoard implements GameSolver {
     }
 
     private static PyramidBoard buildBoard(Card[] cards) {
+        assert cards.length == 52 : "Invalid # of cards: " + cards.length;
+
         return PyramidBoard.builder()
                 .cards(cards)
                 .recycleCount(3)
@@ -100,7 +103,7 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected void checkDeck() {
-        if (deck.isEmpty() && getRecycleCount() > 0) {
+        if (deck.isEmpty() && getRecycleCount() > 1) {
             recycleDeck();
         }
     }
@@ -132,21 +135,39 @@ public class PyramidBoard implements GameSolver {
     }
 
     protected PyramidBoard click(Card[] clickable) {
-        stream(clickable).forEach(this::handleClick);
+        Card card = clickable[0];
+        if (clickable.length == 1 && isDeckCard(card)) {
+            handleDrawedCard(card);
+        } else {
+            handlePairedCards(clickable);
+        }
         path.add(clickable);
         return this;
     }
 
-    private void handleClick(Card clickedCard) {
-        if (isBoardCard(clickedCard)) {
-            cards[clickedCard.at()] = null;
-        } else if (isDeckCard(clickedCard)) {
-            if (!deck.isEmpty() && clickedCard.equals(deck.peek())) {
-                if (!isKing(deck.pop())) flippedDeck.push(clickedCard);
-            } else if (!flippedDeck.isEmpty()) {
-                flippedDeck.pop();
+    private void handleDrawedCard(Card card) {
+        if (isDeckCard(card)) {
+            if (card.equals(deck.peek())) {
+                deck.pop();
+                if (!isKing(card)) {
+                    flippedDeck.push(card);
+                }
             }
         }
+    }
+
+    private void handlePairedCards(Card[] clickable) {
+        stream(clickable).forEach(card -> {
+            if (isBoardCard(card)) {
+                cards[card.at()] = null;
+            } else if (isDeckCard(card)) {
+                if (!deck.isEmpty() && card.equals(deck.peek())) {
+                    deck.pop();
+                } else if (!flippedDeck.isEmpty()) {
+                    flippedDeck.pop();
+                }
+            }
+        });
     }
 
     protected PyramidBoard cloneBoard() {
@@ -240,16 +261,14 @@ public class PyramidBoard implements GameSolver {
     protected int getRow(int at) {
         assert 0 <= at && at < LAST_BOARD : "Invalid board card index: " + at;
 
-        var rowMax = LAST_BOARD;
+        final var rowMax = new RowMax(LAST_BOARD);
 
-        for (int row = 7; row > 0; row--) {
-            if (rowMax - row <= at) {
-                return row;
-            } else {
-                rowMax -= row;
-            }
-        }
-        return 0;
+        return IntStream.rangeClosed(1, 7)
+                .map(i -> 7 - i + 1)
+                .peek(i -> rowMax.setRowMax(rowMax.rowMax - i))
+                .filter(i -> rowMax.getRowMax() <= at)
+                .findFirst()
+                .orElseThrow();
     }
 
     private Pair<Integer, List> getScore(List<Card[]> list) {
@@ -300,7 +319,7 @@ public class PyramidBoard implements GameSolver {
                 .count() == row;
     }
 
-    private Card getCardAt(Card[] cards) {
+    protected Card getCardAt(Card[] cards) {
         var a = cards[0];
         var b = cards[1];
         return isBoardCard(a)
@@ -327,5 +346,11 @@ public class PyramidBoard implements GameSolver {
     private int scoreByRow(int row) {
         assert 0 < row && row <= ROW_SCORES.length : "Invalid row number: " + row;
         return ROW_SCORES[row - 1];
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class RowMax {
+        private int rowMax;
     }
 }

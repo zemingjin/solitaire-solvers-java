@@ -40,7 +40,7 @@ class SolitaireAppTest {
 
 
         assertNotNull(result);
-        assertEquals(5472, result.size());
+        assertEquals(11016, result.size());
     }
 
 }
