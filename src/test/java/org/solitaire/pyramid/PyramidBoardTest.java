@@ -62,11 +62,11 @@ class PyramidBoardTest {
     public void test_getCardAt() {
         var a = board.getCards()[27];
         var b = board.getDeck().peek();
-        var card = board.getCardAt(new Card[]{ a, b });
+        var card = board.getCardAt(new Card[]{a, b});
 
         assertSame(a, card);
 
-        card = board.getCardAt(new Card[]{ b, a });
+        card = board.getCardAt(new Card[]{b, a});
         assertSame(a, card);
     }
 
