@@ -30,6 +30,14 @@ class PyramidBoardTest {
         board = build(IOHelper.loadFile(TEST_FILE));
     }
 
+    @Test
+    public void test_solve() {
+        board = build(IOHelper.loadFile("src/test/resources/pyramid-121122-expert.txt"));
+        var result = board.solve();
+
+        assertNotNull(result);
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     public void test_getMaxScore() {
