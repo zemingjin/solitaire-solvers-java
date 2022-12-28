@@ -57,10 +57,6 @@ public class FreeCellHelper {
         var column = getColumn(card.at());
         var col = board.get(column);
 
-        if (col == null) {
-            col = new LinkedList<>();
-            board.set(column, col);
-        }
         col.add(card);
     }
 

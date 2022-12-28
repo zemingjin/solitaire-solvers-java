@@ -28,22 +28,22 @@ public class SpiderHelper {
                 .build();
     }
 
-    protected static List<Column> buildBoard(String[] cards) {
-        var board = new ArrayList<Column>(LAST_COLUMN);
+    protected static List<List<Card>> buildBoard(String[] cards) {
+        var board = new ArrayList<List<Card>>(LAST_COLUMN);
 
         for (int i = 0; i < LAST_BOARD; i++) {
             var columnAt = calcColumn(i);
             var column = getColumn(board, columnAt);
 
-            column.cards().add(0, buildCard(i, cards[i]));
+            column.add(0, buildCard(i, cards[i]));
         }
         return board;
     }
 
-    private static Column getColumn(List<Column> board, int columnAt) {
+    private static List<Card> getColumn(List<List<Card>> board, int columnAt) {
         assert 0 <= columnAt && columnAt < LAST_COLUMN : "Invalid column: " + columnAt;
         if (board.isEmpty() || board.size() <= columnAt) {
-            board.add(columnAt, new Column(columnAt < NUM_LONG ? COL_LONG - 1 : COL_LONG - 2, new LinkedList<>()));
+            board.add(columnAt, new LinkedList<>());
         }
         return board.get(columnAt);
     }

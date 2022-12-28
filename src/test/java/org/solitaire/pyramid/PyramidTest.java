@@ -3,8 +3,8 @@ package org.solitaire.pyramid;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.solitaire.io.IOHelper;
 import org.solitaire.model.Card;
+import org.solitaire.util.IOHelper;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -51,7 +51,7 @@ class PyramidTest {
 
     private List<String> getItemCounts(List<Card[]> list) {
         return IntStream.range(0, list.size())
-                .filter(i -> list.get(i).length > 1 || board.isKing(list.get(i)[0]))
+                .filter(i -> list.get(i).length > 1 || list.get(i)[0].isKing())
                 .mapToObj(i -> Pair.of(board.getClickScore(i, list), list.get(i)))
                 .map(it -> Pair.of(it.getLeft(), stream(it.getRight()).map(Card::raw).collect(joining(","))))
                 .map(it -> it.getRight() + ": " + it.getLeft())
@@ -83,7 +83,7 @@ class PyramidTest {
         var c = new Card[]{card};
 
         assertEquals(51, card.at());
-        assertFalse(board.isKing(card));
+        assertFalse(card.isKing());
 
         board.click(c);
 
@@ -96,7 +96,7 @@ class PyramidTest {
         c = new Card[]{card, board.getCards()[LAST_BOARD - 1]};
 
         assertEquals(50, card.at());
-        assertFalse(board.isKing(card));
+        assertFalse(card.isKing());
 
         board.click(c);
 

@@ -4,6 +4,7 @@ import lombok.Builder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
+import org.solitaire.util.CollectionUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,18 +18,19 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.cloneArray;
 import static org.solitaire.model.CardHelper.cloneList;
-import static org.solitaire.model.CardHelper.incTotal;
 import static org.solitaire.model.CardHelper.isCleared;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
+import static org.solitaire.util.SolitaireHelper.incTotal;
 
 @SuppressWarnings("rawtypes")
 @Builder
 public class TriPeaks implements GameSolver {
     private static final int BOARD_BONUS = 5000;
-    private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
+    private static final int C = LAST_BOARD + LAST_DECK - 1;
+    private final IntUnaryOperator reverse = i -> C - i;
     private final IntUnaryOperator reverseBoard = i -> LAST_BOARD - i - 1;
     private Card[] cards;
     private List<Card> wastePile;
@@ -46,7 +48,7 @@ public class TriPeaks implements GameSolver {
         }
         incTotal();
         return Optional.of(findBoardCards())
-                .filter(it -> !it.isEmpty())
+                .filter(CollectionUtil::isNotEmpty)
                 .map(this::clickBoardCards)
                 .orElseGet(this::clickDeckCard);
     }
@@ -81,7 +83,7 @@ public class TriPeaks implements GameSolver {
     }
 
     private Card getTopDeckCard() {
-        return IntStream.range(LAST_BOARD, LAST_DECK)
+        return IntStream.rangeClosed(LAST_BOARD, LAST_DECK - 1)
                 .map(reverse)
                 .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)

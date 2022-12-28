@@ -26,25 +26,24 @@ public class CardHelper {
     public static final String CLUB = "♣";
     public static final String HEART = "♥";
     public static final String VALUES = "A23456789TJQK";
-    private static final Map<Character, String> SUITS_MAP = new HashMap<>() {{
-        put('d', DIAMOND);
-        put('s', SPADE);
-        put('c', CLUB);
-        put('h', HEART);
+    private static final Map<String, String> SUITS_MAP = new HashMap<>() {{
+        put("d", DIAMOND);
+        put("s", SPADE);
+        put("c", CLUB);
+        put("h", HEART);
     }};
     public static boolean useSuit = true;
-    private static int totalScenarios;
 
-    public static void incTotal() {
-        totalScenarios++;
+    public static int suitCode(Card card) {
+        return switch (card.suit().toLowerCase()) {
+            case "d" -> 0;
+            case "h" -> 1;
+            case "c" -> 2;
+            default -> 3;
+        };
     }
 
-    public static int getTotalScenarios() {
-        return totalScenarios;
-    }
-
-
-    public static String getSuit(char c) {
+    public static String getSuit(String c) {
         return SUITS_MAP.get(c);
     }
 
@@ -56,6 +55,12 @@ public class CardHelper {
         return buf;
     }
 
+    public static <R> List<Stack<R>> cloneStacks(List<Stack<R>> stacks) {
+        return stacks.stream()
+                .map(CardHelper::cloneStack)
+                .toList();
+    }
+
     public static <R> Stack<R> cloneStack(Stack<R> stack) {
         var clone = new Stack<R>();
 
@@ -65,6 +70,12 @@ public class CardHelper {
             }
         }
         return clone;
+    }
+
+    public static List<Column> cloneColumns(List<Column> lists) {
+        return lists.stream()
+                .map(CardHelper::cloneColumn)
+                .toList();
     }
 
     public static Card[] resizeArray(Card[] origin, int newSize) {
@@ -80,6 +91,12 @@ public class CardHelper {
                 .orElse(null);
     }
 
+    public static Column cloneColumn(Column column) {
+        return Optional.ofNullable(column)
+                .map(Column::new)
+                .orElse(null);
+    }
+
     public static Card[] toCards(String[] cards) {
         requireNonNull(cards);
         return IntStream.range(0, cards.length)
@@ -92,8 +109,9 @@ public class CardHelper {
 
         return Card.builder()
                 .at(at)
-                .raw(useSuit ? value.charAt(0) + getSuit(value.charAt(1)) : value)
-                .value(value.charAt(0))
+                .raw(useSuit ? value.charAt(0) + getSuit(value.substring(1)) : value)
+                .value(value.substring(0, 1))
+                .suit(value.substring(1))
                 .build();
     }
 

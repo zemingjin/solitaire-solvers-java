@@ -8,6 +8,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.Math.min;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.buildCard;
 
@@ -17,6 +18,7 @@ public class TriPeaksHelper {
     public static final int LAST_DECK = 51;
 
     public static GameSolver build(String[] cards) {
+        assert nonNull(cards) && cards.length == 52: "Invalid number of cards: " + cards.length;
         return TriPeaks.builder()
                 .cards(toCards(cards))
                 .wastePile(toWastePile(cards))
@@ -39,5 +41,4 @@ public class TriPeaksHelper {
     public static boolean isFromDeck(Card card) {
         return 28 <= card.at();
     }
-
 }

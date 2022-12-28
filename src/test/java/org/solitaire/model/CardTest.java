@@ -4,7 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -63,5 +65,59 @@ public class CardTest {
 
         b = CardHelper.buildCard(31, "Ah");
         assertNotEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    public void test_isDifferentColor() {
+        var a = buildCard("3d");
+        var b = buildCard("2h");
+
+        assertFalse(a.isDifferentColor(b));
+
+        a = buildCard("3h");
+        assertFalse(a.isDifferentColor(b));
+
+        b = buildCard("2s");
+        assertTrue(a.isDifferentColor(b));
+
+        b = buildCard("2c");
+        assertTrue(a.isDifferentColor(b));
+    }
+
+    @Test
+    public void test_isHigherOrderWithDifferentColor() {
+        var a = buildCard("3d");
+        var b = buildCard("2s");
+
+        assertTrue(a.isHigherWithDifferentColor(b));
+
+        a = buildCard("3h");
+        b = buildCard("2c");
+        assertTrue(a.isHigherWithDifferentColor(b));
+
+        b = buildCard("2h");
+        assertFalse(a.isHigherWithDifferentColor(b));
+    }
+
+    @Test
+    public void test_isDifferentColor_exception() {
+        var a = buildCard("3d");
+        var b = buildCard("5f");
+
+        assertNotNull(assertThrows(RuntimeException.class, () -> a.isDifferentColor(b)));
+    }
+
+    @Test
+    public void test_isLowerWithSameSuit() {
+        var a = buildCard("3d");
+        var b = buildCard("4d");
+
+        assertTrue(a.isLowerWithSameSuit(b));
+
+        b = buildCard("5d");
+        assertFalse(a.isLowerWithSameSuit(b));
+
+        b = buildCard("4h");
+        assertFalse(a.isLowerWithSameSuit(b));
     }
 }

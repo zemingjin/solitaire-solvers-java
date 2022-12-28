@@ -2,12 +2,12 @@ package org.solitaire;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
-import org.solitaire.io.IOHelper;
 import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameBuilder;
 import org.solitaire.model.GameSolver;
 import org.solitaire.pyramid.Pyramid;
 import org.solitaire.tripeaks.TriPeaksHelper;
+import org.solitaire.util.IOHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 import static org.solitaire.model.CardHelper.checkLongestPath;
 import static org.solitaire.model.CardHelper.checkMaxScore;
 import static org.solitaire.model.CardHelper.checkShortestPath;
-import static org.solitaire.model.CardHelper.getTotalScenarios;
+import static org.solitaire.util.SolitaireHelper.getTotalScenarios;
 
 @SuppressWarnings("rawtypes")
 public class SolitaireApp {

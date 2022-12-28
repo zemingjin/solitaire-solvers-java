@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 public class Spider implements GameSolver {
     private List<Card[]> path;
-    private List<Column> board;
+    private List<List<Card>> board;
     private List<Card> deck;
 
     @Override

@@ -19,10 +19,10 @@ class CardHelperTest {
 
     @Test
     public void test_getSuit() {
-        assertEquals(DIAMOND, getSuit('d'));
-        assertEquals(SPADE, getSuit('s'));
-        assertEquals(HEART, getSuit('h'));
-        assertEquals(CLUB, getSuit('c'));
+        assertEquals(DIAMOND, getSuit("d"));
+        assertEquals(SPADE, getSuit("s"));
+        assertEquals(HEART, getSuit("h"));
+        assertEquals(CLUB, getSuit("c"));
     }
 
     @Test

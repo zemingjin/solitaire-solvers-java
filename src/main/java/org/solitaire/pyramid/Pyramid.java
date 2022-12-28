@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameSolver;
+import org.solitaire.util.CollectionUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,9 +29,9 @@ import static java.util.Objects.requireNonNull;
 import static org.solitaire.model.CardHelper.VALUES;
 import static org.solitaire.model.CardHelper.cloneArray;
 import static org.solitaire.model.CardHelper.cloneStack;
-import static org.solitaire.model.CardHelper.incTotal;
 import static org.solitaire.model.CardHelper.isCleared;
 import static org.solitaire.model.CardHelper.resizeArray;
+import static org.solitaire.util.SolitaireHelper.incTotal;
 
 @SuppressWarnings("rawtypes")
 @Data
@@ -38,7 +39,8 @@ import static org.solitaire.model.CardHelper.resizeArray;
 public class Pyramid implements GameSolver {
     public static final int LAST_BOARD = 28;
     public static final int LAST_DECK = 52;
-    public static final char KING = 'K';
+    public static final String KING = "K";
+    public static final String ACE = "A";
     private static final int[] ROW_SCORES = new int[]{500, 250, 150, 100, 75, 50, 25};
     private static final IntUnaryOperator reverse = i -> LAST_BOARD - i - 1;
     private Card[] cards;
@@ -81,7 +83,7 @@ public class Pyramid implements GameSolver {
         }
         incTotal();
         return Optional.of(findCardsOf13())
-                .filter(it -> !it.isEmpty())
+                .filter(CollectionUtil::isNotEmpty)
                 .map(this::clickCards)
                 .orElseGet(this::clickDeck);
     }
@@ -115,7 +117,7 @@ public class Pyramid implements GameSolver {
 
     protected Optional<Card[]> drawCard() {
         return Optional.of(deck)
-                .filter(it -> !it.isEmpty())
+                .filter(CollectionUtil::isNotEmpty)
                 .map(Stack::peek)
                 .map(it -> new Card[]{it});
     }
@@ -123,7 +125,7 @@ public class Pyramid implements GameSolver {
     private List<List> clickCards(List<Card[]> clickable) {
         return clickable.stream()
                 .map(this::clickCard)
-                .filter(it -> !it.isEmpty())
+                .filter(CollectionUtil::isNotEmpty)
                 .flatMap(List::stream)
                 .toList();
     }
@@ -149,7 +151,7 @@ public class Pyramid implements GameSolver {
         if (isDeckCard(card)) {
             if (card.equals(deck.peek())) {
                 deck.pop();
-                if (!isKing(card)) {
+                if (!card.isKing()) {
                     flippedDeck.push(card);
                 }
             }
@@ -199,13 +201,9 @@ public class Pyramid implements GameSolver {
     }
 
     private void checkKing(List<Card[]> collect, Card card) {
-        if (isKing(card)) {
+        if (card.isKing()) {
             collect.add(0, new Card[]{card});
         }
-    }
-
-    protected boolean isKing(Card card) {
-        return card.value() == KING;
     }
 
     private boolean isAddingTo13(Card a, Card b) {
@@ -294,7 +292,7 @@ public class Pyramid implements GameSolver {
         var item = list.get(at);
         return Optional.of(item)
                 .filter(it -> it.length == 1)
-                .map(it -> isKing(it[0]) ? 5 : 0)
+                .map(it -> it[0].isKing() ? 5 : 0)
                 .orElseGet(() -> getRowClearingScore(at, list));
     }
 

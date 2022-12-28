@@ -1,4 +1,4 @@
-package org.solitaire.io;
+package org.solitaire.util;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

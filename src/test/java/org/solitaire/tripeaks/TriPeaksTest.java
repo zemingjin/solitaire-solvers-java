@@ -12,10 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.io.IOHelper.loadFile;
 import static org.solitaire.model.CardHelper.buildCard;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
+import static org.solitaire.util.IOHelper.loadFile;
 
 class TriPeaksTest {
     public static final String TEST_FILE = "games/tripeaks/tripeaks-120822-expert.txt";
