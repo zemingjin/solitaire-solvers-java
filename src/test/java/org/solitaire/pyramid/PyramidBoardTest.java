@@ -30,6 +30,14 @@ class PyramidBoardTest {
         board = build(IOHelper.loadFile(TEST_FILE));
     }
 
+    @Test
+    public void test_solve() {
+        board = build(IOHelper.loadFile("src/test/resources/pyramid-121122-expert.txt"));
+        var result = board.solve();
+
+        assertNotNull(result);
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     public void test_getMaxScore() {
@@ -54,11 +62,11 @@ class PyramidBoardTest {
     public void test_getCardAt() {
         var a = board.getCards()[27];
         var b = board.getDeck().peek();
-        var card = board.getCardAt(new Card[]{ a, b });
+        var card = board.getCardAt(new Card[]{a, b});
 
         assertSame(a, card);
 
-        card = board.getCardAt(new Card[]{ b, a });
+        card = board.getCardAt(new Card[]{b, a});
         assertSame(a, card);
     }
 

@@ -34,13 +34,13 @@ class SolitaireAppTest {
 
     @Test
     public void test_run_pyramid() {
-        ARGS[0] = "src/test/resources/pyramid-easy.txt";
+        ARGS[0] = "src/test/resources/pyramid-121122-expert.txt";
         ARGS[2] = PYRAMID;
         var result = app.run(ARGS);
 
 
         assertNotNull(result);
-        assertEquals(11016, result.size());
+        assertEquals(512, result.size());
     }
 
 }

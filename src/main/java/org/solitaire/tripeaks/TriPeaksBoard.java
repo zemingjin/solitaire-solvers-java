@@ -23,16 +23,25 @@ import static org.solitaire.model.CardHelper.isCleared;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
+import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 
 @SuppressWarnings("rawtypes")
 @Builder
 public class TriPeaksBoard implements GameSolver {
+    private static final int BOARD_BONUS = 5000;
     private final IntUnaryOperator reverse = i -> LAST_BOARD + LAST_DECK - i - 1;
     private Card[] cards;
     private List<Card> wastePile;
 
+    private static void removeDeckCardsAtEnd(List<Card> cards) {
+        for (int i = cards.size(); isFromDeck(cards.get(--i)); ) {
+            cards.remove(i);
+        }
+    }
+
     public List<List> solve() {
         if (isCleared(cards)) {
+            removeDeckCardsAtEnd(wastePile);
             return Collections.singletonList(wastePile);
         }
         incTotal();
@@ -104,10 +113,34 @@ public class TriPeaksBoard implements GameSolver {
                 sequenceCount = 0;
             } else {
                 sequenceCount++;
-                score += (sequenceCount * 2 - 1) * 100;
+                score += (sequenceCount * 2 - 1) * 100 + checkPeakBonus(card, cards);
             }
         }
         return Pair.of(score, cards);
+    }
+
+    protected int checkPeakBonus(Card card, List<Card> list) {
+        if (isPeakCard(card)) {
+            var num = numOfPeeksCleared(card, list);
+            if (num < 3) {
+                return 500 * num;
+            } else {
+                return 5000;
+            }
+        }
+        return 0;
+    }
+
+    private int numOfPeeksCleared(Card card, List<Card> list) {
+        return (int) IntStream.rangeClosed(0, list.indexOf(card))
+                .mapToObj(list::get)
+                .filter(it -> it.at() < 3)
+                .count();
+    }
+
+    private boolean isPeakCard(Card card) {
+        var at = card.at();
+        return 0 <= at && at < 3;
     }
 
     private TriPeaksBoard cloneBoard() {
