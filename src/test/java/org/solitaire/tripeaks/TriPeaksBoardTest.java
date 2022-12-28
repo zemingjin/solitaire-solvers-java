@@ -18,7 +18,7 @@ import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
 
 class TriPeaksBoardTest {
-    public static final String TEST_FILE = "src/test/resources/tripeaks-120822-expert.txt";
+    public static final String TEST_FILE = "src/test/resources/tripeaks/tripeaks-120822-expert.txt";
 
     private final String[] cards = loadFile(TEST_FILE);
     private TriPeaksBoard board;

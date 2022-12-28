@@ -21,7 +21,7 @@ import static org.solitaire.pyramid.PyramidBoard.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidBoard.build;
 
 class PyramidBoardTest {
-    private static final String TEST_FILE = "src/test/resources/pyramid-121922-medium.txt";
+    private static final String TEST_FILE = "src/test/resources/pyramid/pyramid-121922-medium.txt";
 
     private PyramidBoard board;
 
@@ -32,7 +32,7 @@ class PyramidBoardTest {
 
     @Test
     public void test_solve() {
-        board = build(IOHelper.loadFile("src/test/resources/pyramid-121122-expert.txt"));
+        board = build(IOHelper.loadFile("src/test/resources/pyramid/pyramid-121122-expert.txt"));
         var result = board.solve();
 
         assertNotNull(result);
