@@ -6,7 +6,7 @@ import org.solitaire.io.IOHelper;
 import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameBuilder;
 import org.solitaire.model.GameSolver;
-import org.solitaire.pyramid.PyramidBoard;
+import org.solitaire.pyramid.Pyramid;
 import org.solitaire.tripeaks.TriPeaksHelper;
 
 import java.util.HashMap;
@@ -30,7 +30,7 @@ public class SolitaireApp {
 
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
         put(TRIPEAKS, TriPeaksHelper::build);
-        put(PYRAMID, PyramidBoard::build);
+        put(PYRAMID, Pyramid::build);
     }};
 
     public static void main(String[] args) {

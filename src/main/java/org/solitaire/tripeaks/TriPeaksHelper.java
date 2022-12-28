@@ -17,7 +17,7 @@ public class TriPeaksHelper {
     public static final int LAST_DECK = 51;
 
     public static GameSolver build(String[] cards) {
-        return TriPeaksBoard.builder()
+        return TriPeaks.builder()
                 .cards(toCards(cards))
                 .wastePile(toWastePile(cards))
                 .build();

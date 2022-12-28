@@ -34,7 +34,7 @@ class SolitaireAppTest {
 
     @Test
     public void test_run_pyramid() {
-        ARGS[0] = "src/test/resources/pyramid/pyramid-121122-expert.txt";
+        ARGS[0] = "games/pyramid/pyramid-121122-expert.txt";
         ARGS[2] = PYRAMID;
         var result = app.run(ARGS);
 
