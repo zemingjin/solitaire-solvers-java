@@ -1,8 +1,11 @@
-package org.solitaire.model;
+package org.solitaire.util;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.solitaire.model.Card;
+import org.solitaire.model.GameSolver;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,14 +20,13 @@ import java.util.stream.Stream;
 import static java.util.Arrays.stream;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.math.NumberUtils.min;
 
 @SuppressWarnings("rawtypes")
 public class CardHelper {
-    public static final String DIAMOND = "♦";
-    public static final String SPADE = "♠";
-    public static final String CLUB = "♣";
-    public static final String HEART = "♥";
+    public static final String DIAMOND = "♦";   // \u2666
+    public static final String SPADE = "♠";     // \u2660
+    public static final String CLUB = "♣";      // \u2663
+    public static final String HEART = "♥";     // \u2665
     public static final String VALUES = "A23456789TJQK";
     private static final Map<String, String> SUITS_MAP = new HashMap<>() {{
         put("d", DIAMOND);
@@ -33,6 +35,16 @@ public class CardHelper {
         put("h", HEART);
     }};
     public static boolean useSuit = true;
+
+    public static int diffOfValues(Card a, Card b) {
+        assert nonNull(a);
+        var aValue = VALUES.indexOf(a.value());
+
+        if (nonNull(b)) {
+            return aValue - VALUES.indexOf(b.value());
+        }
+        return aValue + 1;
+    }
 
     public static int suitCode(Card card) {
         return switch (card.suit().toLowerCase()) {
@@ -64,37 +76,8 @@ public class CardHelper {
     public static <R> Stack<R> cloneStack(Stack<R> stack) {
         var clone = new Stack<R>();
 
-        if (nonNull(stack) && !stack.isEmpty()) {
-            for (R item : stack) {
-                clone.push(item);
-            }
-        }
+        clone.addAll(stack);
         return clone;
-    }
-
-    public static List<Column> cloneColumns(List<Column> lists) {
-        return lists.stream()
-                .map(CardHelper::cloneColumn)
-                .toList();
-    }
-
-    public static Card[] resizeArray(Card[] origin, int newSize) {
-        var target = new Card[newSize];
-
-        System.arraycopy(origin, 0, target, 0, min(origin.length, newSize));
-        return target;
-    }
-
-    public static <T> List<T> cloneList(List<T> list) {
-        return Optional.ofNullable(list)
-                .map(ArrayList::new)
-                .orElse(null);
-    }
-
-    public static Column cloneColumn(Column column) {
-        return Optional.ofNullable(column)
-                .map(Column::new)
-                .orElse(null);
     }
 
     public static Card[] toCards(String[] cards) {
@@ -105,7 +88,8 @@ public class CardHelper {
     }
 
     public static Card buildCard(int at, String value) {
-        assert VALUES.indexOf(value.charAt(0)) >= 0;
+        assert nonNull(value) && value.length() == 2 && VALUES.indexOf(value.charAt(0)) >= 0
+                : "Invalid card value/suit: " + value;
 
         return Card.builder()
                 .at(at)
@@ -125,19 +109,25 @@ public class CardHelper {
     @SuppressWarnings("unchecked")
     public static String string(List cards) {
         return ((List<Object>) cards).stream()
-                .map(CardHelper::toString)
+                .map(CardHelper::stringOfRaws)
                 .collect(Collectors.joining(" "));
     }
 
-    protected static String toString(Object obj) {
-        return obj instanceof Card ? ((Card) obj).raw() : toString((Card[]) obj);
+    protected static String stringOfRaws(Object obj) {
+        return obj instanceof Card
+                ? ((Card) obj).raw()
+                : obj instanceof Card[] ? stringOfRaws((Card[]) obj) : (String) obj;
     }
 
-    private static String toString(Card[] cards) {
+    public static String stringOfRaws(Card[] cards) {
         return Optional.of(cards)
                 .filter(it -> it.length > 1)
                 .map(it -> Stream.of(cards).map(Card::raw).collect(Collectors.joining(":")))
                 .orElseGet(cards[0]::raw);
+    }
+
+    public static String stringOfRaws(List<Card> cards) {
+        return stringOfRaws(cards.toArray(Card[]::new));
     }
 
     public static void checkShortestPath(List<List> results) {
@@ -149,15 +139,38 @@ public class CardHelper {
     }
 
     public static void checkMaxScore(Pair<GameSolver, List<List>> pair) {
-        Optional.of(pair.getLeft().getMaxScore(pair.getRight()))
+        Optional.ofNullable(pair.getLeft().getMaxScore(pair.getRight()))
                 .filter(p -> p.getLeft() > 0)
-                .ifPresent(p -> System.out.printf("Max Score(%d): %s\n", p.getLeft(), string(p.getRight())));
+                .ifPresent(p -> System.out.printf("Max Score(%,d): %s\n", p.getLeft(), string(p.getRight())));
     }
 
     private static void checkPath(List<List> results, BinaryOperator<List> accumulator, String type) {
         requireNonNull(results);
 
-        Optional.of(results.stream().reduce(results.get(0), accumulator))
-                .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), string(it)));
+        if (!results.isEmpty()) {
+            Optional.of(results.stream().reduce(results.get(0), accumulator))
+                    .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), string(it)));
+        }
+    }
+
+
+    public static void checkDuplicates(String[] cards) {
+        assert nonNull(cards);
+
+        IntStream.range(0, cards.length)
+                .forEach(i -> checkDuplicates(cards, i));
+    }
+
+    private static void checkDuplicates(String[] cards, int at) {
+        var list = Arrays.asList(cards);
+        var card = cards[at];
+
+        if (list.indexOf(card) != list.lastIndexOf(card)) {
+            throw new RuntimeException("Duplicated cards: " + card);
+        }
+    }
+
+    public static List<Card> toList(Card card) {
+        return Collections.singletonList(card);
     }
 }

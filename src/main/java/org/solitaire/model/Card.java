@@ -9,9 +9,9 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.RED;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
-import static org.solitaire.model.CardHelper.VALUES;
 import static org.solitaire.pyramid.Pyramid.ACE;
 import static org.solitaire.pyramid.Pyramid.KING;
+import static org.solitaire.util.CardHelper.VALUES;
 
 @Builder
 public record Card(int at, String value, String suit, String raw) {
@@ -64,11 +64,23 @@ public record Card(int at, String value, String suit, String raw) {
     }
 
     public boolean isHigherWithDifferentColor(Card other) {
-        return isDifferentColor(other) && VALUES.indexOf(value) - VALUES.indexOf(other.value) == 1;
+        return isDifferentColor(other) && isHigherOrder(other);
+    }
+
+    private boolean isHigherOrder(Card other) {
+        return VALUES.indexOf(value) - VALUES.indexOf(other.value) == 1;
+    }
+
+    public boolean isHigherOfSameColor(Card other) {
+        return isSameColor(other) && isHigherOrder(other);
     }
 
     public boolean isLowerWithSameSuit(Card other) {
-        return isSameSuit(other) && VALUES.indexOf(other.value) - VALUES.indexOf(value) == 1;
+        return isSameSuit(other) && isLowerOrder(other);
+    }
+
+    private boolean isLowerOrder(Card other) {
+        return VALUES.indexOf(other.value) - VALUES.indexOf(value) == 1;
     }
 
     public boolean isSameSuit(Card other) {

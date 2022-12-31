@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.EmptyStackException;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
@@ -22,8 +23,16 @@ public class Column extends ArrayList<Card> {
 
     @Override
     public Card remove(int at) {
-        setOpenAt(openAt >= at ? openAt - 1 : openAt);
+        checkOpenAt(at);
+
         return super.remove(at);
+    }
+
+    @Override
+    public List<Card> subList(int fromIndex, int toIndex) {
+        checkOpenAt(fromIndex);
+
+        return super.subList(fromIndex, toIndex);
     }
 
     public boolean isNotEmpty() {
@@ -39,11 +48,12 @@ public class Column extends ArrayList<Card> {
 
     public Card pop() {
         if (isNotEmpty()) {
-            if (openAt == size() - 1) {
-                openAt--;
-            }
             return remove(size() - 1);
         }
         throw new EmptyStackException();
+    }
+
+    private void checkOpenAt(int at) {
+        setOpenAt(openAt >= at ? openAt - 1 : openAt);
     }
 }

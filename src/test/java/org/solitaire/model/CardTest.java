@@ -2,6 +2,7 @@ package org.solitaire.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.solitaire.util.CardHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,9 +22,19 @@ public class CardTest {
     }
 
     @Test
-    public void test_Card() {
+    public void test_Card_exception() {
         assertThrows(AssertionError.class, () -> buildCard("ab"));
         assertThrows(AssertionError.class, () -> buildCard("as"));
+    }
+
+    @Test
+    public void test_isHigherOfSameColor() {
+        var card = buildCard("2d");
+
+        assertTrue(card.isHigherOfSameColor(buildCard("Ad")));
+        assertFalse(card.isHigherOfSameColor(buildCard("Ac")));
+        assertFalse(card.isHigherOfSameColor(buildCard("3d")));
+        assertTrue(buildCard("3d").isHigherOfSameColor(card));
     }
 
     @Test

@@ -7,7 +7,7 @@ import org.solitaire.util.IOHelper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.solitaire.klondike.KlondikeHelper.LAST_DECK;
-import static org.solitaire.model.CardHelper.useSuit;
+import static org.solitaire.util.CardHelper.useSuit;
 
 class KlondikeHelperTest {
     private static final String TEST_FILE = "games/klondike/klondike-122822-medium.txt";
@@ -23,8 +23,8 @@ class KlondikeHelperTest {
         var klondike = KlondikeHelper.build(CARDS);
 
         assertNotNull(klondike);
-        assertEquals("23:7d", klondike.getDeck().peek().toString());
-        assertEquals("0:8d", klondike.getDeck().get(0).toString());
+        assertEquals("23:Ts", klondike.getDeck().peek().toString());
+        assertEquals("0:Jc", klondike.getDeck().get(0).toString());
         assertEquals(1, klondike.getColumns().get(0).size());
         assertEquals("24:Th", klondike.getColumns().get(0).get(0).toString());
         assertEquals("25:8h", klondike.getColumns().get(1).get(0).toString());
@@ -33,7 +33,7 @@ class KlondikeHelperTest {
     @Test
     public void test_clone() {
         var klondike = KlondikeHelper.build(CARDS);
-        var clone = KlondikeHelper.clone(klondike);
+        var clone = new Klondike(klondike);
 
         assertEquals(klondike, clone);
     }

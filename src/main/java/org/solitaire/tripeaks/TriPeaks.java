@@ -1,28 +1,29 @@
 package org.solitaire.tripeaks;
 
 import lombok.Builder;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
-import org.solitaire.util.CollectionUtil;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
-import static org.solitaire.model.CardHelper.cloneArray;
-import static org.solitaire.model.CardHelper.cloneList;
-import static org.solitaire.model.CardHelper.isCleared;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
+import static org.solitaire.util.CardHelper.cloneArray;
+import static org.solitaire.util.CardHelper.cloneStack;
+import static org.solitaire.util.CardHelper.isCleared;
 import static org.solitaire.util.SolitaireHelper.incTotal;
 
 @SuppressWarnings("rawtypes")
@@ -33,11 +34,11 @@ public class TriPeaks implements GameSolver {
     private final IntUnaryOperator reverse = i -> C - i;
     private final IntUnaryOperator reverseBoard = i -> LAST_BOARD - i - 1;
     private Card[] cards;
-    private List<Card> wastePile;
+    private Stack<Card> wastePile;
 
-    private static void removeDeckCardsAtEnd(List<Card> cards) {
-        for (int i = cards.size(); isFromDeck(cards.get(--i)); ) {
-            cards.remove(i);
+    private static void removeDeckCardsAtEnd(Stack<Card> cards) {
+        while (isFromDeck(cards.peek())) {
+            cards.pop();
         }
     }
 
@@ -48,14 +49,15 @@ public class TriPeaks implements GameSolver {
         }
         incTotal();
         return Optional.of(findBoardCards())
-                .filter(CollectionUtil::isNotEmpty)
+                .filter(ObjectUtils::isNotEmpty)
                 .map(this::clickBoardCards)
                 .orElseGet(this::clickDeckCard);
     }
 
     private List<List> clickDeckCard() {
         return Optional.ofNullable(getTopDeckCard())
-                .map(this::clickCard)
+                .map(this::click)
+                .map(TriPeaks::solve)
                 .orElseGet(Collections::emptyList);
     }
 
@@ -67,7 +69,7 @@ public class TriPeaks implements GameSolver {
     }
 
     protected List findBoardCards() {
-        return Optional.of(wastePile.get(wastePile.size() - 1))
+        return Optional.of(wastePile.peek())
                 .map(this::findAdjacentCardsFromBoard)
                 .orElseGet(Collections::emptyList);
     }
@@ -150,13 +152,13 @@ public class TriPeaks implements GameSolver {
     private TriPeaks cloneBoard() {
         return TriPeaks.builder()
                 .cards(cloneArray(cards))
-                .wastePile(cloneList(wastePile))
+                .wastePile(cloneStack(wastePile))
                 .build();
     }
 
     private TriPeaks click(Card card) {
         cards[card.at()] = null;
-        wastePile.add(card);
+        wastePile.push(card);
         return this;
     }
 

@@ -3,20 +3,20 @@ package org.solitaire.pyramid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
-import org.solitaire.model.CardHelper;
 import org.solitaire.model.GameSolver;
-import org.solitaire.util.CollectionUtil;
+import org.solitaire.util.CardHelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,11 +26,10 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
-import static org.solitaire.model.CardHelper.VALUES;
-import static org.solitaire.model.CardHelper.cloneArray;
-import static org.solitaire.model.CardHelper.cloneStack;
-import static org.solitaire.model.CardHelper.isCleared;
-import static org.solitaire.model.CardHelper.resizeArray;
+import static org.solitaire.util.CardHelper.VALUES;
+import static org.solitaire.util.CardHelper.cloneArray;
+import static org.solitaire.util.CardHelper.cloneStack;
+import static org.solitaire.util.CardHelper.isCleared;
 import static org.solitaire.util.SolitaireHelper.incTotal;
 
 @SuppressWarnings("rawtypes")
@@ -42,7 +41,7 @@ public class Pyramid implements GameSolver {
     public static final String KING = "K";
     public static final String ACE = "A";
     private static final int[] ROW_SCORES = new int[]{500, 250, 150, 100, 75, 50, 25};
-    private static final IntUnaryOperator reverse = i -> LAST_BOARD - i - 1;
+    private static final int LAST_BOARD_INDEX = LAST_BOARD - 1;
     private Card[] cards;
     private Stack<Card> deck;
     private Stack<Card> flippedDeck;
@@ -70,9 +69,9 @@ public class Pyramid implements GameSolver {
 
     private Pyramid buildDeck() {
         deck = new Stack<>();
-        stream(cards, LAST_BOARD, LAST_DECK).forEach(card -> deck.push(card));
 
-        cards = resizeArray(cards, LAST_BOARD);
+        deck.addAll(stream(cards, LAST_BOARD, LAST_DECK).toList());
+        cards = Arrays.copyOf(cards, LAST_BOARD);
         return this;
     }
 
@@ -83,9 +82,9 @@ public class Pyramid implements GameSolver {
         }
         incTotal();
         return Optional.of(findCardsOf13())
-                .filter(CollectionUtil::isNotEmpty)
+                .filter(ObjectUtils::isNotEmpty)
                 .map(this::clickCards)
-                .orElseGet(this::clickDeck);
+                .orElseGet(this::drawDeckCards);
     }
 
     @SuppressWarnings("unchecked")
@@ -97,7 +96,7 @@ public class Pyramid implements GameSolver {
                 .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
     }
 
-    private List<List> clickDeck() {
+    private List<List> drawDeckCards() {
         checkDeck();
         return drawCard()
                 .map(this::clickCard)
@@ -117,7 +116,7 @@ public class Pyramid implements GameSolver {
 
     protected Optional<Card[]> drawCard() {
         return Optional.of(deck)
-                .filter(CollectionUtil::isNotEmpty)
+                .filter(ObjectUtils::isNotEmpty)
                 .map(Stack::peek)
                 .map(it -> new Card[]{it});
     }
@@ -125,7 +124,7 @@ public class Pyramid implements GameSolver {
     private List<List> clickCards(List<Card[]> clickable) {
         return clickable.stream()
                 .map(this::clickCard)
-                .filter(CollectionUtil::isNotEmpty)
+                .filter(ObjectUtils::isNotEmpty)
                 .flatMap(List::stream)
                 .toList();
     }
@@ -227,8 +226,8 @@ public class Pyramid implements GameSolver {
     }
 
     private List<Card> getBoardOpenCards() {
-        return IntStream.range(0, cards.length)
-                .map(reverse)
+        return IntStream.rangeClosed(0, LAST_BOARD_INDEX)
+                .map(i -> LAST_BOARD_INDEX - i)
                 .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)
                 .filter(this::isOpen)

@@ -7,9 +7,9 @@ import org.solitaire.model.Card;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.model.CardHelper.buildCard;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 import static org.solitaire.tripeaks.TriPeaksHelper.toCards;
+import static org.solitaire.util.CardHelper.buildCard;
 
 class TriPeaksHelperTest {
     private Card[] cards;

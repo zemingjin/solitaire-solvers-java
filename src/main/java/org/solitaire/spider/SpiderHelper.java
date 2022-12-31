@@ -1,15 +1,16 @@
 package org.solitaire.spider;
 
-import org.solitaire.model.Card;
+import org.solitaire.model.Column;
+import org.solitaire.model.Columns;
+import org.solitaire.model.Deck;
+import org.solitaire.model.Path;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.Objects.nonNull;
-import static org.solitaire.model.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.buildCard;
 
 public class SpiderHelper {
     protected static final int LAST_BOARD = 54;
@@ -21,37 +22,50 @@ public class SpiderHelper {
 
     public static Spider build(String[] cards) {
         assert nonNull(cards) && cards.length == LAST_BOARD + LAST_DECK;
+
         return Spider.builder()
-                .board(buildBoard(cards))
+                .columns(buildColumns(cards))
                 .deck(buildDeck(cards))
-                .path(new LinkedList<>())
+                .path(new Path())
+                .totalScore(500)
                 .build();
     }
 
-    protected static List<List<Card>> buildBoard(String[] cards) {
-        var board = new ArrayList<List<Card>>(LAST_COLUMN);
+    public static Spider clone(Spider spider) {
+        return Spider.builder()
+                .columns(new Columns(spider.getColumns()))
+                .deck(new Deck(spider.getDeck()))
+                .path(new Path(spider.getPath()))
+                .totalScore(spider.getTotalScore())
+                .build();
+    }
+
+    protected static Columns buildColumns(String[] cards) {
+        var columns = new Columns(LAST_COLUMN);
 
         for (int i = 0; i < LAST_BOARD; i++) {
             var columnAt = calcColumn(i);
-            var column = getColumn(board, columnAt);
+            var column = getColumn(columns, columnAt);
 
-            column.add(0, buildCard(i, cards[i]));
+            column.add(buildCard(i, cards[i]));
+            column.setOpenAt(column.size() - 1);
         }
-        return board;
+        return columns;
     }
 
-    private static List<Card> getColumn(List<List<Card>> board, int columnAt) {
+    private static Column getColumn(List<Column> board, int columnAt) {
         assert 0 <= columnAt && columnAt < LAST_COLUMN : "Invalid column: " + columnAt;
+
         if (board.isEmpty() || board.size() <= columnAt) {
-            board.add(columnAt, new LinkedList<>());
+            board.add(columnAt, new Column());
         }
         return board.get(columnAt);
     }
 
-    protected static List<Card> buildDeck(String[] cards) {
+    protected static Deck buildDeck(String[] cards) {
         return IntStream.range(LAST_BOARD, LAST_BOARD + LAST_DECK)
                 .mapToObj(i -> buildCard(i, cards[i]))
-                .collect(Collectors.toCollection(LinkedList::new));
+                .collect(Collectors.toCollection(Deck::new));
     }
 
     private static int calcColumn(int i) {

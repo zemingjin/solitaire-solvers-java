@@ -2,42 +2,30 @@ package org.solitaire.klondike;
 
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
+import org.solitaire.model.Columns;
+import org.solitaire.model.Deck;
+import org.solitaire.model.Path;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.solitaire.model.CardHelper.buildCard;
-import static org.solitaire.model.CardHelper.cloneColumns;
-import static org.solitaire.model.CardHelper.cloneList;
-import static org.solitaire.model.CardHelper.cloneStack;
-import static org.solitaire.model.CardHelper.cloneStacks;
+import static org.solitaire.util.CardHelper.buildCard;
 
 public class KlondikeHelper {
     protected static final int LAST_DECK = 24;
     protected static final int NUM_COLUMNS = 7;
 
     public static Klondike build(String[] cards) {
-        return Klondike.builder()
-                .deck(buildDeck(cards))
-                .deckPile(new Stack<>())
-                .columns(buildColumns(cards))
-                .path(new LinkedList<>())
-                .foundations(buildFoundation())
-                .build();
-    }
-
-    public static Klondike clone(Klondike klondike) {
-        return Klondike.builder()
-                .deck(cloneStack(klondike.getDeck()))
-                .deckPile(cloneStack(klondike.getDeckPile()))
-                .columns(cloneColumns(klondike.getColumns()))
-                .path(cloneList(klondike.getPath()))
-                .foundations(cloneStacks(klondike.getFoundations()))
-                .totalScore(klondike.getTotalScore())
-                .build();
+        return new Klondike(
+                buildColumns(cards),
+                new Path(),
+                0,
+                buildDeck(cards),
+                new Stack<>(),
+                buildFoundation(),
+                true);
     }
 
     private static List<Stack<Card>> buildFoundation() {
@@ -46,16 +34,16 @@ public class KlondikeHelper {
                 .toList();
     }
 
-    private static Stack<Card> buildDeck(String[] cards) {
+    private static Deck buildDeck(String[] cards) {
         return IntStream.range(0, LAST_DECK)
                 .mapToObj(i -> buildCard(i, cards[i]))
-                .collect(Collectors.toCollection(Stack::new));
+                .collect(Collectors.toCollection(Deck::new));
     }
 
-    private static List<Column> buildColumns(String[] cards) {
+    private static Columns buildColumns(String[] cards) {
         return IntStream.range(0, NUM_COLUMNS)
                 .mapToObj(i -> buildColumnCards(i, cards))
-                .toList();
+                .collect(Collectors.toCollection(Columns::new));
     }
 
     private static Column buildColumnCards(int col, String[] cards) {
@@ -77,18 +65,5 @@ public class KlondikeHelper {
 
     protected static int colEnd(int col) {
         return colStart(col) + col + 1;
-    }
-
-    public static Stack<Card> toStack(Card card) {
-        var stack = new Stack<Card>();
-
-        stack.push(card);
-        return stack;
-    }
-
-    protected static void drawDeckCards(Stack<Card> deck, Stack<Card> deckPile, int drawNumber) {
-        IntStream.range(0, drawNumber)
-                .filter(i -> !deck.isEmpty())
-                .forEach(i -> deckPile.push(deck.pop()));
     }
 }
