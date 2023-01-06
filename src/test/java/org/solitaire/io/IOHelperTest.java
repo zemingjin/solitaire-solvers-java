@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.solitaire.io.IOHelper.loadFile;
+import static org.solitaire.util.IOHelper.loadFile;
 
 public class IOHelperTest {
-    public static final String TEST_FILE = "src/test/resources/tripeaks/tripeaks-easy.txt";
+    public static final String TEST_FILE = "games/tripeaks/tripeaks-easy.txt";
 
     @Test
     public void test_loadFile() {

@@ -3,13 +3,16 @@ package org.solitaire.tripeaks;
 import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
 
-import java.util.List;
+import java.util.Stack;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.Math.min;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
-import static org.solitaire.model.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.checkDuplicates;
 
 public class TriPeaksHelper {
     public static final int LAST_BOARD = 28;
@@ -17,16 +20,19 @@ public class TriPeaksHelper {
     public static final int LAST_DECK = 51;
 
     public static GameSolver build(String[] cards) {
-        return TriPeaksBoard.builder()
+        assert nonNull(cards) && cards.length == 52 : "Invalid number of cards: " + cards.length;
+
+        checkDuplicates(cards);
+        return TriPeaks.builder()
                 .cards(toCards(cards))
                 .wastePile(toWastePile(cards))
                 .build();
     }
 
-    protected static List<Card> toWastePile(String[] cards) {
+    protected static Stack<Card> toWastePile(String[] cards) {
         assert 0 < cards.length && cards.length <= 52;
 
-        return Stream.of(buildCard(51, cards[cards.length - 1])).toList();
+        return Stream.of(buildCard(51, cards[cards.length - 1])).collect(Collectors.toCollection(Stack::new));
     }
 
     protected static Card[] toCards(String[] cards) {
@@ -39,5 +45,4 @@ public class TriPeaksHelper {
     public static boolean isFromDeck(Card card) {
         return 28 <= card.at();
     }
-
 }
