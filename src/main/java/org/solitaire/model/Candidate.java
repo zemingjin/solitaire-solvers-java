@@ -1,17 +1,13 @@
 package org.solitaire.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
 
-import static org.solitaire.util.CardHelper.toList;
-
 @ToString
 @AllArgsConstructor
-@Builder
 @Getter
 public class Candidate {
     private List<Card> cards;
@@ -26,16 +22,24 @@ public class Candidate {
         target = candidate.getTarget();
     }
 
-    public static Candidate buildCandidate(int at, Origin origin, Card card) {
-        return buildCandidate(at, origin, toList(card));
+    public static Candidate buildCandidate(int from, Origin origin, Card card) {
+        return buildCandidate(from, origin, List.of(card));
     }
 
-    public static Candidate buildCandidate(int at, Origin origin, List<Card> cards) {
-        return buildCandidate(at, origin, cards, -1);
+    public static Candidate buildCandidate(int from, Origin origin, List<Card> cards) {
+        return buildCandidate(from, origin, cards, -1);
     }
 
-    public static Candidate buildCandidate(int at, Origin origin, List<Card> cards, int target) {
-        return Candidate.builder().from(at).origin(origin).cards(cards).target(target).build();
+    public static Candidate buildCandidate(int from, Origin origin, List<Card> cards, int target) {
+        return new Candidate(cards, origin, from, target);
+    }
+
+    public Card peek() {
+        return cards.get(0);
+    }
+
+    public boolean isKing() {
+        return peek().isKing();
     }
 
     public boolean isToColumn() {

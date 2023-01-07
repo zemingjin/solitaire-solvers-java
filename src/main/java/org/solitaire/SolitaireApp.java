@@ -23,13 +23,13 @@ import static org.solitaire.util.CardHelper.checkMaxScore;
 import static org.solitaire.util.CardHelper.checkShortestPath;
 import static org.solitaire.util.SolitaireHelper.getTotalScenarios;
 
-@SuppressWarnings("rawtypes")
 public class SolitaireApp {
     public static final String TRIPEAKS = "-t";
     public static final String SPIDER = "-s";
     public static final String PYRAMID = "-p";
     public static final String KLONDIKE = "-k";
     public static final String NOSUITS = "-n";
+    @SuppressWarnings("rawtypes")
     private static final Function<GameSolver, Pair<GameSolver, List<List>>> solveIt = it -> Pair.of(it, it.solve());
 
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
@@ -43,6 +43,7 @@ public class SolitaireApp {
         new SolitaireApp().run(args);
     }
 
+    @SuppressWarnings("rawtypes")
     public List<List> run(String[] args) {
         Function<String[], GameSolver> buildSolver = it -> getGameBuilder(args).apply(it);
 

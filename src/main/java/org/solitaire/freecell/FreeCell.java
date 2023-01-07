@@ -6,11 +6,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
 import org.solitaire.model.GameSolver;
-import org.solitaire.model.GameState;
 import org.solitaire.model.Path;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,19 +19,19 @@ import java.util.List;
  */
 @SuppressWarnings("rawtypes")
 @Getter
-public class FreeCell extends GameState implements GameSolver {
+public class FreeCell extends FreeCellState implements GameSolver {
     private final Card[] freeCells;
     private final Card[] foundations;
 
     @Builder
-    public FreeCell(Columns columns, Path path, Card[] freeCells, Card[] foundations) {
-        super(columns, path, 0);
+    public FreeCell(Columns columns, Path<Card> path, Card[] freeCells, Card[] foundations) {
+        super(columns, path);
         this.freeCells = freeCells;
         this.foundations = foundations;
     }
 
     public FreeCell(FreeCell freeCell) {
-        super(new Columns(freeCell.columns), new Path(freeCell.path), 0);
+        super(new Columns(freeCell.columns), new Path<>(freeCell.path));
         this.freeCells = Arrays.copyOf(freeCell.freeCells, freeCell.freeCells.length);
         this.foundations = Arrays.copyOf(freeCell.foundations, freeCell.foundations.length);
     }
@@ -41,7 +39,7 @@ public class FreeCell extends GameState implements GameSolver {
     @Override
     public List<List> solve() {
         if (isCleared()) {
-            return Collections.singletonList(path);
+            return List.of(path);
         }
         return null;
     }

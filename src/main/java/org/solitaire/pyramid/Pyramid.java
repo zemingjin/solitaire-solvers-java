@@ -7,6 +7,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
+import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
 import java.util.ArrayList;
@@ -22,7 +23,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
@@ -45,7 +45,7 @@ public class Pyramid implements GameSolver {
     private Card[] cards;
     private Stack<Card> deck;
     private Stack<Card> flippedDeck;
-    private List<Card[]> path;
+    private Path<Card[]> path;
     private int recycleCount;
 
     public static Pyramid build(String[] cards) {
@@ -62,7 +62,7 @@ public class Pyramid implements GameSolver {
         return Pyramid.builder()
                 .cards(cards)
                 .recycleCount(3)
-                .path(new ArrayList<>())
+                .path(new Path<>())
                 .flippedDeck(new Stack<>())
                 .build();
     }
@@ -78,7 +78,7 @@ public class Pyramid implements GameSolver {
     @Override
     public List<List> solve() {
         if (isCleared(cards)) {
-            return singletonList(path);
+            return List.of(path);
         }
         incTotal();
         return Optional.of(findCardsOf13())
@@ -174,7 +174,7 @@ public class Pyramid implements GameSolver {
     protected Pyramid cloneBoard() {
         return Pyramid.builder()
                 .cards(cloneArray(cards))
-                .path(new ArrayList<>(path))
+                .path(new Path<>(path))
                 .flippedDeck(cloneStack(flippedDeck))
                 .deck(cloneStack(deck))
                 .recycleCount(recycleCount)
@@ -268,7 +268,7 @@ public class Pyramid implements GameSolver {
                 .orElseThrow();
     }
 
-    private Pair<Integer, List> getScore(List<Card[]> list) {
+    private Pair<Integer, List> getScore(List<?> list) {
         return Pair.of(
                 IntStream.range(0, list.size())
                         .map(i -> getClickScore(i, list))
@@ -287,12 +287,13 @@ public class Pyramid implements GameSolver {
      * - 250 for row 2
      * - 500 for clear board
      */
-    protected int getClickScore(int at, List<Card[]> list) {
+    @SuppressWarnings("unchecked")
+    protected int getClickScore(int at, List<?> list) {
         var item = list.get(at);
         return Optional.of(item)
-                .filter(it -> it.length == 1)
-                .map(it -> it[0].isKing() ? 5 : 0)
-                .orElseGet(() -> getRowClearingScore(at, list));
+                .filter(it -> ((Card[]) it).length == 1)
+                .map(it -> ((Card[]) it)[0].isKing() ? 5 : 0)
+                .orElseGet(() -> getRowClearingScore(at, (List<Card[]>) list));
     }
 
     private int getRowClearingScore(int at, List<Card[]> list) {

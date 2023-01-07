@@ -18,26 +18,12 @@ public class SpiderHelper {
     protected static final int LAST_COLUMN = 10;
     protected static final int NUM_LONG = 4;
     protected static final int COL_LONG = 6;
-    private static final int LAST_LONG = 24;
+    protected static final int LAST_LONG = 24;
 
     public static Spider build(String[] cards) {
         assert nonNull(cards) && cards.length == LAST_BOARD + LAST_DECK;
 
-        return Spider.builder()
-                .columns(buildColumns(cards))
-                .deck(buildDeck(cards))
-                .path(new Path())
-                .totalScore(500)
-                .build();
-    }
-
-    public static Spider clone(Spider spider) {
-        return Spider.builder()
-                .columns(new Columns(spider.getColumns()))
-                .deck(new Deck(spider.getDeck()))
-                .path(new Path(spider.getPath()))
-                .totalScore(spider.getTotalScore())
-                .build();
+        return new Spider(buildColumns(cards), new Path<>(), 500, buildDeck(cards));
     }
 
     protected static Columns buildColumns(String[] cards) {
@@ -68,7 +54,12 @@ public class SpiderHelper {
                 .collect(Collectors.toCollection(Deck::new));
     }
 
-    private static int calcColumn(int i) {
-        return i < LAST_LONG ? i / 6 : (i - LAST_LONG) / 5 + NUM_LONG;
+    protected static int calcColumn(int i) {
+        if (0 <= i && i < LAST_LONG) {
+            return i / 6;
+        } else if (LAST_LONG <= i && i < LAST_BOARD) {
+            return (i - LAST_LONG) / 5 + NUM_LONG;
+        }
+        throw new IndexOutOfBoundsException("Invalid index: " + i);
     }
 }

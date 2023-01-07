@@ -1,11 +1,13 @@
 package org.solitaire.klondike;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.util.IOHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.klondike.KlondikeHelper.LAST_DECK;
 import static org.solitaire.util.CardHelper.useSuit;
 
@@ -35,7 +37,7 @@ class KlondikeHelperTest {
         var klondike = KlondikeHelper.build(CARDS);
         var clone = new Klondike(klondike);
 
-        assertEquals(klondike, clone);
+        assertTrue(EqualsBuilder.reflectionEquals(clone, klondike));
     }
 
     @Test
