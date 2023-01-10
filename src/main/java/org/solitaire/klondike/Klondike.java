@@ -1,6 +1,5 @@
 package org.solitaire.klondike;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -37,14 +36,13 @@ import static org.solitaire.util.SolitaireHelper.incTotal;
 @Slf4j
 @SuppressWarnings("rawtypes")
 @Getter
-@EqualsAndHashCode(callSuper = true)
 public class Klondike extends KlondikeState implements GameSolver {
+    private static final List<List> solutions = new ArrayList<>();
     private static final int drawNumber = 3;
     private static final int LIMIT_SOLUTIONS = 1000;
-    private final static List<List> solutions = new ArrayList<>();
 
     public Klondike(Columns columns,
-                    Path path,
+                    Path<String> path,
                     int totalScore,
                     Deck deck,
                     Stack<Card> deckPile,

@@ -43,6 +43,8 @@ public class TriPeaksHelper {
     }
 
     public static boolean isFromDeck(Card card) {
+        assert nonNull(card);
+
         return 28 <= card.at();
     }
 }

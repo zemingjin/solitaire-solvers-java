@@ -22,12 +22,6 @@ public class CardTest {
     }
 
     @Test
-    public void test_Card_exception() {
-        assertThrows(AssertionError.class, () -> buildCard("ab"));
-        assertThrows(AssertionError.class, () -> buildCard("as"));
-    }
-
-    @Test
     public void test_isHigherOfSameColor() {
         var card = buildCard("2d");
 

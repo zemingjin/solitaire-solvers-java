@@ -42,10 +42,11 @@ public class TriPeaks implements GameSolver {
         }
     }
 
+    @Override
     public List<List> solve() {
         if (isCleared(cards)) {
             removeDeckCardsAtEnd(wastePile);
-            return Collections.singletonList(wastePile);
+            return List.of(wastePile);
         }
         incTotal();
         return Optional.of(findBoardCards())

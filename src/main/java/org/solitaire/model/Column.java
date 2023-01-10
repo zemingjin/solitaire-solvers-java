@@ -1,14 +1,9 @@
 package org.solitaire.model;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = false)
-@Data
 public class Column extends ArrayList<Card> {
     private int openAt;
 
@@ -19,6 +14,11 @@ public class Column extends ArrayList<Card> {
     public Column(Column column) {
         super(column);
         setOpenAt(column.getOpenAt());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj) && openAt == ((Column) obj).openAt;
     }
 
     @Override
@@ -33,6 +33,15 @@ public class Column extends ArrayList<Card> {
         checkOpenAt(fromIndex);
 
         return super.subList(fromIndex, toIndex);
+    }
+
+    public Column subList(Card card) {
+        assert contains(card);
+
+        var sub = new Column();
+
+        sub.addAll(super.subList(0, lastIndexOf(card)));
+        return sub;
     }
 
     public boolean isNotEmpty() {
@@ -53,7 +62,15 @@ public class Column extends ArrayList<Card> {
         throw new EmptyStackException();
     }
 
+    public int getOpenAt() {
+        return openAt;
+    }
+
+    public void setOpenAt(int openAt) {
+        this.openAt = openAt;
+    }
+
     private void checkOpenAt(int at) {
-        setOpenAt(openAt >= at ? openAt - 1 : openAt);
+        setOpenAt(openAt >= at ? at - 1 : openAt);
     }
 }

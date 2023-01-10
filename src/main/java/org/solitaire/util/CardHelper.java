@@ -5,7 +5,6 @@ import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,12 +90,8 @@ public class CardHelper {
         assert nonNull(value) && value.length() == 2 && VALUES.indexOf(value.charAt(0)) >= 0
                 : "Invalid card value/suit: " + value;
 
-        return Card.builder()
-                .at(at)
-                .raw(useSuit ? value.charAt(0) + getSuit(value.substring(1)) : value)
-                .value(value.substring(0, 1))
-                .suit(value.substring(1))
-                .build();
+        return new Card(at, value.substring(0, 1), value.substring(1),
+                useSuit ? value.charAt(0) + getSuit(value.substring(1)) : value);
     }
 
     public static boolean isCleared(Card[] cards) {
@@ -106,9 +101,8 @@ public class CardHelper {
                 .isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
-    public static String string(List cards) {
-        return ((List<Object>) cards).stream()
+    public static String string(List<?> cards) {
+        return cards.stream()
                 .map(CardHelper::stringOfRaws)
                 .collect(Collectors.joining(" "));
     }
@@ -153,7 +147,6 @@ public class CardHelper {
         }
     }
 
-
     public static void checkDuplicates(String[] cards) {
         assert nonNull(cards);
 
@@ -168,9 +161,5 @@ public class CardHelper {
         if (list.indexOf(card) != list.lastIndexOf(card)) {
             throw new RuntimeException("Duplicated cards: " + card);
         }
-    }
-
-    public static List<Card> toList(Card card) {
-        return Collections.singletonList(card);
     }
 }

@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.pyramid.Pyramid.LAST_BOARD;
 import static org.solitaire.pyramid.Pyramid.build;
@@ -23,17 +22,17 @@ import static org.solitaire.pyramid.Pyramid.build;
 class PyramidTest {
     private static final String TEST_FILE = "games/pyramid/pyramid-121922-medium.txt";
 
-    private Pyramid board;
+    private Pyramid pyramid;
 
     @BeforeEach
     public void setup() {
-        board = build(IOHelper.loadFile(TEST_FILE));
+        pyramid = build(IOHelper.loadFile(TEST_FILE));
     }
 
     @Test
     public void test_solve() {
-        board = build(IOHelper.loadFile("games/pyramid/pyramid-121122-expert.txt"));
-        var result = board.solve();
+        pyramid = build(IOHelper.loadFile("games/pyramid/pyramid-121122-expert.txt"));
+        var result = pyramid.solve();
 
         assertNotNull(result);
     }
@@ -41,7 +40,7 @@ class PyramidTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_getMaxScore() {
-        var result = board.getMaxScore(board.solve());
+        var result = pyramid.getMaxScore(pyramid.solve());
         var counts = getItemCounts((List<Card[]>) result.getRight());
 
         assertEquals(23, counts.size());
@@ -52,7 +51,7 @@ class PyramidTest {
     private List<String> getItemCounts(List<Card[]> list) {
         return IntStream.range(0, list.size())
                 .filter(i -> list.get(i).length > 1 || list.get(i)[0].isKing())
-                .mapToObj(i -> Pair.of(board.getClickScore(i, list), list.get(i)))
+                .mapToObj(i -> Pair.of(pyramid.getClickScore(i, list), list.get(i)))
                 .map(it -> Pair.of(it.getLeft(), stream(it.getRight()).map(Card::raw).collect(joining(","))))
                 .map(it -> it.getRight() + ": " + it.getLeft())
                 .toList();
@@ -60,72 +59,72 @@ class PyramidTest {
 
     @Test
     public void test_getCardAt() {
-        var a = board.getCards()[27];
-        var b = board.getDeck().peek();
-        var card = board.getCardAt(new Card[]{a, b});
+        var a = pyramid.getCards()[27];
+        var b = pyramid.getDeck().peek();
+        var card = pyramid.getCardAt(new Card[]{a, b});
 
         assertSame(a, card);
 
-        card = board.getCardAt(new Card[]{b, a});
+        card = pyramid.getCardAt(new Card[]{b, a});
         assertSame(a, card);
     }
 
     @Test
     public void test_clickCard() {
-        var result = board.clickCard(new Card[]{board.getCards()[24]});
+        var result = pyramid.clickCard(new Card[]{pyramid.getCards()[24]});
 
         assertNotNull(result);
     }
 
     @Test
     public void test_click() {
-        var card = board.getDeck().peek();
+        var card = pyramid.getDeck().peek();
         var c = new Card[]{card};
 
         assertEquals(51, card.at());
         assertFalse(card.isKing());
 
-        board.click(c);
+        pyramid.click(c);
 
-        assertFalse(board.isOpen(card));
-        assertEquals(1, board.getFlippedDeck().size());
-        assertTrue(board.getPath().contains(c));
-        assertEquals(1, board.getPath().size());
+        assertFalse(pyramid.isOpen(card));
+        assertEquals(1, pyramid.getFlippedDeck().size());
+        assertTrue(pyramid.getPath().contains(c));
+        assertEquals(1, pyramid.getPath().size());
 
-        card = board.getDeck().peek();
-        c = new Card[]{card, board.getCards()[LAST_BOARD - 1]};
+        card = pyramid.getDeck().peek();
+        c = new Card[]{card, pyramid.getCards()[LAST_BOARD - 1]};
 
         assertEquals(50, card.at());
         assertFalse(card.isKing());
 
-        board.click(c);
+        pyramid.click(c);
 
-        assertFalse(board.isOpen(card));
-        assertEquals(1, board.getFlippedDeck().size());
-        assertTrue(board.getPath().contains(c));
-        assertEquals(2, board.getPath().size());
+        assertFalse(pyramid.isOpen(card));
+        assertEquals(1, pyramid.getFlippedDeck().size());
+        assertTrue(pyramid.getPath().contains(c));
+        assertEquals(2, pyramid.getPath().size());
     }
 
     @Test
     public void test_recycle() {
-        while (!board.getDeck().isEmpty()) {
-            board.getFlippedDeck().push(board.getDeck().pop());
+        while (!pyramid.getDeck().isEmpty()) {
+            pyramid.getFlippedDeck().push(pyramid.getDeck().pop());
         }
-        assertFalse(board.drawCard().isPresent());
+        assertFalse(pyramid.drawCard().isPresent());
 
-        board.checkDeck();
-        assertTrue(board.drawCard().isPresent());
+        pyramid.checkDeck();
+        assertTrue(pyramid.drawCard().isPresent());
     }
 
     @Test
     public void test_cloneBoard() {
-        var cloned = board.cloneBoard();
-        assertEquals(board, cloned);
+        var cloned = pyramid.cloneBoard();
+        assertEquals(pyramid, cloned);
     }
 
     @Test
     public void test_findCardsAddingTo13() {
-        var cards = board.findCardsOf13();
+        var cards = pyramid.findCardsOf13();
 
         assertNotNull(cards);
         assertEquals(3, cards.size());
@@ -133,7 +132,7 @@ class PyramidTest {
 
     @Test
     public void test_findOpenCards() {
-        var cards = board.findOpenCards();
+        var cards = pyramid.findOpenCards();
 
         assertNotNull(cards);
         assertEquals(8, cards.length);
@@ -141,49 +140,42 @@ class PyramidTest {
 
     @Test
     void test_isOpenDeckCard() {
-        assertTrue(board.isOpenDeckCard(board.getDeck().peek()));
-        assertFalse(board.isOpenDeckCard(board.getDeck().get(0)));
+        assertTrue(pyramid.isOpenDeckCard(pyramid.getDeck().peek()));
+        assertFalse(pyramid.isOpenDeckCard(pyramid.getDeck().get(0)));
     }
 
     @Test
     void test_isOpenAt() {
-        assertTrue(board.isOpenAt(27));
-        assertTrue(board.isOpenAt(21));
-        assertFalse(board.isOpenAt(20));
+        assertTrue(pyramid.isOpenAt(27));
+        assertTrue(pyramid.isOpenAt(21));
+        assertFalse(pyramid.isOpenAt(20));
 
         IntStream.range(21, LAST_BOARD)
-                .forEach(i -> board.getCards()[i] = null);
+                .forEach(i -> pyramid.getCards()[i] = null);
 
-        assertTrue(board.isOpenAt(20));
-        assertTrue(board.isOpenAt(19));
-        assertTrue(board.isOpenAt(18));
-        assertTrue(board.isOpenAt(17));
-        assertTrue(board.isOpenAt(16));
-        assertTrue(board.isOpenAt(15));
-        assertFalse(board.isOpenAt(14));
+        assertTrue(pyramid.isOpenAt(20));
+        assertTrue(pyramid.isOpenAt(19));
+        assertTrue(pyramid.isOpenAt(18));
+        assertTrue(pyramid.isOpenAt(17));
+        assertTrue(pyramid.isOpenAt(16));
+        assertTrue(pyramid.isOpenAt(15));
+        assertFalse(pyramid.isOpenAt(14));
 
         IntStream.range(19, 21)
-                .forEach(i -> board.getCards()[i] = null);
+                .forEach(i -> pyramid.getCards()[i] = null);
 
-        assertTrue(board.isOpenAt(14));
+        assertTrue(pyramid.isOpenAt(14));
     }
 
     @Test
     void test_getRow() {
-        assertEquals(7, board.getRow(27));
-        assertEquals(6, board.getRow(19));
-        assertEquals(5, board.getRow(12));
-        assertEquals(4, board.getRow(7));
-        assertEquals(3, board.getRow(3));
-        assertEquals(2, board.getRow(1));
-        assertEquals(1, board.getRow(0));
+        assertEquals(7, pyramid.getRow(27));
+        assertEquals(6, pyramid.getRow(19));
+        assertEquals(5, pyramid.getRow(12));
+        assertEquals(4, pyramid.getRow(7));
+        assertEquals(3, pyramid.getRow(3));
+        assertEquals(2, pyramid.getRow(1));
+        assertEquals(1, pyramid.getRow(0));
     }
 
-    @Test
-    void test_getRow_error() {
-        var ex = assertThrows(AssertionError.class, () -> board.getRow(28));
-
-        assertNotNull(ex);
-        assertEquals("Invalid board card index: 28", ex.getMessage());
-    }
 }

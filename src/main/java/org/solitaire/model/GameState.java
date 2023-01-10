@@ -1,20 +1,22 @@
 package org.solitaire.model;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-@AllArgsConstructor
-@EqualsAndHashCode
 @Getter
-public class GameState {
+public class GameState<R> {
     protected final Columns columns;
-    protected final Path path;
+    protected final Path<R> path;
     protected int totalScore;
+
+    public GameState(Columns columns, Path<R> path, int totalScore) {
+        this.columns = columns;
+        this.path = path;
+        this.totalScore = totalScore;
+    }
 
     protected void removeFromColumn(Candidate candidate) {
         Optional.of(candidate)
@@ -39,6 +41,10 @@ public class GameState {
     }
 
     protected boolean isCleared() {
-        return columns.stream().anyMatch(Column::isNotEmpty);
+        return columns.stream().allMatch(Column::isEmpty);
+    }
+
+    public void setTotalScore(int totalScore) {
+        this.totalScore = totalScore;
     }
 }

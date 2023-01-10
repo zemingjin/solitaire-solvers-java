@@ -21,7 +21,7 @@ class FreeCellTest {
     public void test_solve() {
         var result = freeCell.solve();
 
-        assertNotNull(result);
+        assertNull(result);
     }
 
     @Test
@@ -29,7 +29,7 @@ class FreeCellTest {
         freeCell.getColumns().forEach(List::clear);
         var result = freeCell.solve();
 
-        assertNull(result);
+        assertNotNull(result);
     }
 
     @Test

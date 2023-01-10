@@ -14,14 +14,14 @@ import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
 
 @Getter
-class KlondikeState extends GameState {
+class KlondikeState extends GameState<String> {
     protected final Deck deck;
     protected final Stack<Card> deckPile;
     protected final List<Stack<Card>> foundations;
     protected boolean stateChanged;
 
     KlondikeState(Columns columns,
-                  Path path,
+                  Path<String> path,
                   int totalScore,
                   Deck deck,
                   Stack<Card> deckPile,
@@ -36,7 +36,7 @@ class KlondikeState extends GameState {
 
     KlondikeState(KlondikeState that) {
         this(new Columns(that.getColumns()),
-                new Path(that.getPath()),
+                new Path<>(that.getPath()),
                 that.getTotalScore(),
                 new Deck(that.getDeck()),
                 cloneStack(that.getDeckPile()),

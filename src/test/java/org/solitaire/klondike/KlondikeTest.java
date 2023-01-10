@@ -6,7 +6,6 @@ import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
@@ -24,7 +23,6 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.buildCard;
-import static org.solitaire.util.CardHelper.toList;
 
 class KlondikeTest {
     private Klondike klondike;
@@ -52,7 +50,7 @@ class KlondikeTest {
 
 //    @Test
 //    public void test_moveCards() {
-//        var candidates = singletonList(klondike.findCandidateAtColumn(6).setTarget(2));
+//        var candidates = List.of(klondike.findCandidateAtColumn(6).setTarget(2));
 //        var result = klondike.moveCards(candidates);
 //
 //        assertNotNull(result);
@@ -72,8 +70,8 @@ class KlondikeTest {
     @Test
     public void test_optimizeCandidates_removeDuplicates() {
         var candidates = new LinkedList<Candidate>();
-        candidates.add(buildCandidate(0, COLUMN, Collections.singletonList(buildCard(0, "Ks")), 0));
-        candidates.add(buildCandidate(0, COLUMN, Collections.singletonList(buildCard(0, "Ks")), 1));
+        candidates.add(buildCandidate(0, COLUMN, List.of(buildCard(0, "Ks")), 0));
+        candidates.add(buildCandidate(0, COLUMN, List.of(buildCard(0, "Ks")), 1));
 
         var result = klondike.optimizeCandidates(candidates);
 
@@ -202,7 +200,7 @@ class KlondikeTest {
         klondike.drawDeckCards();
         assertFalse(klondike.getDeckPile().isEmpty());
         assertEquals(3, klondike.getDeckPile().size());
-        candidate = Candidate.builder().origin(DECKPILE).build();
+        candidate = buildCandidate(-1, DECKPILE, new LinkedList<>());
 
         klondike.removeFromSource(candidate);
 
@@ -222,7 +220,7 @@ class KlondikeTest {
     @Test
     public void test_findTarget() {
         var card = buildCard(34, "9h");
-        var candidate = Candidate.builder().origin(COLUMN).from(0).cards(toList(card)).build();
+        var candidate = buildCandidate(0, COLUMN, List.of(card));
 
         var result = klondike.findTarget(candidate);
 
@@ -240,7 +238,7 @@ class KlondikeTest {
     @Test
     public void test_findTarget_king() {
         var card = buildCard(34, "Kh");
-        var candidate = Candidate.builder().origin(COLUMN).from(1).cards(toList(card)).build();
+        var candidate = buildCandidate(1, COLUMN, List.of(card));
 
         klondike.getColumns().get(1).add(card);
         klondike.getColumns().get(0).clear();
@@ -250,7 +248,7 @@ class KlondikeTest {
         assertNotNull(result);
         assertEquals("Candidate(cards=[34:Kh], origin=COLUMN, from=1, target=0)", result.get(0).toString());
 
-        candidate = Candidate.builder().origin(DECKPILE).from(-1).cards(toList(card)).build();
+        candidate = buildCandidate(-1, DECKPILE, List.of(card));
         klondike.getDeckPile().add(card);
 
         result = klondike.findTarget(candidate);

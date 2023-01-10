@@ -1,10 +1,12 @@
 package org.solitaire.freecell;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.jupiter.api.Test;
 import org.solitaire.util.IOHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.freecell.FreeCellHelper.build;
 
 class FreeCellHelperTest {
@@ -28,7 +30,7 @@ class FreeCellHelperTest {
         var game = build(cards);
         var clone = new FreeCell(game);
 
-        assertEquals(game, clone);
+        assertTrue(EqualsBuilder.reflectionEquals(clone, game));
     }
 
 }

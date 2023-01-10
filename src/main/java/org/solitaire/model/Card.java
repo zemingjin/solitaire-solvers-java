@@ -1,7 +1,5 @@
 package org.solitaire.model;
 
-import lombok.Builder;
-
 import java.awt.*;
 import java.util.Optional;
 
@@ -13,7 +11,6 @@ import static org.solitaire.pyramid.Pyramid.ACE;
 import static org.solitaire.pyramid.Pyramid.KING;
 import static org.solitaire.util.CardHelper.VALUES;
 
-@Builder
 public record Card(int at, String value, String suit, String raw) {
     private static Color getColor(String suit) {
         return switch (suit) {
@@ -67,7 +64,7 @@ public record Card(int at, String value, String suit, String raw) {
         return isDifferentColor(other) && isHigherOrder(other);
     }
 
-    private boolean isHigherOrder(Card other) {
+    public boolean isHigherOrder(Card other) {
         return VALUES.indexOf(value) - VALUES.indexOf(other.value) == 1;
     }
 
