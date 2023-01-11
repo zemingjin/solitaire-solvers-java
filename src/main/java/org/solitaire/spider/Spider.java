@@ -15,11 +15,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static org.solitaire.util.SolitaireHelper.incTotal;
-
 @SuppressWarnings("rawtypes")
 public class Spider implements GameSolver {
     protected static final int SOLUTION_LIMIT = 1000;
+    private static int totalScenarios;
 
     protected final List<List> solutions = new ArrayList<>();
     private final Function<SpiderState, SpiderState> cloner = SpiderState::new;
@@ -40,7 +39,7 @@ public class Spider implements GameSolver {
             if (state.isCleared()) {
                 solutions.add(state.getPath());
             } else {
-                incTotal();
+                totalScenarios++;
                 Optional.of(state.findCandidates())
                         .filter(ObjectUtils::isNotEmpty)
                         .ifPresentOrElse(it -> applyCandidates(it, state), () -> drawDeck(state));
@@ -73,4 +72,10 @@ public class Spider implements GameSolver {
     public SpiderState getInitState() {
         return initState;
     }
+
+    @Override
+    public int totalScenarios() {
+        return totalScenarios;
+    }
+
 }

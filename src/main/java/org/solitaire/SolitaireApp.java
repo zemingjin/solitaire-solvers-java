@@ -5,7 +5,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.klondike.KlondikeHelper;
 import org.solitaire.model.GameBuilder;
 import org.solitaire.model.GameSolver;
-import org.solitaire.pyramid.Pyramid;
+import org.solitaire.pyramid.PyramidHelper;
 import org.solitaire.spider.SpiderHelper;
 import org.solitaire.tripeaks.TriPeaksHelper;
 import org.solitaire.util.CardHelper;
@@ -34,7 +34,7 @@ public class SolitaireApp {
 
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
         put(TRIPEAKS, TriPeaksHelper::build);
-        put(PYRAMID, Pyramid::build);
+        put(PYRAMID, PyramidHelper::build);
         put(SPIDER, SpiderHelper::build);
         put(KLONDIKE, KlondikeHelper::build);
     }};
