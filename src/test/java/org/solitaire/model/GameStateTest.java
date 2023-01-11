@@ -17,16 +17,16 @@ public class GameStateTest {
 
     public final static String[] cards = IOHelper.loadFile(TEST_FILE);
 
-    private GameState<String> state;
+    private GameState<Card[]> state;
 
-    private static GameState<String> mockState(GameState<String> state) {
+    private static GameState<Card[]> mockState(GameState<Card[]> state) {
         return new GameState<>(new Columns(state.columns), new Path<>(state.path), state.totalScore);
     }
 
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = mockState(build(cards));
+        state = mockState(build(cards).getInitState());
     }
 
     @Test

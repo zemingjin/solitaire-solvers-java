@@ -9,6 +9,7 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.GameState;
 import org.solitaire.model.Path;
+import org.solitaire.util.CandidateCompare;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,17 +21,17 @@ import java.util.stream.Stream;
 
 import static java.lang.Integer.compare;
 import static java.lang.Math.max;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
-import static org.solitaire.util.CardHelper.stringOfRaws;
 
 @Slf4j
-public class SpiderState extends GameState<String> {
+public class SpiderState extends GameState<Card[]> {
     protected final Deck deck;
 
-    public SpiderState(Columns columns, Path<String> path, int totalScore, Deck deck) {
+    public SpiderState(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
         this.deck = deck;
     }
@@ -59,16 +60,30 @@ public class SpiderState extends GameState<String> {
                 .filter(this::isMovable)
                 .collect(Collectors.groupingBy(Candidate::peek))
                 .values().stream()
-                .map(this::selectACandidate)
+                .map(this::selectCandidate)
                 .sorted(this::compareCandidates)
                 .toList();
     }
 
     protected boolean isMovable(Candidate candidate) {
-        if (candidate.isKing()) {
-            return columns.get(candidate.getFrom()).indexOf(candidate.peek()) != 0;
-        }
-        return true;
+        return Optional.of(candidate)
+                .filter(this::isNotRepeatingCandidate)
+                .map(it -> !(it.isKing() && isAtTop(it)))
+                .orElse(false);
+    }
+
+    private boolean isAtTop(Candidate candidate) {
+        return columns.get(candidate.getFrom()).indexOf(candidate.peek()) == 0;
+    }
+
+    private boolean isNotRepeatingCandidate(Candidate candidate) {
+        return Optional.of(path)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(Path::peek)
+                .map(it -> it[0])
+                .map(Card::toString)
+                .filter(it -> it.equals(candidate.peek().toString()))
+                .isEmpty();
     }
 
     /**
@@ -76,50 +91,38 @@ public class SpiderState extends GameState<String> {
      *
      * @return the selected candidate
      */
-    protected Candidate selectACandidate(List<Candidate> candidates) {
+    protected Candidate selectCandidate(List<Candidate> candidates) {
         return candidates.stream()
-                .reduce(candidates.get(0), (a, b) -> (compareCandidates(a, b) <= 0) ? a : b);
+                .reduce(null, (a, b) -> (compareCandidates(a, b) <= 0) ? a : b);
     }
 
     /**
      * @return -1: a; 0: a == b; 1: b
      */
-    private int compareCandidates(Candidate a, Candidate b) {
-        if (a == b) {
-            return 0;
+    protected int compareCandidates(Candidate a, Candidate b) {
+        if (isNull(a)) {
+            return 1;
+        } else if (isNull(b)) {
+            return -1;
         }
-        var x = compareKings(a, b);
-
-        if (x == 0) {
-            x = compareTargetSuits(a, b);
-
-            if (x == 0) {
-                x = compareDistanceToReviewCard(a, b);
-
-                if (x == 0) {
-                    x = compareCardChains(a, b);
-                }
-            }
-        }
-        return x;
+        return new CandidateCompare(a, b).compare(
+                this::compareKings,
+                this::compareTargetSuits,
+                this::compareDistanceToRevealCard,
+                this::compareCardChains);
     }
 
-    private int compareKings(Candidate a, Candidate b) {
+    protected int compareKings(Candidate a, Candidate b) {
         var cardA = a.peek();
         var cardB = b.peek();
 
-        if (cardA.isKing()) {
-            return -1;
-        } else if (cardB.isKing()) {
-            return 1;
-        }
-        return 0;
+        return cardA.isKing() ? -1 : cardB.isKing() ? 1 : 0;
     }
 
     /**
      * @return -1: OrderedCards at column a longer; 0: lengths are the same; 1: one at column b longer
      */
-    private int compareCardChains(Candidate a, Candidate b) {
+    protected int compareCardChains(Candidate a, Candidate b) {
         return compare(getChainLength(b), getChainLength(a));
     }
 
@@ -136,7 +139,7 @@ public class SpiderState extends GameState<String> {
     /**
      * @return -1: same suit for a/target; 0: same suit for both a/target and b/target; 1: same suit for b/target
      */
-    private int compareTargetSuits(Candidate a, Candidate b) {
+    protected int compareTargetSuits(Candidate a, Candidate b) {
         var matchA = isMatchingTargetSuit(a);
         var matchB = isMatchingTargetSuit(b);
 
@@ -146,14 +149,14 @@ public class SpiderState extends GameState<String> {
         return matchB ? 1 : 0;
     }
 
-    private int compareDistanceToReviewCard(Candidate a, Candidate b) {
+    protected int compareDistanceToRevealCard(Candidate a, Candidate b) {
         var distA = getDistanceToFlipCard(a);
         var distB = getDistanceToFlipCard(b);
 
-        return compare(distA, distB);
+        return compare(distB, distA);
     }
 
-    private int getDistanceToFlipCard(Candidate candidate) {
+    protected int getDistanceToFlipCard(Candidate candidate) {
         var column = columns.get(candidate.getFrom());
         var dist = column.lastIndexOf(candidate.peek());
 
@@ -161,12 +164,10 @@ public class SpiderState extends GameState<String> {
     }
 
     private boolean isMatchingTargetSuit(Candidate candidate) {
-        var column = columns.get(candidate.getTarget());
-
-        if (column.isEmpty()) {
-            return true;
-        }
-        return candidate.peek().isSameSuit(column.peek());
+        return Optional.of(columns.get(candidate.getTarget()))
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> candidate.peek().isSameSuit(it.peek()))
+                .orElse(true);
     }
 
     protected Stream<Candidate> findOpenCandidates() {
@@ -183,7 +184,7 @@ public class SpiderState extends GameState<String> {
                 .orElse(null);
     }
 
-    private List<Card> getOrderedCardsAtColumn(Column column) {
+    protected List<Card> getOrderedCardsAtColumn(Column column) {
         var collector = new LinkedList<Card>();
 
         for (int i = column.size(), floor = max(column.getOpenAt(), 0); i-- > floor; ) {
@@ -232,7 +233,7 @@ public class SpiderState extends GameState<String> {
     protected SpiderState appendToTarget(Candidate candidate) {
         var cards = candidate.getCards();
 
-        path.add(stringOfRaws(cards.toArray(Card[]::new)));
+        path.add(cards.toArray(Card[]::new));
         appendToTargetColumn(candidate);
         totalScore--;
         return this;
@@ -267,7 +268,7 @@ public class SpiderState extends GameState<String> {
 
         var run = column.subList(column.size() - 13, column.size());
 
-        getPath().add(stringOfRaws(run));
+        getPath().add(run.toArray(Card[]::new));
         System.out.printf("Run: %s\n", run);
         totalScore += 100;
         run.clear();

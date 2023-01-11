@@ -3,11 +3,13 @@ package org.solitaire.spider;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.util.CardHelper;
 
 import java.util.List;
 
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -23,6 +25,7 @@ import static org.solitaire.spider.SpiderHelper.LAST_DECK;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.stringOfRaws;
 
 class SpiderStateTest {
     private SpiderState state;
@@ -43,7 +46,7 @@ class SpiderStateTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = new SpiderState(build(cards));
+        state = build(cards).getInitState();
     }
 
     @Test
@@ -69,6 +72,114 @@ class SpiderStateTest {
         state.deck.clear();
 
         assertTrue(state.isCleared());
+    }
+
+    @Test
+    public void test_isMovable_repeatingCandidate() {
+        var candidate = state.findCandidateAtColumn(5).setTarget(9);
+        var path = state.getPath();
+
+        assertTrue(state.isMovable(candidate));
+
+        path.add(new Card[]{candidate.peek()});
+        assertFalse(state.isMovable(candidate));
+
+        path.clear();
+        path.add(new Card[]{buildCard(0, "Ad")});
+        assertTrue(state.isMovable(candidate));
+    }
+
+    @Test
+    public void test_isMovable_king() {
+        var card = buildCard(0, "Kd");
+        var column = state.getColumns().get(0);
+
+        column.add(card);
+        var candidate = state.findCandidateAtColumn(0);
+
+        assertTrue(state.isMovable(candidate));
+
+        column.clear();
+        column.add(card);
+        assertFalse(state.isMovable(candidate));
+    }
+
+    @Test
+    public void test_compareCandidates() {
+        var a = buildCandidate(5, COLUMN, List.of(state.getColumns().get(5).peek()), 9);
+        var b = buildCandidate(5, COLUMN, List.of(state.getColumns().get(5).peek()), 4);
+
+        assertEquals(1, state.compareCandidates(null, b));
+        assertEquals(-1, state.compareCandidates(a, null));
+
+        // different target suits
+        assertEquals(-1, state.compareCandidates(a, b));
+
+        // same target suits, different chain lengths
+        state.getColumns().get(4).set(4, buildCard(0, "4h"));
+        state.getColumns().get(4).add(buildCard(0, "3h"));
+        assertEquals(1, state.compareCandidates(a, b));
+    }
+
+    @Test
+    public void test_compareDistanceToRevealCard() {
+        var a = buildCandidate(3, COLUMN, List.of(state.getColumns().get(3).peek()), 0);
+        var b = buildCandidate(3, COLUMN, List.of(state.getColumns().get(3).peek()), 8);
+
+        assertEquals(0, state.compareDistanceToRevealCard(a, b));
+        assertEquals(0, state.compareDistanceToRevealCard(b, a));
+
+        state.getColumns().set(0, mockRun().setOpenAt(0));
+        a = buildCandidate(0, COLUMN, List.of(state.getColumns().get(0).peek()), 2);
+        assertEquals(-1, state.compareDistanceToRevealCard(a, b));
+        assertEquals(1, state.compareDistanceToRevealCard(b, a));
+    }
+
+    @Test
+    public void test_getDistanceToFlipCard() {
+        state.getColumns().set(0, mockRun().setOpenAt(0));
+        var a = buildCandidate(0, COLUMN, List.of(state.getColumns().get(0).peek()), 2);
+
+        assertEquals(12, state.getDistanceToFlipCard(a));
+
+        state.getColumns().set(0, mockRun().setOpenAt(12));
+        assertEquals(0, state.getDistanceToFlipCard(a));
+    }
+
+    @Test
+    public void test_compareTargetSuits() {
+        // same target suits
+        var a = buildCandidate(3, COLUMN, List.of(state.getColumns().get(3).peek()), 0);
+        var b = buildCandidate(3, COLUMN, List.of(state.getColumns().get(3).peek()), 8);
+        assertEquals(0, state.compareTargetSuits(a, b));
+        assertEquals(0, state.compareTargetSuits(b, a));
+
+        b = buildCandidate(3, COLUMN, List.of(buildCard(0, "9h")), 8);
+        assertEquals(1, state.compareTargetSuits(a, b));
+        assertEquals(-1, state.compareTargetSuits(b, a));
+    }
+
+    @Test
+    public void test_compareCardChains() {
+        var a = buildCandidate(5, COLUMN, List.of(state.getColumns().get(5).peek()), 9);
+        var b = buildCandidate(3, COLUMN,
+                List.of(state.getColumns().get(3).peek(), buildCard(0, "8s")), 8);
+        state.getColumns().get(8).set(4, buildCard(0, "Ts"));
+
+        assertEquals(1, state.compareCardChains(a, b));
+    }
+
+    @Test
+    public void test_compareKings() {
+        var a = buildCandidate(0, COLUMN, buildCard(0, "Jd"));
+        var b = buildCandidate(0, COLUMN, buildCard(0, "Kd"));
+
+        assertEquals(1, state.compareKings(a, b));
+        assertEquals(-1, state.compareKings(b, a));
+        assertEquals(-1, state.compareKings(b, b));
+
+        b = buildCandidate(0, COLUMN, buildCard(0, "Qd"));
+        assertEquals(0, state.compareKings(a, b));
     }
 
     @Test
@@ -102,8 +213,8 @@ class SpiderStateTest {
 
     @Test
     public void test_checkForRuns() {
-        state.getColumns().set(0, mockRun());
-        var column = state.getColumns().get(0);
+        var column = mockRun().setOpenAt(0);
+        state.getColumns().set(0, column);
         var candidate = buildCandidate(0, COLUMN, List.of(column.peek()), 0);
 
         assertEquals(13, column.size());
@@ -115,8 +226,16 @@ class SpiderStateTest {
 
         assertNotNull(result);
         assertTrue(column.isEmpty());
-        assertEquals("Kd:Qd:Jd:Td:9d:8d:7d:6d:5d:4d:3d:2d:Ad", state.getPath().get(0));
+        assertEquals("Kd:Qd:Jd:Td:9d:8d:7d:6d:5d:4d:3d:2d:Ad", stringOfRaws(state.getPath().get(0)));
         assertEquals(600, state.getTotalScore());
+
+        state.getPath().clear();
+        column = mockRun().setOpenAt(0);
+        state.getColumns().set(0, column);
+        column.remove(12);
+        result = state.checkForRun(candidate);
+        assertNotNull(result);
+        assertTrue(state.getPath().isEmpty());
     }
 
     @Test
@@ -153,7 +272,7 @@ class SpiderStateTest {
 
         assertFalse(state.getPath().isEmpty());
         assertEquals(1, state.getPath().size());
-        assertEquals("2h", state.getPath().get(0));
+        assertEquals("33:2h", state.getPath().get(0)[0].toString());
         assertEquals(499, state.getTotalScore());
     }
 
@@ -187,21 +306,21 @@ class SpiderStateTest {
         var a = buildCandidate(3, COLUMN, List.of(card), 0);
         var candidstes = List.of(a);
 
-        assertSame(a, state.selectACandidate(candidstes));
+        assertSame(a, state.selectCandidate(candidstes));
 
         var b = buildCandidate(a.getFrom(), a.getOrigin(), a.getCards(), 8);
-        var result = state.selectACandidate(List.of(a, b));
+        var result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(a, result);
 
         state.getColumns().get(b.getTarget()).set(4, buildCard(0, "Ts"));
-        result = state.selectACandidate(List.of(a, b));
+        result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(b, result);
 
         state.getColumns().get(a.getTarget()).set(5, buildCard(0, "Ts"));
         state.getColumns().get(a.getTarget()).set(4, buildCard(0, "Js"));
-        result = state.selectACandidate(List.of(a, b));
+        result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(a, result);
     }
@@ -209,17 +328,17 @@ class SpiderStateTest {
     @Test
     public void test_findTargetsByCandidate() {
         var candidate = state.findCandidateAtColumn(5);
-        var targets = state.matchCandidateToTargets(candidate).toList();
+        var result = state.matchCandidateToTargets(candidate).toList();
 
-        assertNotNull(targets);
-        assertEquals(4, targets.get(0).getTarget());
-        assertEquals("Candidate(cards=[33:2h], origin=COLUMN, from=5, target=4)", targets.get(0).toString());
+        assertNotNull(result);
+        assertEquals(4, result.get(0).getTarget());
+        assertEquals("Candidate(cards=[33:2h], origin=COLUMN, from=5, target=4)", result.get(0).toString());
 
         candidate = state.findCandidateAtColumn(1);
-        targets = state.matchCandidateToTargets(candidate).toList();
-        assertNotNull(targets);
-        assertEquals(7, targets.get(0).getTarget());
-        assertEquals("Candidate(cards=[11:5h], origin=COLUMN, from=1, target=7)", targets.get(0).toString());
+        result = state.matchCandidateToTargets(candidate).toList();
+        assertNotNull(result);
+        assertEquals(7, result.get(0).getTarget());
+        assertEquals("Candidate(cards=[11:5h], origin=COLUMN, from=1, target=7)", result.get(0).toString());
     }
 
     @Test
@@ -227,7 +346,14 @@ class SpiderStateTest {
         var candidate = state.findCandidateAtColumn(5);
 
         assertNull(state.findTargetColumn(candidate.getFrom(), candidate));
-        assertNotNull(state.findTargetColumn(9, candidate));
+
+        var result = state.findTargetColumn(9, candidate);
+
+        assertNotNull(result);
+        assertEquals("Candidate(cards=[33:2h], origin=COLUMN, from=5, target=9)", result.toString());
+
+        candidate = buildCandidate(9, COLUMN, buildCard(0, "2h"));
+        assertNull(state.findTargetColumn(9, candidate));
     }
 
     @Test
@@ -257,6 +383,16 @@ class SpiderStateTest {
 
         candidate = state.findCandidateAtColumn(state.getColumns().size() - 1);
         assertEquals("Candidate(cards=[53:3h], origin=COLUMN, from=9, target=-1)", candidate.toString());
+    }
+
+    @Test
+    public void test_getOrderedCardsAtColumn() {
+        var result = state.getOrderedCardsAtColumn(mockRun().setOpenAt(0));
+
+        assertNotNull(result);
+        assertTrue(isNotEmpty(result));
+        assertEquals(13, result.size());
+        assertEquals("Kd:Qd:Jd:Td:9d:8d:7d:6d:5d:4d:3d:2d:Ad", stringOfRaws(result));
     }
 
 }

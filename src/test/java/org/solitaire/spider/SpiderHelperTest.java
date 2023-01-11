@@ -26,7 +26,7 @@ class SpiderHelperTest {
 
     @Test
     public void test_build() {
-        var state = build(cards);
+        var state = build(cards).getInitState();
 
         assertNotNull(state);
         assertEquals(LAST_COLUMN, state.getColumns().size());

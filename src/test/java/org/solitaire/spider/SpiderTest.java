@@ -6,11 +6,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.solitaire.model.Candidate;
+import org.solitaire.model.Card;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.solitaire.model.GameStateTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.ReflectHelper.setField;
@@ -30,6 +33,7 @@ import static org.solitaire.util.SolitaireHelper.setTotalScenarios;
 
 @ExtendWith(MockitoExtension.class)
 class SpiderTest {
+    public static final int ZERO = 0;
     public static final int ONE = 1;
     @Mock
     private SpiderState state;
@@ -44,8 +48,36 @@ class SpiderTest {
         state = spy(state);
         spider = build(cards);
         setField(spider, "cloner", (Cloner) i -> state);
+        setField(spider, "initState", state);
 
         candidate = mockCandidate();
+    }
+
+    @Test
+    public void test_solve_cleared() {
+        when(state.isCleared()).thenReturn(true);
+        when(state.getPath()).thenReturn(mockPath());
+
+        var result = spider.solve();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(state, times(ONE)).isCleared();
+        verify(state, times(ONE)).getPath();
+        assertEquals(0, getTotalScenarios());
+    }
+
+    @Test
+    public void test_solve_solution_limit() {
+        var mock = mockPath();
+        IntStream.range(0, SOLUTION_LIMIT).forEach(i -> spider.solutions.add(mock));
+
+        var result = spider.solve();
+
+        assertNotNull(result);
+        assertEquals(SOLUTION_LIMIT, result.size());
+        verify(state, times(ZERO)).isCleared();
+        assertEquals(0, getTotalScenarios());
     }
 
     @Test
@@ -63,13 +95,25 @@ class SpiderTest {
     }
 
     @Test
+    public void test_solve_applyCandidates_no_recurse() {
+        when(state.isCleared()).thenReturn(true);
+        when(state.updateState(candidate)).thenReturn(state);
+
+        spider.applyCandidates(mockCandidateList(), state);
+
+        verify(state, times(ONE)).isCleared();
+        verify(state, times(ZERO)).findCandidates();
+        verify(state, times(ONE)).updateState(candidate);
+        assertEquals(0, getTotalScenarios());
+    }
+
+    @Test
     public void test_solve_drawDeck() {
         when(state.isCleared()).thenReturn(false);
         when(state.findCandidates()).thenReturn(emptyList());
         when(state.drawDeck()).thenReturn(false);
-        setField(spider, "cloner", (Cloner) i -> state);
 
-        spider.solve(state);
+        spider.solve();
 
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
@@ -78,18 +122,15 @@ class SpiderTest {
     }
 
     @Test
-    public void test_solve_cleared() {
+    public void test_drawDeck_recurse() {
         when(state.isCleared()).thenReturn(true);
-        when(state.getPath()).thenReturn(mockPath());
-        setField(spider, "state", state);
+        when(state.drawDeck()).thenReturn(true);
 
-        var result = spider.solve();
+        spider.drawDeck(state);
 
-        assertNotNull(result);
         verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).getPath();
-        assertEquals(ONE, result.size());
-        assertEquals("[mock solution]", result.get(0).toString());
+        verify(state, times(ZERO)).findCandidates();
+        verify(state, times(ONE)).drawDeck();
         assertEquals(0, getTotalScenarios());
     }
 
@@ -149,9 +190,9 @@ class SpiderTest {
         return Candidate.buildCandidate(0, COLUMN, buildCard(0, "Ad"));
     }
 
-    private Path<String> mockPath() {
-        var path = new Path<String>();
-        path.add("mock solution");
+    private Path<Card[]> mockPath() {
+        var path = new Path<Card[]>();
+        path.add(new Card[]{buildCard(0, "Ah")});
         return path;
     }
 
