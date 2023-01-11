@@ -3,6 +3,7 @@ package org.solitaire.spider;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Candidate;
+import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.GameSolver;
@@ -17,21 +18,20 @@ import java.util.function.Function;
 import static org.solitaire.util.SolitaireHelper.incTotal;
 
 @SuppressWarnings("rawtypes")
-public class Spider extends SpiderState implements GameSolver {
+public class Spider implements GameSolver {
     protected static final int SOLUTION_LIMIT = 1000;
 
     protected final List<List> solutions = new ArrayList<>();
-    protected final SpiderState state;
     private final Function<SpiderState, SpiderState> cloner = SpiderState::new;
+    private final SpiderState initState;
 
-    public Spider(Columns columns, Path<String> path, int totalScore, Deck deck) {
-        super(columns, path, totalScore, deck);
-        state = this;
+    public Spider(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
+        initState = new SpiderState(columns, path, totalScore, deck);
     }
 
     @Override
     public List<List> solve() {
-        solve(state);
+        solve(initState);
         return solutions;
     }
 
@@ -68,5 +68,9 @@ public class Spider extends SpiderState implements GameSolver {
 
     private SpiderState cloneState(SpiderState state) {
         return cloner.apply(state);
+    }
+
+    public SpiderState getInitState() {
+        return initState;
     }
 }

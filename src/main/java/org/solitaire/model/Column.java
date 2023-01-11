@@ -35,15 +35,6 @@ public class Column extends ArrayList<Card> {
         return super.subList(fromIndex, toIndex);
     }
 
-    public Column subList(Card card) {
-        assert contains(card);
-
-        var sub = new Column();
-
-        sub.addAll(super.subList(0, lastIndexOf(card)));
-        return sub;
-    }
-
     public boolean isNotEmpty() {
         return !isEmpty();
     }
@@ -66,8 +57,9 @@ public class Column extends ArrayList<Card> {
         return openAt;
     }
 
-    public void setOpenAt(int openAt) {
+    public Column setOpenAt(int openAt) {
         this.openAt = openAt;
+        return this;
     }
 
     private void checkOpenAt(int at) {

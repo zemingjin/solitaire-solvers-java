@@ -95,10 +95,7 @@ public class CardHelper {
     }
 
     public static boolean isCleared(Card[] cards) {
-        return stream(cards, 0, cards.length)
-                .filter(Objects::nonNull)
-                .findAny()
-                .isEmpty();
+        return stream(cards).allMatch(Objects::isNull);
     }
 
     public static String string(List<?> cards) {
