@@ -1,7 +1,6 @@
 package org.solitaire.pyramid;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
@@ -49,8 +48,8 @@ public class PyramidHelper {
 
         return rangeClosed(1, 7)
                 .map(i -> 7 - i + 1)
-                .peek(i -> rowMax.setRowMax(rowMax.rowMax - i))
-                .filter(i -> rowMax.getRowMax() <= at)
+                .peek(i -> rowMax.rowMax(rowMax.rowMax - i))
+                .filter(i -> rowMax.rowMax() <= at)
                 .findFirst()
                 .orElseThrow();
     }
@@ -79,8 +78,10 @@ public class PyramidHelper {
     protected static int getClickScore(int at, List<?> list) {
         var item = list.get(at);
         return Optional.of(item)
-                .filter(it -> ((Card[]) it).length == 1)
-                .map(it -> ((Card[]) it)[0].isKing() ? 5 : 0)
+                .map(it -> (Card[]) it)
+                .filter(it -> it.length == 1)
+                .map(it -> it[0])
+                .map(it -> it.isKing() ? 5 : 0)
                 .orElseGet(() -> getRowClearingScore(at, (List<Card[]>) list));
     }
 
@@ -99,13 +100,13 @@ public class PyramidHelper {
     protected static Card cardAt(Card[] cards) {
         var a = cards[0];
         var b = cards[1];
-        return isBoardCard(a)
-                ? isBoardCard(b)
-                ? a.at() >= b.at() ? a : b
-                : a
-                : isBoardCard(b)
-                ? b
-                : a.at() >= b.at() ? a : b;
+
+        if (isBoardCard(a) == isBoardCard(b)) {
+            return a.at() >= b.at() ? a : b;
+        } else if (isBoardCard(a)) {
+            return a;
+        }
+        return b;
     }
 
     protected static boolean isBoardCard(Card card) {
@@ -114,10 +115,6 @@ public class PyramidHelper {
 
     protected static boolean isBoardCard(int at) {
         return 0 <= at && at < LAST_BOARD;
-    }
-
-    protected static boolean isDeckCard(Card card) {
-        return !isBoardCard(card);
     }
 
     protected static int scoreByRow(int row) {
@@ -134,10 +131,17 @@ public class PyramidHelper {
                 .count() == row;
     }
 
-    @Data
     @AllArgsConstructor
     static class RowMax {
         private int rowMax;
+
+        int rowMax() {
+            return rowMax;
+        }
+
+        void rowMax(int rowMax) {
+            this.rowMax = rowMax;
+        }
     }
 
 }

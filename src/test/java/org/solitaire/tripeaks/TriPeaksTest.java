@@ -8,30 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
-import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.IOHelper.loadFile;
 
 class TriPeaksTest {
     public static final String TEST_FILE = "games/tripeaks/tripeaks-120822-expert.txt";
 
-    private final String[] cards = loadFile(TEST_FILE);
-    private TriPeaks board;
+    protected static final String[] cards = loadFile(TEST_FILE);
+    private TriPeaks triPeaks;
 
     @BeforeEach
     public void setup() {
-        board = (TriPeaks) build(cards);
+        triPeaks = build(cards);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void test_getMaxScore() {
-        var max = board.getMaxScore(board.solve());
+        var max = triPeaks.getMaxScore(triPeaks.solve());
         var items = getItemScores((List<Card>) max.getRight());
 
         assertNotNull(max);
@@ -50,7 +46,7 @@ class TriPeaksTest {
                 list.add(card.raw());
             } else {
                 sequenceCount++;
-                score += (sequenceCount * 2 - 1) * 100 + board.checkPeakBonus(card, cards);
+                score += (sequenceCount * 2 - 1) * 100 + triPeaks.checkPeakBonus(card, cards);
                 list.add(card.raw() + ":" + score);
             }
         }
@@ -58,37 +54,8 @@ class TriPeaksTest {
     }
 
     @Test
-    public void test_findAdjacentCards() {
-        var openCards = board.findBoardCards();
-
-        assertNotNull(openCards);
-        assertFalse(openCards.isEmpty());
-        assertEquals(2, openCards.size());
-        assertTrue(openCards.get(0).toString().startsWith("25:T"));
-        assertTrue(openCards.get(1).toString().startsWith("22:Q"));
-    }
-
-    @Test
-    public void test_isOpenCard() {
-        var board = TriPeaks.builder().cards(new Card[]{null, null, null, null, null}).build();
-
-        assertTrue(board.isOpenCard(buildCard(0, "Ad")));
-    }
-
-    @Test
-    public void test_isOpenCard_exception() {
-        var board = TriPeaks.builder().build();
-        var card = buildCard(LAST_BOARD, "Ad");
-
-        var ex = assertThrows(RuntimeException.class, () -> board.isOpenCard(card));
-
-        assertNotNull(ex);
-        assertEquals("Invalid card: " + card.toString(), ex.getMessage());
-    }
-
-    @Test
     public void test_checks() {
-        var p = board.getMaxScore(board.solve());
+        var p = triPeaks.getMaxScore(triPeaks.solve());
 
         assertNotNull(p);
         assertEquals(16900, p.getLeft());
@@ -96,6 +63,6 @@ class TriPeaksTest {
 
     @Test
     public void test_checks_null() {
-        assertNotNull(assertThrows(NullPointerException.class, () -> board.getMaxScore(null)));
+        assertNotNull(assertThrows(NullPointerException.class, () -> triPeaks.getMaxScore(null)));
     }
 }

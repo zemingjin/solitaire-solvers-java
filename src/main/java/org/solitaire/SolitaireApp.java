@@ -21,7 +21,6 @@ import java.util.function.Function;
 import static org.solitaire.util.CardHelper.checkLongestPath;
 import static org.solitaire.util.CardHelper.checkMaxScore;
 import static org.solitaire.util.CardHelper.checkShortestPath;
-import static org.solitaire.util.SolitaireHelper.getTotalScenarios;
 
 public class SolitaireApp {
     public static final String TRIPEAKS = "-t";
@@ -51,15 +50,17 @@ public class SolitaireApp {
 
         stopWatch.start();
         checkUseSuits(args);
-        var results = Optional.of(getPath(args))
+        var solver = Optional.of(getPath(args))
                 .map(IOHelper::loadFile)
                 .map(buildSolver)
+                .orElseThrow();
+        var results = Optional.of(solver)
                 .map(solveIt)
                 .orElseThrow();
         stopWatch.stop();
 
         System.out.printf("Found %,d solutions in %,d scenarios - total time: %s.\n",
-                results.getRight().size(), getTotalScenarios(), stopWatch.formatTime());
+                results.getRight().size(), solver.totalScenarios(), stopWatch.formatTime());
         checkShortestPath(results.getRight());
         checkLongestPath(results.getRight());
         checkMaxScore(results);

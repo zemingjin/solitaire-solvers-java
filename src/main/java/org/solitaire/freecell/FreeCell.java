@@ -1,6 +1,5 @@
 package org.solitaire.freecell;
 
-import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
@@ -18,7 +17,6 @@ import java.util.function.Function;
  * - there are many cases where moving a card is irreversible, such as a card is moved to the foundation
  */
 @SuppressWarnings("rawtypes")
-@Getter
 public class FreeCell implements GameSolver {
     private final Card[] freeCells;
     private final Card[] foundations;
@@ -73,4 +71,13 @@ public class FreeCell implements GameSolver {
     public void cloner(Function<FreeCellState, FreeCellState> cloner) {
         this.cloner = cloner;
     }
+
+    public Card[] freeCells() {
+        return freeCells;
+    }
+
+    public Card[] foundations() {
+        return foundations;
+    }
+
 }

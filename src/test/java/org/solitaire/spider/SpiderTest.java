@@ -30,8 +30,6 @@ import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
 import static org.solitaire.util.ReflectHelper.setField;
-import static org.solitaire.util.SolitaireHelper.getTotalScenarios;
-import static org.solitaire.util.SolitaireHelper.setTotalScenarios;
 
 @ExtendWith(MockitoExtension.class)
 class SpiderTest {
@@ -43,7 +41,6 @@ class SpiderTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        setTotalScenarios(0);
 
         state = spy(state);
         spider = build(cards);
@@ -64,7 +61,7 @@ class SpiderTest {
         assertEquals(1, result.size());
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).path();
-        assertEquals(0, getTotalScenarios());
+        assertEquals(0, spider.totalScenarios());
     }
 
     @Test
@@ -77,7 +74,7 @@ class SpiderTest {
         assertNotNull(result);
         assertEquals(SOLUTION_LIMIT, result.size());
         verify(state, times(ZERO)).isCleared();
-        assertEquals(0, getTotalScenarios());
+        assertEquals(0, spider.totalScenarios());
     }
 
     @Test
@@ -91,7 +88,7 @@ class SpiderTest {
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
         verify(state, times(ONE)).updateState(candidate);
-        assertEquals(0, getTotalScenarios());
+        assertEquals(1, spider.totalScenarios());
     }
 
     @Test
@@ -104,7 +101,7 @@ class SpiderTest {
         verify(state, times(ONE)).isCleared();
         verify(state, times(ZERO)).findCandidates();
         verify(state, times(ONE)).updateState(candidate);
-        assertEquals(0, getTotalScenarios());
+        assertEquals(0, spider.totalScenarios());
     }
 
     @Test
@@ -118,7 +115,7 @@ class SpiderTest {
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
         verify(state, times(ONE)).drawDeck();
-        assertEquals(0, getTotalScenarios());
+        assertEquals(1, spider.totalScenarios());
     }
 
     @Test
@@ -131,7 +128,7 @@ class SpiderTest {
         verify(state, times(ONE)).isCleared();
         verify(state, times(ZERO)).findCandidates();
         verify(state, times(ONE)).drawDeck();
-        assertEquals(0, getTotalScenarios());
+        assertEquals(0, spider.totalScenarios());
     }
 
     @Test
