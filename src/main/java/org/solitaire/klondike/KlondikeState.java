@@ -16,10 +16,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
+import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
@@ -75,14 +75,14 @@ class KlondikeState extends GameState<String> {
     }
 
     private List<Candidate> findFoundationCandidatesFromColumns() {
-        return IntStream.range(0, columns().size())
+        return range(0, columns().size())
                 .filter(i -> isNotEmpty(columns.get(i)))
                 .filter(i -> isFoundationCandidate(columns.get(i).peek()))
                 .mapToObj(i -> buildCandidate(i, COLUMN, columns.get(i).peek()))
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    private List<Candidate> findFoundationCandidateFromDeck(List<Candidate> collector) {
+    protected List<Candidate> findFoundationCandidateFromDeck(List<Candidate> collector) {
         if (isNotEmpty(deckPile)) {
             Optional.of(deckPile.peek())
                     .filter(this::isFoundationCandidate)
@@ -92,7 +92,7 @@ class KlondikeState extends GameState<String> {
         return collector;
     }
 
-    private boolean isFoundationCandidate(Card card) {
+    protected boolean isFoundationCandidate(Card card) {
         var foundation = foundations.get(suitCode(card));
 
         return Optional.of(foundation)
@@ -117,7 +117,7 @@ class KlondikeState extends GameState<String> {
     }
 
     private LinkedList<Candidate> checkColumnsForAppendables(Candidate candidate) {
-        return IntStream.range(0, columns.size())
+        return range(0, columns.size())
                 .filter(i -> isMatchingColumn(i, candidate))
                 .mapToObj(i -> new Candidate(candidate).setTarget(i))
                 .collect(Collectors.toCollection(LinkedList::new));
@@ -140,17 +140,17 @@ class KlondikeState extends GameState<String> {
         return column.peek().isHigherWithDifferentColor(card);
     }
 
-    private boolean isMovable(Candidate candidate) {
+    protected boolean isMovable(Candidate candidate) {
         if (COLUMN.equals(candidate.getOrigin())) {
-            var column = columns().get(candidate.getFrom());
-            var card = candidate.getCards().get(0);
-
-            return column.indexOf(card) > 0;
+            return Optional.of(candidate.getFrom())
+                    .map(columns::get)
+                    .filter(it -> it.indexOf(candidate.peek()) > 0)
+                    .isPresent();
         }
         return DECKPILE.equals(candidate.getOrigin());
     }
 
-    private boolean isNotSameColumn(int colNum, Candidate candidate) {
+    protected boolean isNotSameColumn(int colNum, Candidate candidate) {
         return !(COLUMN.equals(candidate.getOrigin()) && candidate.getFrom() == colNum);
     }
 
@@ -162,9 +162,8 @@ class KlondikeState extends GameState<String> {
                 .orElse(candidates);
     }
 
-    private List<Candidate> findCandidatesFromColumns() {
-        return IntStream.range(0, 7)
-                .filter(i -> isNotEmpty(columns.get(i)))
+    protected List<Candidate> findCandidatesFromColumns() {
+        return range(0, 7)
                 .mapToObj(this::findCandidateAtColumn)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedList::new));
@@ -179,7 +178,10 @@ class KlondikeState extends GameState<String> {
     }
 
     protected Candidate findCandidateAtColumn(int colAt) {
-        return Optional.of(getOrderedCards(columns.get(colAt)))
+        return Optional.of(colAt)
+                .map(columns::get)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(this::getOrderedCards)
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> buildCandidate(colAt, COLUMN, it))
                 .orElse(null);
@@ -201,7 +203,7 @@ class KlondikeState extends GameState<String> {
         return emptyList();
     }
 
-    private boolean isMovable(Card card, Column column) {
+    protected boolean isMovable(Card card, Column column) {
         return !card.isKing() || column.indexOf(card) > 0;
     }
 
@@ -222,11 +224,11 @@ class KlondikeState extends GameState<String> {
     private List<Candidate> removeDuplicateKings(List<Candidate> candidates) {
         var collect = new LinkedList<Candidate>();
 
-        for (int i = 0; i < candidates.size() - 1; i++) {
+        range(0, candidates.size() - 1).forEach(i -> {
             var a = candidates.get(i);
 
             if (a.getCards().get(0).isKing()) {
-                for (int j = i + 1; j < candidates.size(); j++) {
+                range(i + 1, candidates.size()).forEach(j -> {
                     var b = candidates.get(j);
 
                     if (b.getCards().get(0).isKing()) {
@@ -234,18 +236,18 @@ class KlondikeState extends GameState<String> {
                             collect.add(b);
                         }
                     }
-                }
+                });
             }
-        }
+        });
         collect.forEach(candidates::remove);
         return candidates;
     }
 
-    private boolean isDuplicate(Candidate a, Candidate b) {
+    protected boolean isDuplicate(Candidate a, Candidate b) {
         return a.getOrigin() == b.getOrigin() && a.getFrom() == b.getFrom() && a.getTarget() != b.getTarget();
     }
 
-    private boolean isImmediateToFoundation(Card card) {
+    protected boolean isImmediateToFoundation(Card card) {
         return foundations.stream()
                 .allMatch(it -> diffOfValues(card, it.isEmpty() ? null : it.peek()) <= 2);
     }
@@ -273,12 +275,12 @@ class KlondikeState extends GameState<String> {
         return this;
     }
 
-    private boolean isScorable(Candidate candidate) {
+    protected boolean isScorable(Candidate candidate) {
         return DECKPILE.equals(candidate.getOrigin()) ||
                 (COLUMN.equals(candidate.getOrigin()) && isNotEmpty(columns.get(candidate.getFrom())));
     }
 
-    private void moveToFoundation(Candidate candidate) {
+    protected void moveToFoundation(Candidate candidate) {
         var card = candidate.getCards().get(0);
 
         Optional.of(suitCode(card))
@@ -307,26 +309,25 @@ class KlondikeState extends GameState<String> {
 
     protected KlondikeState drawDeckCards() {
         if (checkRecycleDeck()) {
-            IntStream.range(0, drawNumber)
-                    .filter(i -> isNotEmpty(deck))
-                    .forEach(i -> deckPile.push(deck.pop()));
+            range(0, drawNumber)
+                    .filter(i -> isNotEmpty(deck()))
+                    .forEach(i -> deckPile().push(deck().pop()));
             return this;
         }
         return null;
     }
 
     private boolean checkRecycleDeck() {
-        if (deck.isEmpty()) {
-            if (stateChanged) {
-                while (isNotEmpty(deckPile)) {
-                    deck.push(deckPile.pop());
-                }
-                stateChanged(false);
-            } else {
-                return false;
-            }
-        }
-        return true;
+        Optional.of(deck())
+                .filter(Deck::isEmpty)
+                .filter(it -> stateChanged)
+                .ifPresent(it -> {
+                    while (isNotEmpty(deckPile())) {
+                        it.push(deckPile().pop());
+                    }
+                    stateChanged(false);
+                });
+        return isNotEmpty(deck());
     }
 
 

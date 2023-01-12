@@ -1,6 +1,5 @@
 package org.solitaire.freecell;
 
-import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
@@ -8,8 +7,9 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.GameSolver;
 import org.solitaire.model.Path;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Heineman’s Staged Deepening (HSD)
@@ -19,32 +19,32 @@ import java.util.List;
  */
 @SuppressWarnings("rawtypes")
 @Getter
-public class FreeCell extends FreeCellState implements GameSolver {
-    private static int totalScenarios;
+public class FreeCell implements GameSolver {
     private final Card[] freeCells;
     private final Card[] foundations;
+    private final List<List> solutions = new ArrayList<>();
+    private FreeCellState initState;
+    private int totalScenarios;
+    private Function<FreeCellState, FreeCellState> cloner = FreeCellState::new;
 
-    @Builder
-    public FreeCell(Columns columns, Path<Card> path, Card[] freeCells, Card[] foundations) {
-        super(columns, path);
-        this.freeCells = freeCells;
-        this.foundations = foundations;
-    }
-
-    public FreeCell(FreeCell freeCell) {
-        super(new Columns(freeCell.columns), new Path<>(freeCell.path));
-        this.freeCells = Arrays.copyOf(freeCell.freeCells, freeCell.freeCells.length);
-        this.foundations = Arrays.copyOf(freeCell.foundations, freeCell.foundations.length);
+    public FreeCell(Columns columns) {
+        initState = new FreeCellState(columns, new Path<>());
+        this.freeCells = new Card[4];
+        this.foundations = new Card[4];
     }
 
     @Override
     public List<List> solve() {
-        if (isCleared()) {
-            return List.of(path);
+        solve(initState);
+        return solutions();
+    }
+
+    protected void solve(FreeCellState state) {
+        if (state.isCleared()) {
+            solutions.add(state.path());
         } else {
             totalScenarios++;
         }
-        return null;
     }
 
     @Override
@@ -55,5 +55,22 @@ public class FreeCell extends FreeCellState implements GameSolver {
     @Override
     public int totalScenarios() {
         return totalScenarios;
+    }
+
+    public FreeCellState initState() {
+        return initState;
+    }
+
+    public FreeCell initState(FreeCellState initState) {
+        this.initState = initState;
+        return this;
+    }
+
+    public List<List> solutions() {
+        return solutions;
+    }
+
+    public void cloner(Function<FreeCellState, FreeCellState> cloner) {
+        this.cloner = cloner;
     }
 }

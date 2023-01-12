@@ -20,25 +20,16 @@ import java.util.function.Function;
 @Slf4j
 @SuppressWarnings("rawtypes")
 public class Klondike implements GameSolver {
-    private static final List<List> solutions = new ArrayList<>();
-    private static final int LIMIT_SOLUTIONS = 1000;
-    private static int totalScenarios;
-
+    protected static final int LIMIT_SOLUTIONS = 1000;
+    private final List<List> solutions = new ArrayList<>();
+    private int totalScenarios;
     private KlondikeState initState;
     private Function<KlondikeState, KlondikeState> cloner = KlondikeState::new;
 
     public Klondike(Columns columns,
-                    Path<String> path,
-                    int totalScore,
                     Deck deck,
-                    Stack<Card> deckPile,
-                    List<Stack<Card>> foundations,
-                    boolean stateChanged) {
-        initState = new KlondikeState(columns, path, totalScore, deck, deckPile, foundations, stateChanged);
-    }
-
-    public static void totalScenarios(int totalScenarios) {
-        Klondike.totalScenarios = totalScenarios;
+                    List<Stack<Card>> foundations) {
+        initState = new KlondikeState(columns, new Path<>(), 0, deck, new Stack<>(), foundations, true);
     }
 
     @Override
@@ -93,5 +84,4 @@ public class Klondike implements GameSolver {
     public void cloner(Function<KlondikeState, KlondikeState> cloner) {
         this.cloner = cloner;
     }
-
 }

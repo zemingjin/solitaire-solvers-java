@@ -3,11 +3,10 @@ package org.solitaire.freecell;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
-import org.solitaire.model.Path;
 
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
+import static java.util.stream.IntStream.range;
 import static org.solitaire.util.CardHelper.buildCard;
 
 public class FreeCellHelper {
@@ -17,21 +16,16 @@ public class FreeCellHelper {
     private static final int LEN_SHORT = 6;
 
     public static FreeCell build(String[] cards) {
-        return FreeCell.builder()
-                .columns(buildBoard(cards))
-                .freeCells(new Card[4])
-                .foundations(new Card[4])
-                .path(new Path())
-                .build();
+        return new FreeCell(buildBoard(cards));
     }
 
     private static Columns buildBoard(String[] cards) {
         assert cards != null && cards.length == LAST_BOARD : "Invalid source cards: " + Arrays.toString(cards);
 
         var columns = new Columns(8);
-        IntStream.range(0, 8).forEach(i -> columns.add(i, new Column()));
+        range(0, 8).forEach(i -> columns.add(i, new Column()));
 
-        IntStream.range(0, cards.length)
+        range(0, cards.length)
                 .mapToObj(i -> buildCard(i, cards[i]))
                 .forEach(it -> setCardsToColumns(columns, it));
         return columns;

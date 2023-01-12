@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
 
-import java.util.stream.IntStream;
-
+import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -132,7 +131,7 @@ class PyramidStateTest {
         assertTrue(state.isOpenAt(21));
         assertFalse(state.isOpenAt(20));
 
-        IntStream.range(21, LAST_BOARD)
+        range(21, LAST_BOARD)
                 .forEach(i -> state.cards()[i] = null);
 
         assertTrue(state.isOpenAt(20));
@@ -143,7 +142,7 @@ class PyramidStateTest {
         assertTrue(state.isOpenAt(15));
         assertFalse(state.isOpenAt(14));
 
-        IntStream.range(19, 21)
+        range(19, 21)
                 .forEach(i -> state.cards()[i] = null);
 
         assertTrue(state.isOpenAt(14));

@@ -5,12 +5,12 @@ import org.solitaire.model.GameSolver;
 
 import java.util.Stack;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.IntStream.range;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.checkDuplicates;
 
@@ -37,7 +37,7 @@ public class TriPeaksHelper {
 
     protected static Card[] toCards(String[] cards) {
         requireNonNull(cards);
-        return IntStream.range(0, min(cards.length, LAST_DECK))
+        return range(0, min(cards.length, LAST_DECK))
                 .mapToObj(i -> buildCard(i, cards[i]))
                 .toArray(Card[]::new);
     }

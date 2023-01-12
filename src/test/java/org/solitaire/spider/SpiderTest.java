@@ -12,9 +12,9 @@ import org.solitaire.util.CardHelper;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -70,7 +70,7 @@ class SpiderTest {
     @Test
     public void test_solve_solution_limit() {
         var mock = mockPath();
-        IntStream.range(0, SOLUTION_LIMIT).forEach(i -> spider.solutions.add(mock));
+        range(0, SOLUTION_LIMIT).forEach(i -> spider.solutions.add(mock));
 
         var result = spider.solve();
 

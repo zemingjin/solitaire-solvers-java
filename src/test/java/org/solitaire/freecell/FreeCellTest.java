@@ -2,33 +2,38 @@ package org.solitaire.freecell;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.solitaire.util.CardHelperTest.ONE;
 
+@ExtendWith(MockitoExtension.class)
 class FreeCellTest {
     private FreeCell freeCell;
+    @Mock
+    private FreeCellState state;
 
     @BeforeEach
     public void setup() {
-        freeCell = FreeCellHelper.build(FreeCellHelperTest.cards);
-    }
-
-    @Test
-    public void test_solve() {
-        var result = freeCell.solve();
-
-        assertNull(result);
+        state = spy(state);
+        freeCell = FreeCellHelper.build(FreeCellHelperTest.cards).initState(state);
+        freeCell.cloner(it -> state);
     }
 
     @Test
     public void test_solve_cleared() {
-        freeCell.columns().forEach(List::clear);
+        when(state.isCleared()).thenReturn(true);
+
         var result = freeCell.solve();
 
+        verify(state, times(ONE)).isCleared();
         assertNotNull(result);
     }
 

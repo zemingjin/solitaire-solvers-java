@@ -9,11 +9,12 @@ import org.solitaire.util.CardHelper;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.stream;
+import static java.util.stream.IntStream.range;
+import static java.util.stream.IntStream.rangeClosed;
 
 public class PyramidHelper {
     protected static final int LAST_BOARD = 28;
@@ -46,7 +47,7 @@ public class PyramidHelper {
 
         final var rowMax = new RowMax(LAST_BOARD);
 
-        return IntStream.rangeClosed(1, 7)
+        return rangeClosed(1, 7)
                 .map(i -> 7 - i + 1)
                 .peek(i -> rowMax.setRowMax(rowMax.rowMax - i))
                 .filter(i -> rowMax.getRowMax() <= at)
@@ -57,7 +58,7 @@ public class PyramidHelper {
     @SuppressWarnings("rawtypes")
     protected static Pair<Integer, List> getScore(List<?> list) {
         return Pair.of(
-                IntStream.range(0, list.size())
+                range(0, list.size())
                         .map(i -> getClickScore(i, list))
                         .reduce(0, Integer::sum),
                 list);
@@ -125,7 +126,7 @@ public class PyramidHelper {
     }
 
     protected static boolean isRowCleared(int row, int at, List<Card[]> list) {
-        return IntStream.rangeClosed(0, at)
+        return rangeClosed(0, at)
                 .mapToObj(list::get)
                 .flatMap(Stream::of)
                 .filter(PyramidHelper::isBoardCard)

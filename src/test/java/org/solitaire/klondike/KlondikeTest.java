@@ -20,6 +20,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.solitaire.klondike.Klondike.LIMIT_SOLUTIONS;
 import static org.solitaire.klondike.KlondikeHelper.build;
 import static org.solitaire.klondike.KlondikeHelperTest.CARDS;
 import static org.solitaire.model.Candidate.buildCandidate;
@@ -29,7 +30,8 @@ import static org.solitaire.util.CardHelperTest.TWO;
 
 @ExtendWith(MockitoExtension.class)
 class KlondikeTest {
-    @Mock private KlondikeState state;
+    @Mock
+    private KlondikeState state;
     private Klondike klondike;
     private KlondikeState initState;
 
@@ -39,9 +41,16 @@ class KlondikeTest {
         CardHelper.useSuit = false;
         klondike = build(CARDS);
         initState = klondike.initState();
-        klondike.initState(state);
+        assertNotNull(klondike.initState(state));
         klondike.cloner(it -> state);
-        Klondike.totalScenarios(0);
+    }
+
+    @Test
+    public void test_solve() {
+        klondike.initState(initState);
+        klondike.cloner(KlondikeState::new);
+
+        assertEquals(LIMIT_SOLUTIONS, klondike.solve().size());
     }
 
     @Test
