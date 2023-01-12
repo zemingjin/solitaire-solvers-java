@@ -27,14 +27,14 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.ZERO;
 import static org.solitaire.util.ReflectHelper.setField;
 import static org.solitaire.util.SolitaireHelper.getTotalScenarios;
 import static org.solitaire.util.SolitaireHelper.setTotalScenarios;
 
 @ExtendWith(MockitoExtension.class)
 class SpiderTest {
-    public static final int ZERO = 0;
-    public static final int ONE = 1;
     @Mock
     private SpiderState state;
     private Spider spider;
@@ -56,14 +56,14 @@ class SpiderTest {
     @Test
     public void test_solve_cleared() {
         when(state.isCleared()).thenReturn(true);
-        when(state.getPath()).thenReturn(mockPath());
+        when(state.path()).thenReturn(mockPath());
 
         var result = spider.solve();
 
         assertNotNull(result);
         assertEquals(1, result.size());
         verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).getPath();
+        verify(state, times(ONE)).path();
         assertEquals(0, getTotalScenarios());
     }
 

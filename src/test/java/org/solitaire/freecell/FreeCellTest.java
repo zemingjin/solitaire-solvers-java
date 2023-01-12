@@ -26,7 +26,7 @@ class FreeCellTest {
 
     @Test
     public void test_solve_cleared() {
-        freeCell.getColumns().forEach(List::clear);
+        freeCell.columns().forEach(List::clear);
         var result = freeCell.solve();
 
         assertNotNull(result);

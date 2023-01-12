@@ -37,7 +37,7 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     public SpiderState(SpiderState that) {
-        this(new Columns(that.getColumns()), new Path<>(that.getPath()), that.totalScore, new Deck(that.deck));
+        this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore, new Deck(that.deck));
     }
 
     @Override
@@ -268,7 +268,7 @@ public class SpiderState extends GameState<Card[]> {
 
         var run = column.subList(column.size() - 13, column.size());
 
-        getPath().add(run.toArray(Card[]::new));
+        path().add(run.toArray(Card[]::new));
         System.out.printf("Run: %s\n", run);
         totalScore += 100;
         run.clear();
@@ -276,9 +276,9 @@ public class SpiderState extends GameState<Card[]> {
 
     protected boolean drawDeck() {
         if (isNotEmpty(deck)) {
-            assert getColumns().size() <= deck.size();
+            assert columns().size() <= deck.size();
 
-            getColumns().forEach(column -> column.add(deck.remove(0)));
+            columns().forEach(column -> column.add(deck.remove(0)));
             return true;
         }
         return false;

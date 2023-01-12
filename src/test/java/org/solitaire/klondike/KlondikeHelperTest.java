@@ -1,10 +1,10 @@
 package org.solitaire.klondike;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.util.IOHelper;
 
+import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,22 +22,22 @@ class KlondikeHelperTest {
 
     @Test
     public void test_build() {
-        var klondike = KlondikeHelper.build(CARDS);
+        var klondike = KlondikeHelper.build(CARDS).initState();
 
         assertNotNull(klondike);
-        assertEquals("23:Ts", klondike.getDeck().peek().toString());
-        assertEquals("0:Jc", klondike.getDeck().get(0).toString());
-        assertEquals(1, klondike.getColumns().get(0).size());
-        assertEquals("24:Th", klondike.getColumns().get(0).get(0).toString());
-        assertEquals("25:8h", klondike.getColumns().get(1).get(0).toString());
+        assertEquals("23:Ts", klondike.deck().peek().toString());
+        assertEquals("0:Jc", klondike.deck().get(0).toString());
+        assertEquals(1, klondike.columns().get(0).size());
+        assertEquals("24:Th", klondike.columns().get(0).get(0).toString());
+        assertEquals("25:8h", klondike.columns().get(1).get(0).toString());
     }
 
     @Test
     public void test_clone() {
-        var klondike = KlondikeHelper.build(CARDS);
-        var clone = new Klondike(klondike);
+        var state = KlondikeHelper.build(CARDS).initState();
+        var clone = new KlondikeState(state);
 
-        assertTrue(EqualsBuilder.reflectionEquals(clone, klondike));
+        assertTrue(reflectionEquals(clone, state));
     }
 
     @Test

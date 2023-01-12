@@ -15,7 +15,11 @@ import static org.solitaire.util.CardHelper.checkDuplicates;
 import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.getSuit;
 
-class CardHelperTest {
+public class CardHelperTest {
+    public static final int ZERO = 0;
+    public static final int ONE = 1;
+    public static final int TWO = 2;
+
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;

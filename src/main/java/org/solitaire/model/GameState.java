@@ -1,12 +1,10 @@
 package org.solitaire.model;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-@Getter
 public class GameState<R> {
     protected final Columns columns;
     protected final Path<R> path;
@@ -46,5 +44,17 @@ public class GameState<R> {
 
     public void setTotalScore(int totalScore) {
         this.totalScore = totalScore;
+    }
+
+    public Columns columns() {
+        return columns;
+    }
+
+    public Path<R> path() {
+        return path;
+    }
+
+    public int totalScore() {
+        return totalScore;
     }
 }
