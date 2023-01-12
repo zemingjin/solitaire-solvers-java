@@ -37,7 +37,7 @@ public class Spider implements GameSolver {
     protected void solve(SpiderState state) {
         if (solutions.size() < SOLUTION_LIMIT) {
             if (state.isCleared()) {
-                solutions.add(state.getPath());
+                solutions.add(state.path());
             } else {
                 totalScenarios++;
                 Optional.of(state.findCandidates())

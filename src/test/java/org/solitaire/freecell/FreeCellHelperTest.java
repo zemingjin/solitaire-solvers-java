@@ -18,11 +18,11 @@ class FreeCellHelperTest {
         var freeCell = build(cards);
 
         assertNotNull(freeCell);
-        assertEquals(8, freeCell.getColumns().size());
-        assertEquals(7, freeCell.getColumns().get(0).size());
-        assertEquals(7, freeCell.getColumns().get(3).size());
-        assertEquals(6, freeCell.getColumns().get(4).size());
-        assertEquals(6, freeCell.getColumns().get(7).size());
+        assertEquals(8, freeCell.columns().size());
+        assertEquals(7, freeCell.columns().get(0).size());
+        assertEquals(7, freeCell.columns().get(3).size());
+        assertEquals(6, freeCell.columns().get(4).size());
+        assertEquals(6, freeCell.columns().get(7).size());
     }
 
     @Test

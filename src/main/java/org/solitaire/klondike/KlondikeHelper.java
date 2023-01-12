@@ -20,7 +20,7 @@ public class KlondikeHelper {
     public static Klondike build(String[] cards) {
         return new Klondike(
                 buildColumns(cards),
-                new Path(),
+                new Path<>(),
                 0,
                 buildDeck(cards),
                 new Stack<>(),
