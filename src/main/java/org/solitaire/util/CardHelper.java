@@ -13,12 +13,12 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.IntStream.range;
 
 @SuppressWarnings("rawtypes")
 public class CardHelper {
@@ -81,7 +81,7 @@ public class CardHelper {
 
     public static Card[] toCards(String[] cards) {
         requireNonNull(cards);
-        return IntStream.range(0, cards.length)
+        return range(0, cards.length)
                 .mapToObj(i -> buildCard(i, cards[i]))
                 .toArray(Card[]::new);
     }
@@ -147,7 +147,7 @@ public class CardHelper {
     public static void checkDuplicates(String[] cards) {
         assert nonNull(cards);
 
-        IntStream.range(0, cards.length)
+        range(0, cards.length)
                 .forEach(i -> checkDuplicates(cards, i));
     }
 

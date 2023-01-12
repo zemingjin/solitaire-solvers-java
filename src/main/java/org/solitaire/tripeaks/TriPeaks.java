@@ -12,11 +12,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.IntUnaryOperator;
-import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.IntStream.range;
+import static java.util.stream.IntStream.rangeClosed;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
@@ -77,7 +78,7 @@ public class TriPeaks implements GameSolver {
     }
 
     private List<Card> findAdjacentCardsFromBoard(Card target) {
-        return IntStream.range(0, min(cards.length, LAST_BOARD))
+        return range(0, min(cards.length, LAST_BOARD))
                 .map(reverseBoard)
                 .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)
@@ -87,7 +88,7 @@ public class TriPeaks implements GameSolver {
     }
 
     private Card getTopDeckCard() {
-        return IntStream.rangeClosed(LAST_BOARD, LAST_DECK - 1)
+        return rangeClosed(LAST_BOARD, LAST_DECK - 1)
                 .map(reverse)
                 .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)
@@ -140,7 +141,7 @@ public class TriPeaks implements GameSolver {
     }
 
     private int numOfPeeksCleared(Card card, List<Card> list) {
-        return (int) IntStream.rangeClosed(0, list.indexOf(card))
+        return (int) rangeClosed(0, list.indexOf(card))
                 .mapToObj(list::get)
                 .filter(it -> it.at() < 3)
                 .count();

@@ -9,20 +9,23 @@ import org.solitaire.util.CardHelper;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
-import java.util.stream.IntStream;
 
+import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.klondike.KlondikeHelper.build;
 import static org.solitaire.klondike.KlondikeHelperTest.CARDS;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
+import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.suitCode;
 
 class KlondikeStateTest {
     private KlondikeState state;
@@ -66,41 +69,86 @@ class KlondikeStateTest {
     }
 
     @Test
-    public void test_updateBoard() {
+    public void test_updateStates() {
         var candidate = state.findCandidateAtColumn(6).setTarget(2);
 
         assertEquals(7, state.columns().get(6).size());
         assertEquals(3, state.columns().get(2).size());
+        state.stateChanged = false;
 
         state = state.updateStates(candidate);
 
         assertEquals(6, state.columns().get(6).size());
         assertEquals(4, state.columns().get(2).size());
+        assertTrue(state.stateChanged);
     }
 
     @Test
-    public void test_drawCardsFromDeck() {
+    public void test_isScorable() {
+        var card = state.columns().get(1).peek();
+
+        assertTrue(state.isScorable(buildCandidate(1, COLUMN, card)));
+        assertTrue(state.isScorable(buildCandidate(-1, DECKPILE, card)));
+
+        state.columns().get(1).clear();
+        assertFalse(state.isScorable(buildCandidate(1, COLUMN, card)));
+    }
+
+    @Test
+    public void test_moveToFoundation() {
+        var card = buildCard(0, "Ad");
+        var foundation = state.foundations().get(suitCode(card));
+        state.moveToFoundation(buildCandidate(0, COLUMN, card));
+        assertTrue(foundation.contains(card));
+        assertEquals(15, state.totalScore());
+
+        card = buildCard(0, "2d");
+        state.moveToFoundation(buildCandidate(0, DECKPILE, card));
+        assertEquals(2, foundation.size());
+        assertEquals(25, state.totalScore());
+
+        card = buildCard(0, "3d");
+        state.moveToFoundation(buildCandidate(0, COLUMN, card));
+        assertEquals(3, foundation.size());
+        assertEquals(30, state.totalScore());
+    }
+
+    @Test
+    public void test_drawDeckCards() {
         assertEquals(24, state.deck().size());
         assertEquals(0, state.deckPile().size());
         assertEquals("21:7d", state.deck().get(21).toString());
 
-        state.drawDeckCards();
+        assertNotNull(state.drawDeckCards());
 
         assertEquals(21, state.deck().size());
         assertEquals(3, state.deckPile().size());
         assertEquals("21:7d", state.deckPile().peek().toString());
 
+        var card = state.deck().peek();
         state.deck().clear();
+        state.deck().add(card);
         assertTrue(state.isDeckCardsAvailable());
 
-        state.drawDeckCards();
+        assertNotNull(state.drawDeckCards());
+        assertEquals(0, state.deck().size());
+        assertEquals(4, state.deckPile().size());
+        assertEquals(card.toString(), state.deckPile().peek().toString());
+
+        state.stateChanged(true);
+        state.deckPile().pop();
+        assertNotNull(state.drawDeckCards());
         assertEquals(0, state.deck().size());
         assertEquals(3, state.deckPile().size());
         assertEquals("21:7d", state.deckPile().peek().toString());
+        assertFalse(state.stateChanged);
 
         state.deckPile().clear();
+        state.stateChanged(true);
 
+        assertNull(state.drawDeckCards());
         assertFalse(state.isDeckCardsAvailable());
+        assertFalse(state.stateChanged);
     }
 
     @Test
@@ -162,7 +210,8 @@ class KlondikeStateTest {
         assertNotNull(results);
         assertTrue(results.isEmpty());
 
-        state.columns().get(0).add(buildCard(0, "Ad"));
+        state.columns().get(0).clear();
+        state.columns().get(6).add(buildCard(0, "Ad"));
 
         results = state.findFoundationCandidates();
 
@@ -172,6 +221,69 @@ class KlondikeStateTest {
         state.moveToTarget(results.get(0));
         assertEquals(1, state.foundations().get(0).size());
         assertEquals("[0:Ad]", state.foundations().get(0).toString());
+    }
+
+    @Test
+    public void test_findFoundationCandidateFromDeck() {
+        var collector = new LinkedList<Candidate>();
+        state.findFoundationCandidateFromDeck(collector);
+
+        assertTrue(collector.isEmpty());
+
+        state.deckPile.push(buildCard(0, "Ad"));
+        state.findFoundationCandidateFromDeck(collector);
+
+        assertEquals(1, collector.size());
+        assertEquals("Candidate(cards=[0:Ad], origin=DECKPILE, from=-1, target=-1)", collector.get(0).toString());
+    }
+
+    @Test
+    public void test_isFoundationCandidate() {
+        var a = buildCard(0, "Ad");
+        var b = buildCard(0, "2d");
+
+        assertTrue(state.isFoundationCandidate(a));
+        assertFalse(state.isFoundationCandidate(b));
+
+        state.foundations().get(suitCode(a)).push(a);
+
+        assertTrue(state.isFoundationCandidate(b));
+        assertFalse(state.isFoundationCandidate(buildCard(0, "3d")));
+    }
+
+    @Test
+    public void test_isMovable() {
+        var column = state.columns().get(3);
+
+        assertTrue(state.isMovable(buildCandidate(3, COLUMN, column.peek())));
+
+        assertFalse(state.isMovable(buildCandidate(3, COLUMN, column.get(0))));
+
+        state.drawDeckCards();
+        assertTrue(state.isMovable(buildCandidate(-1, DECKPILE, state.deckPile.peek())));
+
+        assertFalse(state.isMovable(buildCandidate(-1, FOUNDATION, column.get(0))));
+
+        var card = buildCard(0, "Kd");
+
+        assertFalse(state.isMovable(card, column));
+
+        column.clear();
+        column.add(card);
+        assertFalse(state.isMovable(card, column));
+
+        card = buildCard(0, "Qd");
+        column.add(card);
+        assertTrue(state.isMovable(card, column));
+    }
+
+    @Test
+    public void test_isNotSameColumn() {
+        var card = state.columns().get(3).peek();
+
+        assertTrue(state.isNotSameColumn(0, buildCandidate(3, COLUMN, card)));
+        assertFalse(state.isNotSameColumn(3, buildCandidate(3, COLUMN, card)));
+        assertTrue(state.isNotSameColumn(3, buildCandidate(3, DECKPILE, card)));
     }
 
     @Test
@@ -279,6 +391,38 @@ class KlondikeStateTest {
 
         assertEquals(3, result.size());
 
+        state.columns().get(0).clear();
+        assertTrue(state.getOrderedCards(state.columns().get(0)).isEmpty());
+    }
+
+    @Test
+    public void test_isDuplicate() {
+        var card = state.columns().get(0).peek();
+        var a = buildCandidate(0, COLUMN, List.of(card), 1);
+
+        assertTrue(state.isDuplicate(a, buildCandidate(0, COLUMN, List.of(card), 2)));
+
+        assertFalse(state.isDuplicate(a, buildCandidate(3, COLUMN, List.of(card), 2)));
+        assertFalse(state.isDuplicate(a, buildCandidate(0, DECKPILE, List.of(card), 2)));
+    }
+
+    @Test
+    public void test_isImmediateToFoundation() {
+        var card = buildCard(0, "Ad");
+
+        assertTrue(state.isImmediateToFoundation(card));
+
+        var foundation = state.foundations().get(suitCode(card));
+        foundation.add(card);
+        card = buildCard(0, "2d");
+
+        assertTrue(state.isImmediateToFoundation(card));
+
+        foundation.add(card);
+        assertTrue(state.isImmediateToFoundation(card));
+
+        card = buildCard(0, "3d");
+        assertFalse(state.isImmediateToFoundation(card));
     }
 
     @Test
@@ -291,8 +435,8 @@ class KlondikeStateTest {
     }
 
     private void mockFullFoundations(List<Stack<Card>> foundations) {
-        IntStream.range(0, 4)
-                .forEach(i -> IntStream.range(0, 13)
+        range(0, 4)
+                .forEach(i -> range(0, 13)
                         .forEach(j -> foundations.get(i).add(buildCard(0, VALUES.charAt(i) + toSuit(i)))));
     }
 

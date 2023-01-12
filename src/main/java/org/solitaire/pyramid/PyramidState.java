@@ -11,13 +11,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
+import static java.util.stream.IntStream.rangeClosed;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD_INDEX;
@@ -122,7 +122,7 @@ public class PyramidState {
     }
 
     private List<Card> getBoardOpenCards() {
-        return IntStream.rangeClosed(0, LAST_BOARD_INDEX)
+        return rangeClosed(0, LAST_BOARD_INDEX)
                 .map(i -> LAST_BOARD_INDEX - i)
                 .mapToObj(i -> cards[i])
                 .filter(Objects::nonNull)

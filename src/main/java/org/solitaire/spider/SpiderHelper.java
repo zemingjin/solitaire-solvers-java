@@ -7,9 +7,9 @@ import org.solitaire.model.Path;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.util.Objects.nonNull;
+import static java.util.stream.IntStream.range;
 import static org.solitaire.util.CardHelper.buildCard;
 
 public class SpiderHelper {
@@ -49,7 +49,7 @@ public class SpiderHelper {
     }
 
     protected static Deck buildDeck(String[] cards) {
-        return IntStream.range(LAST_BOARD, LAST_BOARD + LAST_DECK)
+        return range(LAST_BOARD, LAST_BOARD + LAST_DECK)
                 .mapToObj(i -> buildCard(i, cards[i]))
                 .collect(Collectors.toCollection(Deck::new));
     }

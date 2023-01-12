@@ -16,13 +16,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.compare;
 import static java.lang.Math.max;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
@@ -171,7 +171,7 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     protected Stream<Candidate> findOpenCandidates() {
-        return IntStream.range(0, columns.size())
+        return range(0, columns.size())
                 .mapToObj(this::findCandidateAtColumn)
                 .filter(Objects::nonNull);
     }
@@ -200,7 +200,7 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     protected Stream<Candidate> matchCandidateToTargets(Candidate candidate) {
-        return IntStream.range(0, columns.size())
+        return range(0, columns.size())
                 .mapToObj(i -> findTargetColumn(i, candidate))
                 .filter(Objects::nonNull);
     }
