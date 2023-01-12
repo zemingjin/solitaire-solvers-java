@@ -31,6 +31,7 @@ import static org.solitaire.util.SolitaireHelper.incTotal;
 public class TriPeaks implements GameSolver {
     private static final int BOARD_BONUS = 5000;
     private static final int C = LAST_BOARD + LAST_DECK - 1;
+    private static int totalScenarios;
     private final IntUnaryOperator reverse = i -> C - i;
     private final IntUnaryOperator reverseBoard = i -> LAST_BOARD - i - 1;
     private Card[] cards;
@@ -189,5 +190,10 @@ public class TriPeaks implements GameSolver {
 
     private boolean isNotCovered(int at) {
         return isNull(cards[at]) && isNull(cards[at + 1]);
+    }
+
+    @Override
+    public int totalScenarios() {
+        return totalScenarios;
     }
 }

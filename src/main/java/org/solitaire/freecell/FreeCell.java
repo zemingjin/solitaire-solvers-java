@@ -20,6 +20,7 @@ import java.util.List;
 @SuppressWarnings("rawtypes")
 @Getter
 public class FreeCell extends FreeCellState implements GameSolver {
+    private static int totalScenarios;
     private final Card[] freeCells;
     private final Card[] foundations;
 
@@ -40,6 +41,8 @@ public class FreeCell extends FreeCellState implements GameSolver {
     public List<List> solve() {
         if (isCleared()) {
             return List.of(path);
+        } else {
+            totalScenarios++;
         }
         return null;
     }
@@ -49,4 +52,8 @@ public class FreeCell extends FreeCellState implements GameSolver {
         throw new RuntimeException("Not applicable");
     }
 
+    @Override
+    public int totalScenarios() {
+        return totalScenarios;
+    }
 }

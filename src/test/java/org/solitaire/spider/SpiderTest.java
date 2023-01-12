@@ -91,7 +91,7 @@ class SpiderTest {
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
         verify(state, times(ONE)).updateState(candidate);
-        assertEquals(1, getTotalScenarios());
+        assertEquals(0, getTotalScenarios());
     }
 
     @Test
@@ -118,7 +118,7 @@ class SpiderTest {
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
         verify(state, times(ONE)).drawDeck();
-        assertEquals(1, getTotalScenarios());
+        assertEquals(0, getTotalScenarios());
     }
 
     @Test

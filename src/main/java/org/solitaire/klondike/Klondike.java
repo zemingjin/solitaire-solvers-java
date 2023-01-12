@@ -31,7 +31,6 @@ import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.suitCode;
 import static org.solitaire.util.CollectionUtil.add;
-import static org.solitaire.util.SolitaireHelper.incTotal;
 
 @Slf4j
 @SuppressWarnings("rawtypes")
@@ -40,6 +39,7 @@ public class Klondike extends KlondikeState implements GameSolver {
     private static final List<List> solutions = new ArrayList<>();
     private static final int drawNumber = 3;
     private static final int LIMIT_SOLUTIONS = 1000;
+    private static int totalScenarios;
 
     public Klondike(Columns columns,
                     Path<String> path,
@@ -60,6 +60,7 @@ public class Klondike extends KlondikeState implements GameSolver {
         if (isCleared()) {
             solutions.add(path);
         } else if (solutions.size() < LIMIT_SOLUTIONS) {
+            totalScenarios++;
             Optional.of(findCandidates())
                     .filter(ObjectUtils::isNotEmpty)
                     .ifPresentOrElse(this::applyCandidates, this::drawDeck);
@@ -152,7 +153,6 @@ public class Klondike extends KlondikeState implements GameSolver {
     }
 
     protected Klondike moveToTarget(Candidate candidate) {
-        incTotal();
         path.add(CardHelper.stringOfRaws(candidate.getCards()));
 
         if (candidate.isToColumn()) {
@@ -352,4 +352,10 @@ public class Klondike extends KlondikeState implements GameSolver {
         return foundations.stream()
                 .allMatch(it -> diffOfValues(card, it.isEmpty() ? null : it.peek()) <= 2);
     }
+
+    @Override
+    public int totalScenarios() {
+        return totalScenarios;
+    }
+
 }

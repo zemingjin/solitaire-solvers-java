@@ -9,4 +9,6 @@ public interface GameSolver {
     List<List> solve();
 
     Pair<Integer, List> getMaxScore(List<List> results);
+
+    int totalScenarios();
 }
