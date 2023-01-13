@@ -1,11 +1,11 @@
 package org.solitaire.model;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.util.CardHelper;
 import org.solitaire.util.IOHelper;
 
+import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
@@ -33,7 +33,7 @@ public class GameStateTest {
     public void test_equals() {
         var other = mockState(state);
 
-        assertTrue(EqualsBuilder.reflectionEquals(other, state));
+        assertTrue(reflectionEquals(other, state));
     }
 
     @Test

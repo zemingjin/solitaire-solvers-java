@@ -14,6 +14,7 @@ import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.checkDuplicates;
 import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.getSuit;
+import static org.solitaire.util.CardHelper.stringOfRaws;
 
 public class CardHelperTest {
     public static final int ZERO = 0;
@@ -36,7 +37,7 @@ public class CardHelperTest {
     @Test
     public void test_toString() {
         assertEquals("Ah", CardHelper.stringOfRaws(buildCard(1, "Ah")));
-        assertEquals("Ah:9h",
+        assertEquals("[Ah, 9h]",
                 CardHelper.stringOfRaws(new Card[]{buildCard(1, "Ah"), buildCard(2, "9h")}));
     }
 
@@ -54,6 +55,14 @@ public class CardHelperTest {
         var cards = new String[]{"9d", "9d"};
 
         assertThrows(RuntimeException.class, () -> checkDuplicates(cards));
+    }
+
+    @Test
+    void test_stringOfRaws() {
+        assertEquals("[Ad]", stringOfRaws(new Card[]{buildCard(0, "Ad")}));
+        assertEquals("[Ad, 2d]", stringOfRaws(new Card[]{buildCard(0, "Ad"), buildCard(0, "2d")}));
+
+        assertEquals("[]", stringOfRaws(new Card[]{}));
     }
 
 }

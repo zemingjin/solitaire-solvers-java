@@ -13,22 +13,17 @@ import java.util.Stack;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
+import static org.solitaire.tripeaks.TriPeaksHelper.removeDeckCardsAtEnd;
 
 @SuppressWarnings("rawtypes")
 public class TriPeaks implements GameSolver {
     private static final int BOARD_BONUS = 5000;
     private final List<List> solutions = new ArrayList<>();
-    private int totalScenarios;
     private final TriPeaksState initState;
+    private int totalScenarios;
 
     public TriPeaks(Card[] cards, Stack<Card> wastePile) {
         initState = new TriPeaksState(cards, wastePile);
-    }
-
-    private static void removeDeckCardsAtEnd(Stack<Card> cards) {
-        while (isFromDeck(cards.peek())) {
-            cards.pop();
-        }
     }
 
     @Override
@@ -45,20 +40,21 @@ public class TriPeaks implements GameSolver {
             totalScenarios++;
             Optional.of(state.findCandidates())
                     .filter(ObjectUtils::isNotEmpty)
-                    .ifPresentOrElse(it -> applyCandidates(it, state), () -> drawDeck(state));
+                    .map(it -> Pair.of(it, state))
+                    .ifPresentOrElse(this::applyCandidates, () -> drawDeck(state));
         }
+    }
+
+    private void applyCandidates(Pair<List<Card>, TriPeaksState> pair) {
+        pair.getLeft().stream()
+                .map(it -> new TriPeaksState(pair.getRight()).updateState(it))
+                .forEach(this::solve);
     }
 
     private void drawDeck(TriPeaksState state) {
         Optional.ofNullable(state.getTopDeckCard())
                 .map(state::updateState)
                 .ifPresent(this::solve);
-    }
-
-    private void applyCandidates(List<Card> cards, TriPeaksState state) {
-        cards.stream()
-                .map(it -> new TriPeaksState(state).updateState(it))
-                .forEach(this::solve);
     }
 
     @SuppressWarnings("unchecked")
@@ -77,7 +73,7 @@ public class TriPeaks implements GameSolver {
         int sequenceCount = 0;
 
         for (Card card : cards) {
-            if (TriPeaksHelper.isFromDeck(card)) {
+            if (isFromDeck(card)) {
                 sequenceCount = 0;
             } else {
                 sequenceCount++;

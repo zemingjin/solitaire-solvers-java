@@ -211,7 +211,7 @@ class KlondikeState extends GameState<String> {
         return !(deck.isEmpty() && deckPile.isEmpty());
     }
 
-    protected boolean isCleared() {
+    public boolean isCleared() {
         return foundations.stream().allMatch(it -> it.size() == 13);
     }
 

@@ -33,7 +33,7 @@ class PyramidStateTest {
 
         assertNotNull(result);
         assertEquals(3, result.size());
-        assertEquals("Kc", stringOfRaws(result.get(0)));
+        assertEquals("[Kc]", stringOfRaws(result.get(0)));
     }
 
     @Test

@@ -10,10 +10,10 @@ import static java.util.stream.IntStream.range;
 import static org.solitaire.util.CardHelper.buildCard;
 
 public class FreeCellHelper {
-    private static final int LAST_LONG = 28;
-    private static final int LAST_BOARD = 52;
-    private static final int LEN_LONG = 7;
-    private static final int LEN_SHORT = 6;
+    protected static final int LAST_LONG = 28;
+    protected static final int LAST_BOARD = 52;
+    protected static final int LEN_LONG = 7;
+    protected static final int LEN_SHORT = 6;
 
     public static FreeCell build(String[] cards) {
         return new FreeCell(buildBoard(cards));
@@ -38,7 +38,9 @@ public class FreeCellHelper {
         col.add(card);
     }
 
-    private static int getColumn(int at) {
+    protected static int getColumn(int at) {
+        assert 0 <= at && at < LAST_BOARD;
+
         return (at < LAST_LONG)
                 ? at / LEN_LONG
                 : (at - LAST_LONG) / LEN_SHORT + 4;

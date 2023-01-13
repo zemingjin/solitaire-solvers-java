@@ -1,7 +1,6 @@
 package org.solitaire.tripeaks;
 
 import org.solitaire.model.Card;
-import org.solitaire.model.GameSolver;
 
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -39,9 +38,16 @@ public class TriPeaksHelper {
                 .toArray(Card[]::new);
     }
 
-    public static boolean isFromDeck(Card card) {
+    protected static boolean isFromDeck(Card card) {
         assert nonNull(card);
 
         return 28 <= card.at();
     }
+
+    protected static void removeDeckCardsAtEnd(Stack<Card> cards) {
+        while (isFromDeck(cards.peek())) {
+            cards.pop();
+        }
+    }
+
 }
