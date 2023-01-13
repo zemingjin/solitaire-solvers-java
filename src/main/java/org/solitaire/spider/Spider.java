@@ -18,11 +18,11 @@ import java.util.function.Function;
 @SuppressWarnings("rawtypes")
 public class Spider implements GameSolver {
     protected static final int SOLUTION_LIMIT = 1000;
-    private static int totalScenarios;
 
     protected final List<List> solutions = new ArrayList<>();
     private final Function<SpiderState, SpiderState> cloner = SpiderState::new;
     private final SpiderState initState;
+    private int totalScenarios;
 
     public Spider(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
         initState = new SpiderState(columns, path, totalScore, deck);

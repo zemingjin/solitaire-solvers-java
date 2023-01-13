@@ -305,7 +305,7 @@ class KlondikeStateTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(6, result.get(0).getTarget());
+        assertEquals(6, result.get(0).target());
 
         state.columns().get(6).clear();
 
@@ -357,16 +357,16 @@ class KlondikeStateTest {
     public void test_findCandidate() {
         var result = state.findCandidateAtColumn(0);
 
-        assertEquals(1, result.getCards().size());
-        assertEquals(0, result.getFrom());
-        assertEquals(COLUMN, result.getOrigin());
-        assertEquals("24:Th", result.getCards().get(0).toString());
+        assertEquals(1, result.cards().size());
+        assertEquals(0, result.from());
+        assertEquals(COLUMN, result.origin());
+        assertEquals("24:Th", result.cards().get(0).toString());
 
         result = state.findCandidateAtColumn(6);
-        assertEquals(1, result.getCards().size());
-        assertEquals(6, result.getFrom());
-        assertEquals(COLUMN, result.getOrigin());
-        assertEquals("[51:Tc]", result.getCards().toString());
+        assertEquals(1, result.cards().size());
+        assertEquals(6, result.from());
+        assertEquals(COLUMN, result.origin());
+        assertEquals("[51:Tc]", result.cards().toString());
     }
 
     @Test

@@ -19,14 +19,11 @@ public class TriPeaksHelper {
     public static final int INI_COVERED = 18;
     public static final int LAST_DECK = 51;
 
-    public static GameSolver build(String[] cards) {
+    public static TriPeaks build(String[] cards) {
         assert nonNull(cards) && cards.length == 52 : "Invalid number of cards: " + cards.length;
 
         checkDuplicates(cards);
-        return TriPeaks.builder()
-                .cards(toCards(cards))
-                .wastePile(toWastePile(cards))
-                .build();
+        return new TriPeaks(toCards(cards), toWastePile(cards));
     }
 
     protected static Stack<Card> toWastePile(String[] cards) {

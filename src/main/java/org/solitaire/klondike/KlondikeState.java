@@ -131,7 +131,7 @@ class KlondikeState extends GameState<String> {
     }
 
     private boolean isAppendable(Column column, Candidate candidate) {
-        var cards = candidate.getCards();
+        var cards = candidate.cards();
         var card = cards.get(0);
 
         if (column.isEmpty()) {
@@ -141,17 +141,17 @@ class KlondikeState extends GameState<String> {
     }
 
     protected boolean isMovable(Candidate candidate) {
-        if (COLUMN.equals(candidate.getOrigin())) {
-            return Optional.of(candidate.getFrom())
+        if (COLUMN.equals(candidate.origin())) {
+            return Optional.of(candidate.from())
                     .map(columns::get)
                     .filter(it -> it.indexOf(candidate.peek()) > 0)
                     .isPresent();
         }
-        return DECKPILE.equals(candidate.getOrigin());
+        return DECKPILE.equals(candidate.origin());
     }
 
     protected boolean isNotSameColumn(int colNum, Candidate candidate) {
-        return !(COLUMN.equals(candidate.getOrigin()) && candidate.getFrom() == colNum);
+        return !(COLUMN.equals(candidate.origin()) && candidate.from() == colNum);
     }
 
     protected List<Candidate> findOpenCandidates() {
@@ -227,11 +227,11 @@ class KlondikeState extends GameState<String> {
         range(0, candidates.size() - 1).forEach(i -> {
             var a = candidates.get(i);
 
-            if (a.getCards().get(0).isKing()) {
+            if (a.cards().get(0).isKing()) {
                 range(i + 1, candidates.size()).forEach(j -> {
                     var b = candidates.get(j);
 
-                    if (b.getCards().get(0).isKing()) {
+                    if (b.cards().get(0).isKing()) {
                         if (isDuplicate(a, b)) {
                             collect.add(b);
                         }
@@ -244,7 +244,7 @@ class KlondikeState extends GameState<String> {
     }
 
     protected boolean isDuplicate(Candidate a, Candidate b) {
-        return a.getOrigin() == b.getOrigin() && a.getFrom() == b.getFrom() && a.getTarget() != b.getTarget();
+        return a.origin() == b.origin() && a.from() == b.from() && a.target() != b.target();
     }
 
     protected boolean isImmediateToFoundation(Card card) {
@@ -262,7 +262,7 @@ class KlondikeState extends GameState<String> {
     }
 
     protected KlondikeState moveToTarget(Candidate candidate) {
-        path.add(CardHelper.stringOfRaws(candidate.getCards()));
+        path.add(CardHelper.stringOfRaws(candidate.cards()));
 
         if (candidate.isToColumn()) {
             appendToTargetColumn(candidate);
@@ -276,22 +276,22 @@ class KlondikeState extends GameState<String> {
     }
 
     protected boolean isScorable(Candidate candidate) {
-        return DECKPILE.equals(candidate.getOrigin()) ||
-                (COLUMN.equals(candidate.getOrigin()) && isNotEmpty(columns.get(candidate.getFrom())));
+        return DECKPILE.equals(candidate.origin()) ||
+                (COLUMN.equals(candidate.origin()) && isNotEmpty(columns.get(candidate.from())));
     }
 
     protected void moveToFoundation(Candidate candidate) {
-        var card = candidate.getCards().get(0);
+        var card = candidate.cards().get(0);
 
         Optional.of(suitCode(card))
                 .map(foundations::get)
                 .ifPresent(it -> it.push(card));
-        totalScore += isFirstCardToFoundation(candidate) ? 15 : DECKPILE.equals(candidate.getOrigin()) ? 10 : 5;
+        totalScore += isFirstCardToFoundation(candidate) ? 15 : DECKPILE.equals(candidate.origin()) ? 10 : 5;
     }
 
     private boolean isFirstCardToFoundation(Candidate candidate) {
-        if (COLUMN.equals(candidate.getOrigin())) {
-            var card = candidate.getCards().get(0);
+        if (COLUMN.equals(candidate.origin())) {
+            var card = candidate.cards().get(0);
 
             return foundations.get(suitCode(card)).size() == 1;
         }
@@ -299,10 +299,10 @@ class KlondikeState extends GameState<String> {
     }
 
     protected KlondikeState removeFromSource(Candidate candidate) {
-        switch (candidate.getOrigin()) {
+        switch (candidate.origin()) {
             case COLUMN -> removeFromColumn(candidate);
             case DECKPILE -> deckPile.pop();
-            case FOUNDATION -> foundations.get(candidate.getFrom()).pop();
+            case FOUNDATION -> foundations.get(candidate.from()).pop();
         }
         return this;
     }

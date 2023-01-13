@@ -1,14 +1,12 @@
 package org.solitaire.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
 
 @ToString
 @AllArgsConstructor
-@Getter
 public class Candidate {
     private List<Card> cards;
     private Origin origin;
@@ -16,10 +14,10 @@ public class Candidate {
     private int target;
 
     public Candidate(Candidate candidate) {
-        cards = candidate.getCards();
-        from = candidate.getFrom();
-        origin = candidate.getOrigin();
-        target = candidate.getTarget();
+        cards = candidate.cards();
+        from = candidate.from();
+        origin = candidate.origin();
+        target = candidate.target();
     }
 
     public static Candidate buildCandidate(int from, Origin origin, Card card) {
@@ -53,5 +51,21 @@ public class Candidate {
     public Candidate setTarget(int target) {
         this.target = target;
         return this;
+    }
+
+    public List<Card> cards() {
+        return cards;
+    }
+
+    public Origin origin() {
+        return origin;
+    }
+
+    public int from() {
+        return from;
+    }
+
+    public int target() {
+        return target;
     }
 }

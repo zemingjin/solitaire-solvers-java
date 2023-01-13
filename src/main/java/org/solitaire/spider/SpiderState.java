@@ -73,7 +73,7 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     private boolean isAtTop(Candidate candidate) {
-        return columns.get(candidate.getFrom()).indexOf(candidate.peek()) == 0;
+        return columns.get(candidate.from()).indexOf(candidate.peek()) == 0;
     }
 
     private boolean isNotRepeatingCandidate(Candidate candidate) {
@@ -127,12 +127,12 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     private int getChainLength(Candidate candidate) {
-        return candidate.getCards().size() + getTargetChainLength(candidate);
+        return candidate.cards().size() + targetChainLength(candidate);
     }
 
-    private int getTargetChainLength(Candidate candidate) {
+    private int targetChainLength(Candidate candidate) {
         return isMatchingTargetSuit(candidate)
-                ? getOrderedCardsAtColumn(columns.get(candidate.getTarget())).size()
+                ? getOrderedCardsAtColumn(columns.get(candidate.target())).size()
                 : 0;
     }
 
@@ -157,14 +157,14 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     protected int getDistanceToFlipCard(Candidate candidate) {
-        var column = columns.get(candidate.getFrom());
+        var column = columns.get(candidate.from());
         var dist = column.lastIndexOf(candidate.peek());
 
         return dist == 0 ? Integer.MAX_VALUE : dist - column.getOpenAt();
     }
 
     private boolean isMatchingTargetSuit(Candidate candidate) {
-        return Optional.of(columns.get(candidate.getTarget()))
+        return Optional.of(columns.get(candidate.target()))
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> candidate.peek().isSameSuit(it.peek()))
                 .orElse(true);
@@ -209,7 +209,7 @@ public class SpiderState extends GameState<Card[]> {
         var card = candidate.peek();
 
         return Optional.of(colAt)
-                .filter(it -> it != candidate.getFrom())
+                .filter(it -> it != candidate.from())
                 .map(columns::get)
                 .filter(it -> it.isEmpty() || it.peek().isHigherOrder(card))
                 .map(it -> new Candidate(candidate).setTarget(colAt))
@@ -231,7 +231,7 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     protected SpiderState appendToTarget(Candidate candidate) {
-        var cards = candidate.getCards();
+        var cards = candidate.cards();
 
         path.add(cards.toArray(Card[]::new));
         appendToTargetColumn(candidate);
@@ -240,7 +240,7 @@ public class SpiderState extends GameState<Card[]> {
     }
 
     protected SpiderState checkForRun(Candidate candidate) {
-        Optional.of(candidate.getTarget())
+        Optional.of(candidate.target())
                 .map(columns::get)
                 .filter(ObjectUtils::isNotEmpty)
                 .filter(it -> 13 <= it.size())

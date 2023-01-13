@@ -63,6 +63,11 @@ class PyramidStateTest {
         assertEquals(2, state.path().size());
         assert state.path.peek() != null;
         assertEquals("50:Kh", state.path.peek()[0].toString());
+
+        state.drawDeckCards();
+        card = state.deck().peek();
+        state.updateState(new Card[]{card});
+
     }
 
     @Test

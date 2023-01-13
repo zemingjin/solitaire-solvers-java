@@ -187,13 +187,13 @@ class SpiderStateTest {
         state.columns().get(5).add(buildCard(0, "Ah"));
         var candidate = state.findCandidateAtColumn(5).setTarget(9);
 
-        assertEquals(6, state.columns().get(candidate.getFrom()).size());
-        assertEquals(5, state.columns().get(candidate.getTarget()).size());
+        assertEquals(6, state.columns().get(candidate.from()).size());
+        assertEquals(5, state.columns().get(candidate.target()).size());
         var clone = state.updateState(candidate);
 
         assertNotNull(clone);
-        assertEquals(4, clone.columns().get(candidate.getFrom()).size());
-        assertEquals(7, clone.columns().get(candidate.getTarget()).size());
+        assertEquals(4, clone.columns().get(candidate.from()).size());
+        assertEquals(7, clone.columns().get(candidate.target()).size());
     }
 
     @Test
@@ -257,7 +257,7 @@ class SpiderStateTest {
     @Test
     public void test_appendToTarget() {
         var candidate = state.findCandidateAtColumn(5).setTarget(9);
-        var column = state.columns().get(candidate.getTarget());
+        var column = state.columns().get(candidate.target());
 
         assertEquals(5, column.size());
         assertEquals("53:3h", column.peek().toString());
@@ -279,7 +279,7 @@ class SpiderStateTest {
     @Test
     public void test_removeFromSource() {
         var candidate = state.findCandidateAtColumn(5).setTarget(9);
-        var column = state.columns().get(candidate.getFrom());
+        var column = state.columns().get(candidate.from());
 
         assertEquals(5, column.size());
         assertEquals("33:2h", column.peek().toString());
@@ -296,8 +296,8 @@ class SpiderStateTest {
 
         assertNotNull(targets);
         assertEquals(4, targets.size());
-        assertEquals(7, targets.get(0).getTarget());
-        assertEquals(9, targets.get(1).getTarget());
+        assertEquals(7, targets.get(0).target());
+        assertEquals(9, targets.get(1).target());
     }
 
     @Test
@@ -308,18 +308,18 @@ class SpiderStateTest {
 
         assertSame(a, state.selectCandidate(candidstes));
 
-        var b = buildCandidate(a.getFrom(), a.getOrigin(), a.getCards(), 8);
+        var b = buildCandidate(a.from(), a.origin(), a.cards(), 8);
         var result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(a, result);
 
-        state.columns().get(b.getTarget()).set(4, buildCard(0, "Ts"));
+        state.columns().get(b.target()).set(4, buildCard(0, "Ts"));
         result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(b, result);
 
-        state.columns().get(a.getTarget()).set(5, buildCard(0, "Ts"));
-        state.columns().get(a.getTarget()).set(4, buildCard(0, "Js"));
+        state.columns().get(a.target()).set(5, buildCard(0, "Ts"));
+        state.columns().get(a.target()).set(4, buildCard(0, "Js"));
         result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(a, result);
@@ -331,13 +331,13 @@ class SpiderStateTest {
         var result = state.matchCandidateToTargets(candidate).toList();
 
         assertNotNull(result);
-        assertEquals(4, result.get(0).getTarget());
+        assertEquals(4, result.get(0).target());
         assertEquals("Candidate(cards=[33:2h], origin=COLUMN, from=5, target=4)", result.get(0).toString());
 
         candidate = state.findCandidateAtColumn(1);
         result = state.matchCandidateToTargets(candidate).toList();
         assertNotNull(result);
-        assertEquals(7, result.get(0).getTarget());
+        assertEquals(7, result.get(0).target());
         assertEquals("Candidate(cards=[11:5h], origin=COLUMN, from=1, target=7)", result.get(0).toString());
     }
 
@@ -345,7 +345,7 @@ class SpiderStateTest {
     public void test_findTargetColumn_same_column() {
         var candidate = state.findCandidateAtColumn(5);
 
-        assertNull(state.findTargetColumn(candidate.getFrom(), candidate));
+        assertNull(state.findTargetColumn(candidate.from(), candidate));
 
         var result = state.findTargetColumn(9, candidate);
 

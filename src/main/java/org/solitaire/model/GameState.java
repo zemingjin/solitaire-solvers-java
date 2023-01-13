@@ -18,7 +18,7 @@ public class GameState<R> {
 
     protected void removeFromColumn(Candidate candidate) {
         Optional.of(candidate)
-                .map(Candidate::getFrom)
+                .map(Candidate::from)
                 .map(columns::get)
                 .ifPresent(it -> removeFromColumn(candidate, it));
     }
@@ -27,15 +27,15 @@ public class GameState<R> {
         var colSize = column.size();
 
         Optional.of(candidate)
-                .map(Candidate::getCards)
+                .map(Candidate::cards)
                 .filter(it -> column.contains(it.get(0)))
                 .ifPresent(it -> column.subList(colSize - it.size(), colSize).clear());
     }
 
     protected void appendToTargetColumn(Candidate candidate) {
-        var cards = candidate.getCards();
+        var cards = candidate.cards();
 
-        columns.get(candidate.getTarget()).addAll(cards);
+        columns.get(candidate.target()).addAll(cards);
     }
 
     protected boolean isCleared() {
