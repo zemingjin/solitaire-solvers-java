@@ -32,6 +32,10 @@ public class Candidate {
         return new Candidate(cards, origin, from, target);
     }
 
+    public static Candidate buildCandidate(Candidate that, int target) {
+        return new Candidate(that.cards, that.origin, that.from, target);
+    }
+
     public Card peek() {
         return cards.get(0);
     }

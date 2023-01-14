@@ -10,6 +10,10 @@ public class GameState<R> {
     protected final Path<R> path;
     protected int totalScore;
 
+    public GameState(Columns columns, Path<R> path) {
+        this(columns, path, 0);
+    }
+
     public GameState(Columns columns, Path<R> path, int totalScore) {
         this.columns = columns;
         this.path = path;
@@ -38,8 +42,8 @@ public class GameState<R> {
         columns.get(candidate.target()).addAll(cards);
     }
 
-    protected boolean isCleared() {
-        return columns.stream().allMatch(Column::isEmpty);
+    public boolean isCleared() {
+        return columns.isCleared();
     }
 
     public void setTotalScore(int totalScore) {

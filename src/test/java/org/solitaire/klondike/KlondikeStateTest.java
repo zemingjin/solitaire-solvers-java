@@ -219,8 +219,8 @@ class KlondikeStateTest {
         assertEquals(1, results.size());
 
         state.moveToTarget(results.get(0));
-        assertEquals(1, state.foundations().get(0).size());
-        assertEquals("[0:Ad]", state.foundations().get(0).toString());
+        assertEquals(1, state.foundations().get(1).size());
+        assertEquals("[0:Ad]", state.foundations().get(1).toString());
     }
 
     @Test

@@ -5,14 +5,17 @@ import org.solitaire.util.IOHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.solitaire.freecell.FreeCellHelper.LAST_BOARD;
+import static org.solitaire.freecell.FreeCellHelper.LAST_LONG;
 import static org.solitaire.freecell.FreeCellHelper.build;
+import static org.solitaire.freecell.FreeCellHelper.getColumn;
 
 class FreeCellHelperTest {
     private static final String TEST_FILE = "games/freecell/freecell-122622-medium.txt";
     protected static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
     @Test
-    public void test_build() {
+    void test_build() {
         var freeCell = build(cards);
         var state = freeCell.initState();
 
@@ -23,5 +26,14 @@ class FreeCellHelperTest {
         assertEquals(6, state.columns().get(4).size());
         assertEquals(6, state.columns().get(7).size());
     }
+
+    @Test
+    void test_getColumn() {
+        assertEquals(0, getColumn(0));
+        assertEquals(3, getColumn(LAST_LONG - 1));
+        assertEquals(4, getColumn(LAST_LONG));
+        assertEquals(7, getColumn(LAST_BOARD - 1));
+    }
+
 
 }

@@ -16,4 +16,8 @@ public class Columns extends ArrayList<Column> {
         that.forEach(it -> add(new Column(it)));
     }
 
+    public boolean isCleared() {
+        return stream().allMatch(Column::isEmpty);
+    }
+
 }

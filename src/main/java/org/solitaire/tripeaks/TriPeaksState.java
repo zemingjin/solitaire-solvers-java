@@ -1,6 +1,7 @@
 package org.solitaire.tripeaks;
 
 import org.solitaire.model.Card;
+import org.solitaire.util.CardHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +11,6 @@ import java.util.Stack;
 import java.util.function.IntUnaryOperator;
 
 import static java.lang.Math.min;
-import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
@@ -39,7 +39,7 @@ public class TriPeaksState {
     }
 
     protected boolean isCleared() {
-        return stream(cards, 0, LAST_BOARD).allMatch(Objects::isNull);
+        return CardHelper.isCleared(cards, 0, LAST_BOARD);
     }
 
     protected List<Card> findCandidates() {

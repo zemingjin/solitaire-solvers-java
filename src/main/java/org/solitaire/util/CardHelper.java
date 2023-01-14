@@ -47,10 +47,19 @@ public class CardHelper {
 
     public static int suitCode(Card card) {
         return switch (card.suit().toLowerCase()) {
-            case "d" -> 0;
-            case "h" -> 1;
-            case "c" -> 2;
+            case "c" -> 0;
+            case "d" -> 1;
+            case "h" -> 2;
             default -> 3;
+        };
+    }
+
+    public static String suit(int code) {
+        return switch (code % 4) {
+            case 0 -> useSuit ? CLUB : "c";
+            case 1 -> useSuit ? DIAMOND : "d";
+            case 2 -> useSuit ? HEART : "h";
+            default -> useSuit ? SPADE : "s";
         };
     }
 
@@ -95,11 +104,16 @@ public class CardHelper {
     }
 
     public static boolean isCleared(Card[] cards) {
-        return stream(cards).allMatch(Objects::isNull);
+        return isCleared(cards, 0, cards.length);
+    }
+
+    public static boolean isCleared(Card[] cards, int startInclusive, int endExclusive) {
+        return stream(cards, startInclusive, endExclusive).allMatch(Objects::isNull);
     }
 
     public static String string(List<?> cards) {
         return cards.stream()
+
                 .map(CardHelper::stringOfRaws)
                 .collect(Collectors.joining(" "));
     }
@@ -112,9 +126,8 @@ public class CardHelper {
 
     public static String stringOfRaws(Card[] cards) {
         return Optional.of(cards)
-                .filter(it -> it.length > 1)
-                .map(it -> Stream.of(cards).map(Card::raw).collect(Collectors.joining(":")))
-                .orElseGet(cards[0]::raw);
+                .map(it -> Arrays.toString(Stream.of(cards).map(Card::raw).toArray()))
+                .orElseThrow();
     }
 
     public static String stringOfRaws(List<Card> cards) {

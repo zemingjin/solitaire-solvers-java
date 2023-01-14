@@ -1,6 +1,5 @@
 package org.solitaire.spider;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
@@ -10,6 +9,7 @@ import org.solitaire.util.CardHelper;
 import java.util.List;
 
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -53,7 +53,7 @@ class SpiderStateTest {
     public void test_equals() {
         var that = new SpiderState(state);
 
-        assertTrue(EqualsBuilder.reflectionEquals(that, state));
+        assertTrue(reflectionEquals(that, state));
     }
 
     @Test
@@ -61,7 +61,7 @@ class SpiderStateTest {
         var clone = new SpiderState(state);
 
         assertNotSame(state, clone);
-        assertTrue(EqualsBuilder.reflectionEquals(clone, state));
+        assertTrue(reflectionEquals(clone, state));
     }
 
     @Test
@@ -226,7 +226,7 @@ class SpiderStateTest {
 
         assertNotNull(result);
         assertTrue(column.isEmpty());
-        assertEquals("Kd:Qd:Jd:Td:9d:8d:7d:6d:5d:4d:3d:2d:Ad", stringOfRaws(state.path().get(0)));
+        assertEquals("[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", stringOfRaws(state.path().get(0)));
         assertEquals(600, state.totalScore());
 
         state.path().clear();
@@ -392,7 +392,7 @@ class SpiderStateTest {
         assertNotNull(result);
         assertTrue(isNotEmpty(result));
         assertEquals(13, result.size());
-        assertEquals("Kd:Qd:Jd:Td:9d:8d:7d:6d:5d:4d:3d:2d:Ad", stringOfRaws(result));
+        assertEquals("[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", stringOfRaws(result));
     }
 
 }

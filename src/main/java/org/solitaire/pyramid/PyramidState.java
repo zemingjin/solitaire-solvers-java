@@ -2,6 +2,7 @@ package org.solitaire.pyramid;
 
 import org.solitaire.model.Card;
 import org.solitaire.model.Path;
+import org.solitaire.util.CardHelper;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -71,7 +72,7 @@ public class PyramidState {
     }
 
     public boolean isCleared() {
-        return stream(cards).allMatch(Objects::isNull);
+        return CardHelper.isCleared(cards);
     }
 
     /***************************************************************************************************************
