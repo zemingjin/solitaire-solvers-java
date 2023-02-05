@@ -17,9 +17,13 @@ class FreeCellHelperTest {
     @Test
     void test_build() {
         var freeCell = build(cards);
-        var state = freeCell.initState();
 
         assertNotNull(freeCell);
+
+        var state = (FreeCellState)freeCell.stack().peek().peek();
+
+        assertNotNull(state);
+        assertNotNull(state.columns());
         assertEquals(8, state.columns().size());
         assertEquals(7, state.columns().get(0).size());
         assertEquals(7, state.columns().get(3).size());

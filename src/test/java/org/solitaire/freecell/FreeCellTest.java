@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.solitaire.model.StateQueue;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,7 +33,8 @@ class FreeCellTest {
     @BeforeEach
     public void setup() {
         state = spy(state);
-        freeCell = FreeCellHelper.build(FreeCellHelperTest.cards).initState(state);
+        freeCell = FreeCellHelper.build(FreeCellHelperTest.cards);
+        freeCell.stack().add(new StateQueue<>(state));
         freeCell.cloner(it -> state);
     }
 
@@ -47,7 +50,7 @@ class FreeCellTest {
 
         assertNotNull(result);
         assertEquals(ZERO, result.size());
-        assertEquals(ONE, freeCell.totalScenarios());
+        assertEquals(TWO, freeCell.totalScenarios());
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
         verify(state, times(ONE)).updateState(eq(candidate));
@@ -62,23 +65,7 @@ class FreeCellTest {
         verify(state, times(ONE)).isCleared();
         assertNotNull(result);
         assertEquals(ONE, result.size());
-        assertEquals(ZERO, freeCell.totalScenarios());
-    }
-
-    @Test
-    public void test_applyCandidates() {
-        var candidate = buildCandidate(0, COLUMN, buildCard(0, "Ad"));
-
-        when(state.isCleared()).thenReturn(true);
-        when(state.updateState(eq(candidate))).thenReturn(state);
-
-        freeCell.applyCandidates(List.of(candidate), state);
-
-        assertEquals(ONE, freeCell.solutions().size());
-        assertEquals(ZERO, freeCell.totalScenarios());
-
-        verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).updateState(eq(candidate));
+        assertEquals(ONE, freeCell.totalScenarios());
     }
 
     @Test

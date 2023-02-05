@@ -171,6 +171,11 @@ public class FreeCellState extends GameState<Card[]> {
         return freeCells;
     }
 
+    @Override
+    public double score() {
+        return super.score();
+    }
+
     protected int maxCardsToMove() {
         var emptyColumns = columns.stream().filter(ObjectUtils::isEmpty).count();
         var emptyFreeCells = stream(freeCells).filter(Objects::isNull).count();

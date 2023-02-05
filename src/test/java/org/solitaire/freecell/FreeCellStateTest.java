@@ -33,7 +33,7 @@ class FreeCellStateTest {
     @BeforeEach
     void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).initState();
+        state = build(cards).stack().peek().peek();
     }
 
     @Test

@@ -20,13 +20,14 @@ import static org.solitaire.pyramid.PyramidHelper.row;
 import static org.solitaire.pyramid.PyramidTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
 
-@SuppressWarnings("unchecked rawtypes")
 class PyramidHelperTest {
     private Pyramid pyramid;
+    @SuppressWarnings("rawtypes")
     private Pair<Integer, List> maxScore;
     private List<Card[]> list;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setup() {
         CardHelper.useSuit = false;
         pyramid = build(cards);

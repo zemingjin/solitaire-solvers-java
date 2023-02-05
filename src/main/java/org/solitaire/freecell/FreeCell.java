@@ -7,12 +7,15 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
 import org.solitaire.model.GameSolver;
 import org.solitaire.model.Path;
+import org.solitaire.model.StateQueue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Heineman’s Staged Deepening (HSD)
@@ -23,17 +26,40 @@ import java.util.function.Function;
 @SuppressWarnings("rawtypes")
 public class FreeCell implements GameSolver {
     private final List<List> solutions = new ArrayList<>();
-    private FreeCellState initState;
     private int totalScenarios;
     private Function<FreeCellState, FreeCellState> cloner = FreeCellState::new;
+    private Stack<StateQueue<FreeCellState>> stack = new Stack<>();
+    private int maxStack = 0;
 
     public FreeCell(Columns columns) {
-        initState = new FreeCellState(columns, new Path<>(), new Card[4], new Card[4]);
+        stack.add(new StateQueue<>(new FreeCellState(columns, new Path<>(), new Card[4], new Card[4])));
+    }
+
+    public int maxStack() {
+        return this.maxStack;
+    }
+
+    public void maxStack(int maxStack) {
+        this.maxStack = maxStack;
+    }
+
+    protected Stack<StateQueue<FreeCellState>> stack() {
+        return this.stack;
+    }
+
+    protected void stack(Stack<StateQueue<FreeCellState>> stack) {
+        this.stack = stack;
     }
 
     @Override
     public List<List> solve() {
-        solve(initState);
+        while (!stack.isEmpty()) {
+            checkMaxStack();
+            Optional.of(stack.peek())
+                    .filter(StateQueue::isNotEmpty)
+                    .map(StateQueue::poll)
+                    .ifPresentOrElse(this::solve, stack::pop);
+        }
         return solutions();
     }
 
@@ -45,15 +71,29 @@ public class FreeCell implements GameSolver {
             Optional.of(state)
                     .map(FreeCellState::findCandidates)
                     .filter(ObjectUtils::isNotEmpty)
-                    .ifPresent(it -> applyCandidates(it, state));
+                    .map(it -> toStateQueue(it, state))
+                    .map(this::scoreStates)
+                    .map(this::sortStates)
+                    .ifPresent(stack::add);
         }
     }
 
-    protected void applyCandidates(List<Candidate> candidates, FreeCellState state) {
-        candidates.stream()
+    protected StateQueue<FreeCellState> toStateQueue(List<Candidate> candidates, FreeCellState state) {
+        return candidates.stream()
                 .map(it -> cloner.apply(state).updateState(it))
                 .filter(Objects::nonNull)
-                .forEach(this::solve);
+                .collect(Collectors.toCollection(StateQueue<FreeCellState>::new));
+    }
+
+    protected StateQueue<FreeCellState> scoreStates(StateQueue<FreeCellState> queue) {
+        queue.forEach(FreeCellState::score);
+        return queue;
+    }
+
+    protected StateQueue<FreeCellState> sortStates(StateQueue<FreeCellState> queue) {
+        return queue.stream()
+                .sorted((a, b) -> Double.compare(b.score(), a.score()))
+                .collect(Collectors.toCollection(StateQueue<FreeCellState>::new));
     }
 
     @Override
@@ -66,20 +106,17 @@ public class FreeCell implements GameSolver {
         return totalScenarios;
     }
 
-    public FreeCellState initState() {
-        return initState;
-    }
-
-    public FreeCell initState(FreeCellState initState) {
-        this.initState = initState;
-        return this;
-    }
-
     public List<List> solutions() {
         return solutions;
     }
 
     public void cloner(Function<FreeCellState, FreeCellState> cloner) {
         this.cloner = cloner;
+    }
+
+    private void checkMaxStack() {
+        if (stack.size() > maxStack()) {
+            maxStack(stack.size());
+        }
     }
 }
