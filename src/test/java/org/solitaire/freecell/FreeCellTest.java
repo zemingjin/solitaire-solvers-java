@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.solitaire.model.StateQueue;
 
 import java.util.List;
 
@@ -21,7 +20,6 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelperTest.ONE;
-import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +32,8 @@ class FreeCellTest {
     public void setup() {
         state = spy(state);
         freeCell = FreeCellHelper.build(FreeCellHelperTest.cards);
-        freeCell.stack().add(new StateQueue<>(state));
+        freeCell.stack().clear();
+        freeCell.add(state);
         freeCell.cloner(it -> state);
     }
 
@@ -50,7 +49,7 @@ class FreeCellTest {
 
         assertNotNull(result);
         assertEquals(ZERO, result.size());
-        assertEquals(TWO, freeCell.totalScenarios());
+        assertEquals(ONE, freeCell.totalScenarios());
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
         verify(state, times(ONE)).updateState(eq(candidate));

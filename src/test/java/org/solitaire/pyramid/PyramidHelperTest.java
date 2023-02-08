@@ -33,13 +33,14 @@ class PyramidHelperTest {
         pyramid = build(cards);
         maxScore = pyramid.getMaxScore(pyramid.solve());
         list = (List<Card[]>) maxScore.getRight();
+        pyramid = build(cards);
     }
 
     @Test
     public void test_build() {
         assertNotNull(pyramid);
-        assertEquals(28, pyramid.initState().cards().length);
-        assertEquals(24, pyramid.initState().deck().size());
+        assertEquals(28, pyramid.stack().peek().peek().cards().length);
+        assertEquals(24, pyramid.stack().peek().peek().deck().size());
 
         assertNotNull(maxScore);
         assertEquals(1290, maxScore.getLeft());

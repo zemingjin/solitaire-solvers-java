@@ -3,57 +3,49 @@ package org.solitaire.pyramid;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
-import org.solitaire.model.GameSolver;
-import org.solitaire.model.Path;
+import org.solitaire.model.SolveExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Stack;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
-public class Pyramid implements GameSolver {
+public class Pyramid extends SolveExecutor<PyramidState> {
     public static final String KING = "K";
     public static final String ACE = "A";
-    private static int totalScenarios;
-    private final List<List> solutions = new ArrayList<>();
-    private PyramidState initState;
     private Function<PyramidState, PyramidState> cloner = PyramidState::new;
 
-    public Pyramid(Card[] cards, Stack<Card> deck) {
-        initState = new PyramidState(cards, deck, new Stack<>(), new Path<>(), 3);
-        totalScenarios = 0;
-    }
-
-    @Override
-    public List<List> solve() {
-        solve(initState);
-        return solutions();
+    public Pyramid(PyramidState state) {
+        super(state);
+        stateConsumer(this::solve);
     }
 
     protected void solve(PyramidState state) {
         if (state.isCleared()) {
-            solutions.add(state.path());
+            solutions().add(state.path());
         } else {
-            totalScenarios++;
             Optional.of(state.findCandidates())
                     .filter(ObjectUtils::isNotEmpty)
-                    .ifPresentOrElse(it -> applyCandidates(it, state), () -> drawDeck(state));
+                    .map(it -> applyCandidates(it, state))
+                    .map(super::addAll)
+                    .orElseGet(() -> drawDeck(state));
         }
     }
 
-    protected void applyCandidates(List<Card[]> candidates, PyramidState state) {
-        candidates.stream()
+    protected List<PyramidState> applyCandidates(List<Card[]> candidates, PyramidState state) {
+        return candidates.stream()
                 .map(it -> cloner.apply(state).updateState(it))
                 .filter(Objects::nonNull)
-                .forEach(this::solve);
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    protected void drawDeck(PyramidState state) {
-        Optional.ofNullable(state.drawDeckCards())
-                .ifPresent(this::solve);
+    protected boolean drawDeck(PyramidState state) {
+        return Optional.ofNullable(state.drawDeckCards())
+                .map(super::add)
+                .orElse(false);
     }
 
     @SuppressWarnings("unchecked")
@@ -63,23 +55,6 @@ public class Pyramid implements GameSolver {
                 .map(it -> (List<Card[]>) it)
                 .map(PyramidHelper::getScore)
                 .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
-    }
-
-    protected PyramidState initState() {
-        return initState;
-    }
-
-    protected void initState(PyramidState initState) {
-        this.initState = initState;
-    }
-
-    public List<List> solutions() {
-        return solutions;
-    }
-
-    @Override
-    public int totalScenarios() {
-        return totalScenarios;
     }
 
     public Pyramid cloner(Function<PyramidState, PyramidState> cloner) {

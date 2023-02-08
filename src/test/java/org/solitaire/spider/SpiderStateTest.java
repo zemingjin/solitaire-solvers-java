@@ -46,7 +46,7 @@ class SpiderStateTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).getInitState();
+        state = build(cards).stack().peek().peek();
     }
 
     @Test

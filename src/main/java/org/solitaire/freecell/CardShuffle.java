@@ -74,28 +74,6 @@ public class CardShuffle {
     protected static final int MAXPOS = 21;
     protected static final int MAXCOL = 8;
 
-    public String[][] genBoard(int gameNumber) {
-        return Optional.of(getShuffledCards(gameNumber))
-                .map(CardShuffle::cleanUp)
-                .map(CardShuffle::toStrings)
-                .orElseThrow();
-    }
-
-    private int[][] getShuffledCards(int gameNumber) {
-        var deck = initDeck();
-        var card = new int[MAXCOL][MAXPOS];
-        var wLeft = new AtomicInteger(NUM_CARDS);
-        var seed = new AtomicInteger(gameNumber);
-
-        range(0, NUM_CARDS).forEach(i -> {
-            var j = msRandom(seed) % wLeft.get();
-
-            card[i % 8][i / 8] = deck[j];
-            deck[j] = deck[wLeft.decrementAndGet()];
-        });
-        return card;
-    }
-
     private static int msRandom(AtomicInteger seed) {
         seed.set(seed.get() * 214013 + 2531011);
         return (seed.get() >> 16) & 0x7fff;
@@ -122,6 +100,28 @@ public class CardShuffle {
 
     private static String value(int at) {
         return String.valueOf(VALUES.charAt(at / 4));
+    }
+
+    public String[][] genBoard(int gameNumber) {
+        return Optional.of(getShuffledCards(gameNumber))
+                .map(CardShuffle::cleanUp)
+                .map(CardShuffle::toStrings)
+                .orElseThrow();
+    }
+
+    private int[][] getShuffledCards(int gameNumber) {
+        var deck = initDeck();
+        var card = new int[MAXCOL][MAXPOS];
+        var wLeft = new AtomicInteger(NUM_CARDS);
+        var seed = new AtomicInteger(gameNumber);
+
+        range(0, NUM_CARDS).forEach(i -> {
+            var j = msRandom(seed) % wLeft.get();
+
+            card[i % 8][i / 8] = deck[j];
+            deck[j] = deck[wLeft.decrementAndGet()];
+        });
+        return card;
     }
 
     private int[] initDeck() {

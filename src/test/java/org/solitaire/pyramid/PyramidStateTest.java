@@ -26,7 +26,7 @@ class PyramidStateTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).initState();
+        state = build(cards).stack().peek().peek();
     }
 
     @Test
@@ -73,7 +73,7 @@ class PyramidStateTest {
         card = buildCard(LAST_BOARD, "Ad");
         state.deck().push(card);
         state.flippedDeck().add(card);
-        state.updateState(new Card[]{ card });
+        state.updateState(new Card[]{card});
 
         assertNotEquals(state.deck().peek(), card);
         assertEquals(state.flippedDeck().peek(), card);

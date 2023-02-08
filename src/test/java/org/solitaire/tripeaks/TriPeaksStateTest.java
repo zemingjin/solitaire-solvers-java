@@ -21,7 +21,7 @@ class TriPeaksStateTest {
     @BeforeEach
     void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).initState();
+        state = build(cards).stack().peek().peek();
     }
 
     @Test
@@ -52,6 +52,4 @@ class TriPeaksStateTest {
         assertNotNull(ex);
         assertEquals("Invalid card: " + card, ex.getMessage());
     }
-
-
 }

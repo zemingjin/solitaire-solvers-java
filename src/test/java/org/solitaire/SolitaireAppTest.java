@@ -46,9 +46,9 @@ class SolitaireAppTest {
 
     @Test
     void getSolverType() {
-        assertEquals(TRIPEAKS, app.getSolverType(new String[]{ TEST_FILE, TRIPEAKS }));
+        assertEquals(TRIPEAKS, app.getSolverType(new String[]{TEST_FILE, TRIPEAKS}));
 
-        var ex = assertThrows(RuntimeException.class, () -> app.getSolverType(new String[]{ TEST_FILE }));
+        var ex = assertThrows(RuntimeException.class, () -> app.getSolverType(new String[]{TEST_FILE}));
 
         assertNotNull(ex);
         assertEquals("Missing solver type; '-t', '-p', '-k', or '-s'", ex.getMessage());

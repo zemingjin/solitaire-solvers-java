@@ -6,58 +6,54 @@ import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.model.GameSolver;
 import org.solitaire.model.Path;
+import org.solitaire.model.SolveExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
-public class Spider implements GameSolver {
+public class Spider extends SolveExecutor<SpiderState> {
     protected static final int SOLUTION_LIMIT = 1000;
 
-    protected final List<List> solutions = new ArrayList<>();
     private final Function<SpiderState, SpiderState> cloner = SpiderState::new;
-    private final SpiderState initState;
-    private int totalScenarios;
 
     public Spider(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
-        initState = new SpiderState(columns, path, totalScore, deck);
-    }
-
-    @Override
-    public List<List> solve() {
-        solve(initState);
-        return solutions;
+        super(new SpiderState(columns, path, totalScore, deck));
+        stateConsumer(this::solve);
     }
 
     protected void solve(SpiderState state) {
-        if (solutions.size() < SOLUTION_LIMIT) {
+        if (solutions().size() < SOLUTION_LIMIT) {
             if (state.isCleared()) {
-                solutions.add(state.path());
+                solutions().add(state.path());
             } else {
-                totalScenarios++;
                 Optional.of(state.findCandidates())
                         .filter(ObjectUtils::isNotEmpty)
-                        .ifPresentOrElse(it -> applyCandidates(it, state), () -> drawDeck(state));
+                        .map(it -> applyCandidates(it, state))
+                        .filter(it -> !it.isEmpty())
+                        .map(super::addAll)
+                        .orElseGet(() -> drawDeck(state));
             }
         }
     }
 
-    protected void applyCandidates(List<Candidate> candidates, SpiderState state) {
-        candidates.stream()
+    protected List<SpiderState> applyCandidates(List<Candidate> candidates, SpiderState state) {
+        return candidates.stream()
                 .map(it -> cloneState(state).updateState(it))
                 .filter(Objects::nonNull)
-                .forEach(this::solve);
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    protected void drawDeck(SpiderState state) {
+    protected boolean drawDeck(SpiderState state) {
         if (state.drawDeck()) {
-            solve(state);
+            return add(state);
         }
+        return false;
     }
 
     @Override
@@ -68,14 +64,4 @@ public class Spider implements GameSolver {
     private SpiderState cloneState(SpiderState state) {
         return cloner.apply(state);
     }
-
-    public SpiderState getInitState() {
-        return initState;
-    }
-
-    @Override
-    public int totalScenarios() {
-        return totalScenarios;
-    }
-
 }

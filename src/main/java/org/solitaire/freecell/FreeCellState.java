@@ -148,7 +148,10 @@ public class FreeCellState extends GameState<Card[]> {
         return Optional.of(candidate)
                 .map(Candidate::target)
                 .map(columns::get)
-                .map(it -> { it.addAll(candidate.cards()); return this; })
+                .map(it -> {
+                    it.addAll(candidate.cards());
+                    return this;
+                })
                 .orElse(null);
     }
 
@@ -180,6 +183,6 @@ public class FreeCellState extends GameState<Card[]> {
         var emptyColumns = columns.stream().filter(ObjectUtils::isEmpty).count();
         var emptyFreeCells = stream(freeCells).filter(Objects::isNull).count();
 
-        return (int)((emptyFreeCells + 1) * (emptyColumns + 1));
+        return (int) ((emptyFreeCells + 1) * (emptyColumns + 1));
     }
 }

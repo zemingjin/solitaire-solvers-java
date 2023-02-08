@@ -33,7 +33,7 @@ class KlondikeStateTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = build(CARDS).initState();
+        state = build(CARDS).stack().peek().peek();
     }
 
     @Test
