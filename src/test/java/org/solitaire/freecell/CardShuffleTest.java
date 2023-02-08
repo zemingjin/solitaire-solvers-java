@@ -24,10 +24,10 @@ class CardShuffleTest {
         var card = cardShuffle.genBoard(1);
 
         assertNotNull(card);
-        assertEquals(MAXCOL - 1, card.length);
+        assertEquals(MAXCOL, card.length);
         assertEquals(7, card[0].length);
         assertEquals(6, card[4].length);
-        assertEquals("[4d, 6s, 9s, 3c, 4s, Qh, Ts]", Arrays.toString(card[0]));
+        assertEquals("[JD, KD, 2S, 4C, 3S, 6D, 6S]", Arrays.toString(card[0]));
     }
 
 }

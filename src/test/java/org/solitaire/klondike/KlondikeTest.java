@@ -10,7 +10,7 @@ import org.solitaire.util.CardHelper;
 
 import java.util.List;
 
-import static edu.emory.mathcs.backport.java.util.Collections.emptyList;
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -89,7 +89,6 @@ class KlondikeTest {
         assertEquals(1, klondike.totalScenarios());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test_solve_drawDeck() {
         when(state.isCleared()).thenReturn(false);

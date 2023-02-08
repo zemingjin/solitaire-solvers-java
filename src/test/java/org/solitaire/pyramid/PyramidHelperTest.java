@@ -57,6 +57,11 @@ class PyramidHelperTest {
 
         assertSame(a, cardAt(new Card[]{a, b}));
         assertSame(a, cardAt(new Card[]{b, a}));
+
+        b = buildCard(1, "Qs");
+
+        assertSame(a, cardAt(new Card[]{a, b}));
+        assertSame(b, cardAt(new Card[]{b, a}));
     }
 
 

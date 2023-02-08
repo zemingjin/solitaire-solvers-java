@@ -54,7 +54,7 @@ class KlondikeStateTest {
 
         assertNotNull(result);
         assertEquals(3, result.size());
-        assertEquals("Candidate(cards=[26:9s], origin=COLUMN, from=1, target=0)", result.get(0).toString());
+        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=0]", result.get(0).toString());
     }
 
     @Test
@@ -70,7 +70,7 @@ class KlondikeStateTest {
 
     @Test
     public void test_updateStates() {
-        var candidate = state.findCandidateAtColumn(6).setTarget(2);
+        var candidate = buildCandidate(state.findCandidateAtColumn(6), 2);
 
         assertEquals(7, state.columns().get(6).size());
         assertEquals(3, state.columns().get(2).size());
@@ -166,7 +166,7 @@ class KlondikeStateTest {
 
     @Test
     public void test_appendToTarget() {
-        var candidate = state.findCandidateAtColumn(6).setTarget(2);
+        var candidate = buildCandidate(state.findCandidateAtColumn(6), 2);
         var column = state.columns().get(2);
 
         assertEquals(3, column.size());
@@ -234,7 +234,7 @@ class KlondikeStateTest {
         state.findFoundationCandidateFromDeck(collector);
 
         assertEquals(1, collector.size());
-        assertEquals("Candidate(cards=[0:Ad], origin=DECKPILE, from=-1, target=-1)", collector.get(0).toString());
+        assertEquals("Candidate[cards=[0:Ad], origin=DECKPILE, from=-1, target=-1]", collector.get(0).toString());
     }
 
     @Test
@@ -292,8 +292,8 @@ class KlondikeStateTest {
 
         assertNotNull(targets);
         assertEquals(3, targets.size());
-        assertEquals("Candidate(cards=[26:9s], origin=COLUMN, from=1, target=0)", targets.get(0).toString());
-        assertEquals("Candidate(cards=[38:5c], origin=COLUMN, from=4, target=5)", targets.get(1).toString());
+        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=0]", targets.get(0).toString());
+        assertEquals("Candidate[cards=[38:5c], origin=COLUMN, from=4, target=5]", targets.get(1).toString());
     }
 
     @Test
@@ -325,7 +325,7 @@ class KlondikeStateTest {
         var result = state.findTarget(candidate);
 
         assertNotNull(result);
-        assertEquals("Candidate(cards=[34:Kh], origin=COLUMN, from=1, target=0)", result.get(0).toString());
+        assertEquals("Candidate[cards=[34:Kh], origin=COLUMN, from=1, target=0]", result.get(0).toString());
 
         candidate = buildCandidate(-1, DECKPILE, List.of(card));
         state.deckPile().add(card);
@@ -333,7 +333,7 @@ class KlondikeStateTest {
         result = state.findTarget(candidate);
 
         assertNotNull(result);
-        assertEquals("Candidate(cards=[34:Kh], origin=DECKPILE, from=-1, target=0)", result.get(0).toString());
+        assertEquals("Candidate[cards=[34:Kh], origin=DECKPILE, from=-1, target=0]", result.get(0).toString());
     }
 
     @Test
@@ -342,15 +342,15 @@ class KlondikeStateTest {
 
         assertNotNull(result);
         assertEquals(7, result.size());
-        assertEquals("Candidate(cards=[24:Th], origin=COLUMN, from=0, target=-1)", result.get(0).toString());
+        assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=-1]", result.get(0).toString());
 
         state.drawDeckCards();
         result = state.findOpenCandidates();
 
         assertNotNull(result);
         assertEquals(8, result.size());
-        assertEquals("Candidate(cards=[24:Th], origin=COLUMN, from=0, target=-1)", result.get(0).toString());
-        assertEquals("Candidate(cards=[21:7d], origin=DECKPILE, from=-1, target=-1)", result.get(7).toString());
+        assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=-1]", result.get(0).toString());
+        assertEquals("Candidate[cards=[21:7d], origin=DECKPILE, from=-1, target=-1]", result.get(7).toString());
     }
 
     @Test

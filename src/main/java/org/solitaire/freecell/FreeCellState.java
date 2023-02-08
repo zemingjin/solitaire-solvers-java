@@ -54,6 +54,7 @@ public class FreeCellState extends GameState<Card[]> {
         return range(0, columns.size())
                 .mapToObj(i -> Pair.of(i, candidate))
                 .filter(this::isAppendableToColumn)
+                .filter(this::isMovable)
                 .map(it -> buildCandidate(it.getRight(), it.getLeft()))
                 .toList();
     }
@@ -64,6 +65,10 @@ public class FreeCellState extends GameState<Card[]> {
                 .map(Column::peek)
                 .filter(it -> it.isHigherWithDifferentColor(pair.getRight().peek()))
                 .isPresent();
+    }
+
+    private boolean isMovable(Pair<Integer, Candidate> pair) {
+        return pair.getRight().cards().size() <= maxCardsToMove();
     }
 
     protected Stream<Candidate> findFreeCellCandidates() {
@@ -110,6 +115,7 @@ public class FreeCellState extends GameState<Card[]> {
     }
 
     /*****************************************************************************************************************
+     * Apply candidate
      ****************************************************************************************************************/
     protected FreeCellState updateState(Candidate candidate) {
         return Optional.of(candidate)
@@ -139,8 +145,11 @@ public class FreeCellState extends GameState<Card[]> {
     }
 
     private FreeCellState moveToColumn(Candidate candidate) {
-        columns.get(candidate.target()).addAll(candidate.cards());
-        return this;
+        return Optional.of(candidate)
+                .map(Candidate::target)
+                .map(columns::get)
+                .map(it -> { it.addAll(candidate.cards()); return this; })
+                .orElse(null);
     }
 
     private FreeCellState toFreeCell(Card card) {

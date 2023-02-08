@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.solitaire.SolitaireApp.NOSUITS;
 import static org.solitaire.SolitaireApp.PYRAMID;
 import static org.solitaire.SolitaireApp.TRIPEAKS;
@@ -41,6 +42,16 @@ class SolitaireAppTest {
 
         assertNotNull(result);
         assertEquals(512, result.size());
+    }
+
+    @Test
+    void getSolverType() {
+        assertEquals(TRIPEAKS, app.getSolverType(new String[]{ TEST_FILE, TRIPEAKS }));
+
+        var ex = assertThrows(RuntimeException.class, () -> app.getSolverType(new String[]{ TEST_FILE }));
+
+        assertNotNull(ex);
+        assertEquals("Missing solver type; '-t', '-p', '-k', or '-s'", ex.getMessage());
     }
 
 }

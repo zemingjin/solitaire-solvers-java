@@ -46,10 +46,6 @@ public class GameState<R> {
         return columns.isCleared();
     }
 
-    public void setTotalScore(int totalScore) {
-        this.totalScore = totalScore;
-    }
-
     public Columns columns() {
         return columns;
     }

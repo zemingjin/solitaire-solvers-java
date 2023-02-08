@@ -77,11 +77,11 @@ public class SolitaireApp {
                 .orElseThrow();
     }
 
-    private String getSolverType(String[] args) {
+    protected String getSolverType(String[] args) {
         return Arrays.stream(args, 1, args.length)
                 .filter(BUILDERS::containsKey)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Missing solver type; '-t', '-p', or '-s'"));
+                .orElseThrow(() -> new RuntimeException("Missing solver type; '-t', '-p', '-k', or '-s'"));
     }
 
     protected void checkUseSuits(String[] args) {

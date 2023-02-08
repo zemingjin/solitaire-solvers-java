@@ -52,10 +52,4 @@ public class GameStateTest {
         assertEquals(6, state.columns.get(0).size());
         assertEquals(6, state.columns.get(1).size());
     }
-
-    @Test
-    public void test_setTotalScore() {
-        state.setTotalScore(state.totalScore - 1);
-        assertEquals(499, state.totalScore);
-    }
 }

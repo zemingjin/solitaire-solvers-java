@@ -2,9 +2,8 @@ package org.solitaire.freecell;
 
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.IntStream.range;
@@ -73,14 +72,40 @@ import static org.solitaire.util.CardHelper.suit;
 public class CardShuffle {
     protected static final int NUM_CARDS = 52;
     protected static final int MAXPOS = 21;
-    protected static final int MAXCOL = 9;
+    protected static final int MAXCOL = 8;
+
+    public String[][] genBoard(int gameNumber) {
+        return Optional.of(getShuffledCards(gameNumber))
+                .map(CardShuffle::cleanUp)
+                .map(CardShuffle::toStrings)
+                .orElseThrow();
+    }
+
+    private int[][] getShuffledCards(int gameNumber) {
+        var deck = initDeck();
+        var card = new int[MAXCOL][MAXPOS];
+        var wLeft = new AtomicInteger(NUM_CARDS);
+        var seed = new AtomicInteger(gameNumber);
+
+        range(0, NUM_CARDS).forEach(i -> {
+            var j = msRandom(seed) % wLeft.get();
+
+            card[i % 8][i / 8] = deck[j];
+            deck[j] = deck[wLeft.decrementAndGet()];
+        });
+        return card;
+    }
+
+    private static int msRandom(AtomicInteger seed) {
+        seed.set(seed.get() * 214013 + 2531011);
+        return (seed.get() >> 16) & 0x7fff;
+    }
 
     private static int[][] cleanUp(int[][] card) {
-        var copy = new int[MAXCOL - 1][MAXPOS];
-
-        System.arraycopy(card, 1, copy, 0, MAXCOL - 1);
-        range(0, copy.length).forEach(i -> copy[i] = Arrays.copyOf(copy[i], i < 4 ? 7 : 6));
-        return copy;
+        for (int i = 0; i < card.length; i++) {
+            card[i] = Arrays.copyOf(card[i], i < 4 ? 7 : 6);
+        }
+        return card;
     }
 
     private static String[][] toStrings(int[][] cards) {
@@ -99,24 +124,12 @@ public class CardShuffle {
         return String.valueOf(VALUES.charAt(at / 4));
     }
 
-    public String[][] genBoard(int gameNumber) {
+    private int[] initDeck() {
         var deck = new int[NUM_CARDS];
-        var card = new int[MAXCOL][MAXPOS];
-        var rand = new Random(gameNumber);      // Not the same as srand, workaround?
-        var wLeft = NUM_CARDS;
 
         range(0, deck.length).forEach(i -> deck[i] = i);
 
-        for (int i = 0; i < NUM_CARDS; i++) {
-            var j = abs(rand.nextInt()) % wLeft;
-
-            card[(i % 8) + 1][i / 8] = deck[j];
-            deck[j] = deck[--wLeft];
-        }
-        return Optional.of(card)
-                .map(CardShuffle::cleanUp)
-                .map(CardShuffle::toStrings)
-                .orElseThrow();
+        return deck;
     }
 
 }

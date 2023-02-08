@@ -19,6 +19,7 @@ public class SpiderHelper {
     protected static final int NUM_LONG = 4;
     protected static final int COL_LONG = 6;
     protected static final int LAST_LONG = 24;
+    private static final int LONG_RANGE_EXCLUSIVE = LAST_LONG + 5;
 
     public static Spider build(String[] cards) {
         assert nonNull(cards) && cards.length == LAST_BOARD + LAST_DECK;
@@ -55,9 +56,9 @@ public class SpiderHelper {
     }
 
     protected static int calcColumn(int i) {
-        if (0 <= i && i < LAST_LONG) {
+        if (0 <= i && i < LONG_RANGE_EXCLUSIVE) {
             return i / 6;
-        } else if (LAST_LONG <= i && i < LAST_BOARD) {
+        } else if (LONG_RANGE_EXCLUSIVE <= i && i < LAST_BOARD) {
             return (i - LAST_LONG) / 5 + NUM_LONG;
         }
         throw new IndexOutOfBoundsException("Invalid index: " + i);

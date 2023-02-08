@@ -119,7 +119,7 @@ class KlondikeState extends GameState<String> {
     private LinkedList<Candidate> checkColumnsForAppendables(Candidate candidate) {
         return range(0, columns.size())
                 .filter(i -> isMatchingColumn(i, candidate))
-                .mapToObj(i -> new Candidate(candidate).setTarget(i))
+                .mapToObj(i -> buildCandidate(candidate, i))
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 

@@ -47,19 +47,19 @@ public class CardHelper {
 
     public static int suitCode(Card card) {
         return switch (card.suit().toLowerCase()) {
-            case "c" -> 0;
-            case "d" -> 1;
-            case "h" -> 2;
+            case "d" -> 0;
+            case "h" -> 1;
+            case "c" -> 2;
             default -> 3;
         };
     }
 
     public static String suit(int code) {
         return switch (code % 4) {
-            case 0 -> useSuit ? CLUB : "c";
-            case 1 -> useSuit ? DIAMOND : "d";
-            case 2 -> useSuit ? HEART : "h";
-            default -> useSuit ? SPADE : "s";
+            case 0 -> useSuit ? CLUB : "C";
+            case 1 -> useSuit ? DIAMOND : "D";
+            case 2 -> useSuit ? HEART : "H";
+            default -> useSuit ? SPADE : "S";
         };
     }
 
@@ -113,7 +113,6 @@ public class CardHelper {
 
     public static String string(List<?> cards) {
         return cards.stream()
-
                 .map(CardHelper::stringOfRaws)
                 .collect(Collectors.joining(" "));
     }

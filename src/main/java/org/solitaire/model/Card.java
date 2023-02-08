@@ -13,9 +13,9 @@ import static org.solitaire.util.CardHelper.VALUES;
 
 public record Card(int at, String value, String suit, String raw) {
     private static Color getColor(String suit) {
-        return switch (suit) {
-            case "d", "h", "D", "H", "♦", "♥" -> RED;
-            case "c", "s", "C", "S", "♠", "♣" -> BLACK;
+        return switch (suit.toLowerCase()) {
+            case "d", "h", "♦", "♥" -> RED;
+            case "c", "s", "♠", "♣" -> BLACK;
             default -> throw new RuntimeException("Invalid suit: " + suit);
         };
     }

@@ -212,7 +212,7 @@ public class SpiderState extends GameState<Card[]> {
                 .filter(it -> it != candidate.from())
                 .map(columns::get)
                 .filter(it -> it.isEmpty() || it.peek().isHigherOrder(card))
-                .map(it -> new Candidate(candidate).setTarget(colAt))
+                .map(it -> buildCandidate(candidate, colAt))
                 .orElse(null);
     }
 
