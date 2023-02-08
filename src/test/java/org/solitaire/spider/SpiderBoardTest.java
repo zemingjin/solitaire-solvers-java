@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
-import static org.solitaire.model.GameStateTest.cards;
+import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.SpiderHelper.LAST_DECK;
 import static org.solitaire.spider.SpiderHelper.build;
@@ -27,8 +27,8 @@ import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 
-class SpiderStateTest {
-    private SpiderState state;
+class SpiderBoardTest {
+    private SpiderBoard state;
 
     private static Column mockRun() {
         return mockRun(VALUES.length());
@@ -51,14 +51,14 @@ class SpiderStateTest {
 
     @Test
     public void test_equals() {
-        var that = new SpiderState(state);
+        var that = new SpiderBoard(state);
 
         assertTrue(reflectionEquals(that, state));
     }
 
     @Test
     public void test_clone() {
-        var clone = new SpiderState(state);
+        var clone = new SpiderBoard(state);
 
         assertNotSame(state, clone);
         assertTrue(reflectionEquals(clone, state));
@@ -189,7 +189,7 @@ class SpiderStateTest {
 
         assertEquals(6, state.columns().get(candidate.from()).size());
         assertEquals(5, state.columns().get(candidate.target()).size());
-        var clone = state.updateState(candidate);
+        var clone = state.updateBoard(candidate);
 
         assertNotNull(clone);
         assertEquals(4, clone.columns().get(candidate.from()).size());

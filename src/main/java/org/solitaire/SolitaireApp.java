@@ -59,8 +59,8 @@ public class SolitaireApp {
                 .orElseThrow();
         stopWatch.stop();
 
-        System.out.printf("Found %,d solutions in %,d scenarios - total time: %s.\n",
-                results.getRight().size(), solver.totalScenarios(), stopWatch.formatTime());
+        System.out.printf("Found %,d solutions in %,d scenarios - total time: %s with maximum depth of %d.\n",
+                results.getRight().size(), solver.totalScenarios(), stopWatch.formatTime(), solver.maxDepth());
         checkShortestPath(results.getRight());
         checkLongestPath(results.getRight());
         checkMaxScore(results);

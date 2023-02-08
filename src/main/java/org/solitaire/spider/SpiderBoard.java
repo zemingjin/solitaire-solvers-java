@@ -7,7 +7,7 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.model.GameState;
+import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 import org.solitaire.util.CandidateCompare;
 
@@ -28,15 +28,15 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 
 @Slf4j
-public class SpiderState extends GameState<Card[]> {
+public class SpiderBoard extends GameBoard<Card[]> {
     protected final Deck deck;
 
-    public SpiderState(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
+    public SpiderBoard(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
         this.deck = deck;
     }
 
-    public SpiderState(SpiderState that) {
+    public SpiderBoard(SpiderBoard that) {
         this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore, new Deck(that.deck));
     }
 
@@ -219,18 +219,18 @@ public class SpiderState extends GameState<Card[]> {
     /**************************************************************************************************************
      * Update State
      * ***********************************************************************************************************/
-    protected SpiderState updateState(Candidate candidate) {
+    protected SpiderBoard updateBoard(Candidate candidate) {
         return removeFromSource(candidate)
                 .appendToTarget(candidate)
                 .checkForRun(candidate);
     }
 
-    protected SpiderState removeFromSource(Candidate candidate) {
+    protected SpiderBoard removeFromSource(Candidate candidate) {
         removeFromColumn(candidate);
         return this;
     }
 
-    protected SpiderState appendToTarget(Candidate candidate) {
+    protected SpiderBoard appendToTarget(Candidate candidate) {
         var cards = candidate.cards();
 
         path.add(cards.toArray(Card[]::new));
@@ -239,7 +239,7 @@ public class SpiderState extends GameState<Card[]> {
         return this;
     }
 
-    protected SpiderState checkForRun(Candidate candidate) {
+    protected SpiderBoard checkForRun(Candidate candidate) {
         Optional.of(candidate.target())
                 .map(columns::get)
                 .filter(ObjectUtils::isNotEmpty)
@@ -282,5 +282,17 @@ public class SpiderState extends GameState<Card[]> {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public double score() {
+        if (super.score() == 0) {
+            super.score(calcBoardScore());
+        }
+        return super.score();
+    }
+
+    private double calcBoardScore() {
+        return findCandidates().size();
     }
 }

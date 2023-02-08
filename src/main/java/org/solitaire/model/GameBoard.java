@@ -5,17 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class GameState<R> {
+public class GameBoard<R> implements Board<R> {
     protected final Columns columns;
     protected final Path<R> path;
     protected int totalScore;
     private double score = 0;
 
-    public GameState(Columns columns, Path<R> path) {
+    public GameBoard(Columns columns, Path<R> path) {
         this(columns, path, 0);
     }
 
-    public GameState(Columns columns, Path<R> path, int totalScore) {
+    public GameBoard(Columns columns, Path<R> path, int totalScore) {
         this.columns = columns;
         this.path = path;
         this.totalScore = totalScore;
@@ -43,22 +43,25 @@ public class GameState<R> {
         columns.get(candidate.target()).addAll(cards);
     }
 
+    @Override
     public boolean isCleared() {
         return columns.isCleared();
+    }
+
+    @Override
+    public Path<R> path() {
+        return path;
     }
 
     public Columns columns() {
         return columns;
     }
 
-    public Path<R> path() {
-        return path;
-    }
-
     public int totalScore() {
         return totalScore;
     }
 
+    @Override
     public double score() {
         return score;
     }

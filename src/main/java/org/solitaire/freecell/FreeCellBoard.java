@@ -6,7 +6,7 @@ import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
-import org.solitaire.model.GameState;
+import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 
 import javax.annotation.Nonnull;
@@ -26,17 +26,17 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.FREECELL;
 import static org.solitaire.util.CardHelper.cloneArray;
 
-public class FreeCellState extends GameState<Card[]> {
+public class FreeCellBoard extends GameBoard<Card[]> {
     private final Card[] freeCells;
     private final Card[] foundations;
 
-    public FreeCellState(Columns columns, Path<Card[]> path, Card[] freeCells, Card[] foundations) {
+    public FreeCellBoard(Columns columns, Path<Card[]> path, Card[] freeCells, Card[] foundations) {
         super(columns, path);
         this.freeCells = freeCells;
         this.foundations = foundations;
     }
 
-    protected FreeCellState(@Nonnull FreeCellState that) {
+    protected FreeCellBoard(@Nonnull FreeCellBoard that) {
         this(new Columns(that.columns), new Path<>(that.path), cloneArray(that.freeCells), cloneArray(that.foundations));
     }
 
@@ -117,7 +117,7 @@ public class FreeCellState extends GameState<Card[]> {
     /*****************************************************************************************************************
      * Apply candidate
      ****************************************************************************************************************/
-    protected FreeCellState updateState(Candidate candidate) {
+    protected FreeCellBoard updateBoard(Candidate candidate) {
         return Optional.of(candidate)
                 .map(this::removeFromOrigin)
                 .map(this::moveToTarget)
@@ -136,7 +136,7 @@ public class FreeCellState extends GameState<Card[]> {
         return candidate;
     }
 
-    private FreeCellState moveToTarget(Candidate candidate) {
+    private FreeCellBoard moveToTarget(Candidate candidate) {
         path.add(candidate.cards().toArray(Card[]::new));
         return Optional.of(candidate)
                 .filter(it -> it.target() >= 0)
@@ -144,7 +144,7 @@ public class FreeCellState extends GameState<Card[]> {
                 .orElseGet(() -> toFreeCell(candidate.peek()));
     }
 
-    private FreeCellState moveToColumn(Candidate candidate) {
+    private FreeCellBoard moveToColumn(Candidate candidate) {
         return Optional.of(candidate)
                 .map(Candidate::target)
                 .map(columns::get)
@@ -155,7 +155,7 @@ public class FreeCellState extends GameState<Card[]> {
                 .orElse(null);
     }
 
-    private FreeCellState toFreeCell(Card card) {
+    private FreeCellBoard toFreeCell(Card card) {
         return range(0, freeCells.length)
                 .filter(i -> isNull(freeCells[i]))
                 .mapToObj(i -> Pair.of(i, card))
@@ -165,7 +165,7 @@ public class FreeCellState extends GameState<Card[]> {
 
     }
 
-    private FreeCellState toFreeCell(Pair<Integer, Card> pair) {
+    private FreeCellBoard toFreeCell(Pair<Integer, Card> pair) {
         freeCells[pair.getLeft()] = pair.getRight();
         return this;
     }

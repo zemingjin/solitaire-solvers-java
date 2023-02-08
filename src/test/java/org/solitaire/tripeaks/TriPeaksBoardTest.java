@@ -15,8 +15,8 @@ import static org.solitaire.tripeaks.TriPeaksHelper.build;
 import static org.solitaire.tripeaks.TriPeaksTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
 
-class TriPeaksStateTest {
-    private TriPeaksState state;
+class TriPeaksBoardTest {
+    private TriPeaksBoard state;
 
     @BeforeEach
     void setup() {
@@ -37,14 +37,14 @@ class TriPeaksStateTest {
 
     @Test
     public void test_isOpenCard() {
-        var state = new TriPeaksState(new Card[]{null, null, null, null, null}, null);
+        var state = new TriPeaksBoard(new Card[]{null, null, null, null, null}, null);
 
         assertTrue(state.isOpenCard(buildCard(0, "Ad")));
     }
 
     @Test
     public void test_isOpenCard_exception() {
-        var state = new TriPeaksState(null, null);
+        var state = new TriPeaksBoard(null, null);
         var card = buildCard(LAST_BOARD, "Ad");
 
         var ex = assertThrows(RuntimeException.class, () -> state.isOpenCard(card));

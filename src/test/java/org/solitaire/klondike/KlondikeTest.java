@@ -27,13 +27,14 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.TWO;
+import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
 class KlondikeTest {
     @Mock
-    private KlondikeState state;
+    private KlondikeBoard state;
     private Klondike klondike;
-    private KlondikeState initState;
+    private KlondikeBoard initState;
 
     @BeforeEach
     public void setup() {
@@ -50,7 +51,7 @@ class KlondikeTest {
     public void test_solve() {
         klondike.stack().clear();
         klondike.add(initState);
-        klondike.cloner(KlondikeState::new);
+        klondike.cloner(KlondikeBoard::new);
 
         assertEquals(LIMIT_SOLUTIONS, klondike.solve().size());
     }
@@ -71,7 +72,7 @@ class KlondikeTest {
         assertNotNull(result);
         assertEquals(ONE, result.size());
         assertTrue(result.get(0).isEmpty());
-        assertEquals(ONE, klondike.totalScenarios());
+        assertEquals(ZERO, klondike.totalScenarios());
     }
 
     @Test
@@ -81,13 +82,13 @@ class KlondikeTest {
                 buildCandidate(3, COLUMN, initState.columns().get(3).peek()));
         when(state.isCleared()).thenReturn(false);
         when(state.findCandidates()).thenReturn(candidates);
-        when(state.updateStates(any())).thenReturn(null);
+        when(state.updateBoard(any())).thenReturn(null);
 
         klondike.solve();
 
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
-        verify(state, times(TWO)).updateStates(any());
+        verify(state, times(TWO)).updateBoard(any());
         assertEquals(1, klondike.totalScenarios());
     }
 

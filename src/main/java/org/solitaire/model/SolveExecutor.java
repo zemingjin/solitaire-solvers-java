@@ -9,38 +9,48 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Consumer;
 
+import static java.util.Objects.requireNonNull;
+
 @SuppressWarnings("rawtypes")
-public class SolveExecutor<T> implements GameSolver {
-    private final Stack<StateQueue<T>> stack = new Stack<>();
+public class SolveExecutor<T extends Board> implements GameSolver {
+    private final Stack<BoardQueue<T>> stack = new Stack<>();
     private final List<List> solutions = new ArrayList<>();
     private int totalScenarios = 0;
     private int maxStack = 0;
 
-    private Consumer<T> stateConsumer;
+    private Consumer<T> solveBoard;
 
-    public SolveExecutor(T state) {
-        stack.add(new StateQueue<>(state));
+    public SolveExecutor(T board) {
+        stack.add(new BoardQueue<>(board));
     }
 
-    public Stack<StateQueue<T>> stack() {
+    public Stack<BoardQueue<T>> stack() {
         return this.stack;
     }
 
-    public void stateConsumer(Consumer<T> stateConsumer) {
-        this.stateConsumer = stateConsumer;
+    public void solveBoard(Consumer<T> solveBoard) {
+        this.solveBoard = solveBoard;
     }
 
     @Override
     public List<List> solve() {
         while (!stack.isEmpty()) {
-            totalScenarios++;
             checkMaxStack();
 
             Optional.ofNullable(stack.peek())
-                    .map(this::getState)
-                    .ifPresent(stateConsumer);
+                    .map(this::getBoard)
+                    .ifPresent(this::processBoard);
         }
         return solutions();
+    }
+
+    private void processBoard(T board) {
+        if (board.isCleared()) {
+            solutions.add(board.path());
+        } else {
+            totalScenarios++;
+            requireNonNull(solveBoard).accept(board);
+        }
     }
 
     @Override
@@ -48,28 +58,38 @@ public class SolveExecutor<T> implements GameSolver {
         throw new RuntimeException("Not implemented");
     }
 
-    private T getState(StateQueue<T> queue) {
-        if (queue.isNotEmpty()) {
+    @Override
+    public int totalScenarios() {
+        return this.totalScenarios;
+    }
 
-            T state = queue.poll();
+    @Override
+    public int maxDepth() {
+        return maxStack;
+    }
 
+    private T getBoard(BoardQueue<T> queue) {
+        try {
+            if (queue.isNotEmpty()) {
+                return queue.poll();
+            }
+            return null;
+        } finally {
             if (queue.isEmpty()) {
                 stack.pop();
             }
-            return state;
         }
-        return null;
     }
 
     public boolean addAll(Collection<T> states) {
         if (!states.isEmpty()) {
-            return stack().add(new StateQueue<>(states));
+            return stack().add(new BoardQueue<>(states));
         }
         return false;
     }
 
     public boolean add(T state) {
-        return stack().add(new StateQueue<>(state));
+        return stack().add(new BoardQueue<>(state));
     }
 
     private void checkMaxStack() {
@@ -84,10 +104,5 @@ public class SolveExecutor<T> implements GameSolver {
 
     public int maxStack() {
         return this.maxStack;
-    }
-
-    @Override
-    public int totalScenarios() {
-        return this.totalScenarios;
     }
 }

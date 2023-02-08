@@ -13,39 +13,41 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
-public class Pyramid extends SolveExecutor<PyramidState> {
+public class Pyramid extends SolveExecutor<PyramidBoard> {
     public static final String KING = "K";
     public static final String ACE = "A";
-    private Function<PyramidState, PyramidState> cloner = PyramidState::new;
+    private final Function<PyramidBoard, PyramidBoard> cloner = PyramidBoard::new;
 
-    public Pyramid(PyramidState state) {
-        super(state);
-        stateConsumer(this::solve);
+    public Pyramid(PyramidBoard board) {
+        super(board);
+        solveBoard(this::solve);
     }
 
-    protected void solve(PyramidState state) {
-        if (state.isCleared()) {
-            solutions().add(state.path());
-        } else {
-            Optional.of(state.findCandidates())
-                    .filter(ObjectUtils::isNotEmpty)
-                    .map(it -> applyCandidates(it, state))
-                    .map(super::addAll)
-                    .orElseGet(() -> drawDeck(state));
-        }
+    protected void solve(PyramidBoard board) {
+        Optional.of(board.findCandidates())
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .filter(ObjectUtils::isNotEmpty)
+                .map(this::scoreStates)
+                .ifPresentOrElse(super::addAll, () -> drawDeck(board));
     }
 
-    protected List<PyramidState> applyCandidates(List<Card[]> candidates, PyramidState state) {
+    private List<PyramidBoard> scoreStates(List<PyramidBoard> boards) {
+        boards.forEach(PyramidBoard::score);
+        boards.sort((a, b) -> Double.compare(b.score(), a.score()));
+        return boards;
+    }
+
+    protected List<PyramidBoard> applyCandidates(List<Card[]> candidates, PyramidBoard board) {
         return candidates.stream()
-                .map(it -> cloner.apply(state).updateState(it))
+                .map(it -> cloner.apply(board).updateBoard(it))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    protected boolean drawDeck(PyramidState state) {
-        return Optional.ofNullable(state.drawDeckCards())
-                .map(super::add)
-                .orElse(false);
+    protected void drawDeck(PyramidBoard board) {
+        Optional.ofNullable(board.drawDeckCards())
+                .ifPresent(super::add);
     }
 
     @SuppressWarnings("unchecked")
@@ -55,10 +57,5 @@ public class Pyramid extends SolveExecutor<PyramidState> {
                 .map(it -> (List<Card[]>) it)
                 .map(PyramidHelper::getScore)
                 .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
-    }
-
-    public Pyramid cloner(Function<PyramidState, PyramidState> cloner) {
-        this.cloner = cloner;
-        return this;
     }
 }

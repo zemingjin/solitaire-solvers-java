@@ -26,7 +26,7 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 class FreeCellTest {
     private FreeCell freeCell;
     @Mock
-    private FreeCellState state;
+    private FreeCellBoard state;
 
     @BeforeEach
     public void setup() {
@@ -43,7 +43,7 @@ class FreeCellTest {
 
         when(state.isCleared()).thenReturn(false);
         when(state.findCandidates()).thenReturn(List.of(candidate));
-        when(state.updateState(eq(candidate))).thenReturn(null);
+        when(state.updateBoard(eq(candidate))).thenReturn(null);
 
         var result = freeCell.solve();
 
@@ -52,7 +52,7 @@ class FreeCellTest {
         assertEquals(ONE, freeCell.totalScenarios());
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
-        verify(state, times(ONE)).updateState(eq(candidate));
+        verify(state, times(ONE)).updateBoard(eq(candidate));
     }
 
     @Test
@@ -64,7 +64,7 @@ class FreeCellTest {
         verify(state, times(ONE)).isCleared();
         assertNotNull(result);
         assertEquals(ONE, result.size());
-        assertEquals(ONE, freeCell.totalScenarios());
+        assertEquals(ZERO, freeCell.totalScenarios());
     }
 
     @Test

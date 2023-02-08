@@ -22,7 +22,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.solitaire.model.GameStateTest.cards;
+import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.SpiderHelper.build;
@@ -34,7 +34,7 @@ import static org.solitaire.util.ReflectHelper.setField;
 @ExtendWith(MockitoExtension.class)
 class SpiderTest {
     @Mock
-    private SpiderState state;
+    private SpiderBoard state;
     private Spider spider;
     private Candidate candidate;
 
@@ -62,7 +62,7 @@ class SpiderTest {
         assertEquals(ONE, result.size());
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).path();
-        assertEquals(ONE, spider.totalScenarios());
+        assertEquals(ZERO, spider.totalScenarios());
     }
 
     @Test
@@ -74,7 +74,7 @@ class SpiderTest {
 
         assertNotNull(result);
         assertEquals(SOLUTION_LIMIT, result.size());
-        verify(state, times(ZERO)).isCleared();
+        verify(state, times(ONE)).isCleared();
         assertEquals(ONE, spider.totalScenarios());
     }
 
@@ -82,25 +82,25 @@ class SpiderTest {
     public void test_solve_applyCandidates() {
         when(state.isCleared()).thenReturn(false);
         when(state.findCandidates()).thenReturn(mockCandidateList());
-        when(state.updateState(candidate)).thenReturn(null);
+        when(state.updateBoard(candidate)).thenReturn(null);
 
         spider.solve();
 
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
-        verify(state, times(ONE)).updateState(candidate);
+        verify(state, times(ONE)).updateBoard(candidate);
         assertEquals(1, spider.totalScenarios());
     }
 
     @Test
     public void test_solve_applyCandidates_no_recurse() {
-        when(state.updateState(candidate)).thenReturn(state);
+        when(state.updateBoard(candidate)).thenReturn(state);
 
         spider.applyCandidates(mockCandidateList(), state);
 
         verify(state, times(ZERO)).isCleared();
         verify(state, times(ZERO)).findCandidates();
-        verify(state, times(ONE)).updateState(candidate);
+        verify(state, times(ONE)).updateBoard(candidate);
         assertEquals(0, spider.totalScenarios());
     }
 
@@ -133,21 +133,21 @@ class SpiderTest {
     @Test
     public void test_updateColumns() {
         setField(spider, "cloner", (Cloner) i -> state);
-        when(state.updateState(candidate)).thenReturn(state);
+        when(state.updateBoard(candidate)).thenReturn(state);
 
         spider.applyCandidates(mockCandidateList(), state);
 
-        verify(state, times(ONE)).updateState(candidate);
+        verify(state, times(ONE)).updateBoard(candidate);
     }
 
     @Test
     public void test_updateColumns_null() {
         setField(spider, "cloner", (Cloner) i -> state);
-        when(state.updateState(candidate)).thenReturn(null);
+        when(state.updateBoard(candidate)).thenReturn(null);
 
         spider.applyCandidates(mockCandidateList(), state);
 
-        verify(state, times(ONE)).updateState(candidate);
+        verify(state, times(ONE)).updateBoard(candidate);
     }
 
     @Test
@@ -192,6 +192,6 @@ class SpiderTest {
         return path;
     }
 
-    interface Cloner extends Function<SpiderState, SpiderState> {
+    interface Cloner extends Function<SpiderBoard, SpiderBoard> {
     }
 }

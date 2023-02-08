@@ -27,8 +27,8 @@ import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.suitCode;
 
-class KlondikeStateTest {
-    private KlondikeState state;
+class KlondikeBoardTest {
+    private KlondikeBoard state;
 
     @BeforeEach
     public void setup() {
@@ -76,7 +76,7 @@ class KlondikeStateTest {
         assertEquals(3, state.columns().get(2).size());
         state.stateChanged = false;
 
-        state = state.updateStates(candidate);
+        state = state.updateBoard(candidate);
 
         assertEquals(6, state.columns().get(6).size());
         assertEquals(4, state.columns().get(2).size());
@@ -210,8 +210,9 @@ class KlondikeStateTest {
         assertNotNull(results);
         assertTrue(results.isEmpty());
 
+        var card = buildCard(0, "Ad");
         state.columns().get(0).clear();
-        state.columns().get(6).add(buildCard(0, "Ad"));
+        state.columns().get(6).add(card);
 
         results = state.findFoundationCandidates();
 
@@ -219,8 +220,8 @@ class KlondikeStateTest {
         assertEquals(1, results.size());
 
         state.moveToTarget(results.get(0));
-        assertEquals(1, state.foundations().get(1).size());
-        assertEquals("[0:Ad]", state.foundations().get(1).toString());
+        assertEquals(1, state.foundations().get(suitCode(card)).size());
+        assertEquals("[0:Ad]", state.foundations().get(suitCode(card)).toString());
     }
 
     @Test

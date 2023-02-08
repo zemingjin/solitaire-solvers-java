@@ -59,7 +59,7 @@ public class CardHelperTest {
 
     @Test
     void test_stringOfRaws() {
-        assertEquals("[Ad]", stringOfRaws(new Card[]{buildCard(0, "Ad")}));
+        assertEquals("Ad", stringOfRaws(new Card[]{buildCard(0, "Ad")}));
         assertEquals("[Ad, 2d]", stringOfRaws(new Card[]{buildCard(0, "Ad"), buildCard(0, "2d")}));
 
         assertEquals("[]", stringOfRaws(new Card[]{}));

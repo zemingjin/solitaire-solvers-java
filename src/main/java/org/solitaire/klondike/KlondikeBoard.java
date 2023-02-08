@@ -6,7 +6,7 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.model.GameState;
+import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
@@ -30,14 +30,14 @@ import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.suitCode;
 import static org.solitaire.util.CollectionUtil.add;
 
-class KlondikeState extends GameState<String> {
+class KlondikeBoard extends GameBoard<String> {
     private static final int drawNumber = 3;
     protected final Deck deck;
     protected final Stack<Card> deckPile;
     protected final List<Stack<Card>> foundations;
     protected boolean stateChanged;
 
-    KlondikeState(Columns columns,
+    KlondikeBoard(Columns columns,
                   Path<String> path,
                   int totalScore,
                   Deck deck,
@@ -51,7 +51,7 @@ class KlondikeState extends GameState<String> {
         this.stateChanged = stateChanged;
     }
 
-    KlondikeState(KlondikeState that) {
+    KlondikeBoard(KlondikeBoard that) {
         this(new Columns(that.columns()),
                 new Path<>(that.path()),
                 that.totalScore(),
@@ -254,14 +254,14 @@ class KlondikeState extends GameState<String> {
 
     /*************************************************************************************************************
      ************************************************************************************************************/
-    protected KlondikeState updateStates(Candidate candidate) {
+    protected KlondikeBoard updateBoard(Candidate candidate) {
         stateChanged(true);
 
         return removeFromSource(candidate)
                 .moveToTarget(candidate);
     }
 
-    protected KlondikeState moveToTarget(Candidate candidate) {
+    protected KlondikeBoard moveToTarget(Candidate candidate) {
         path.add(CardHelper.stringOfRaws(candidate.cards()));
 
         if (candidate.isToColumn()) {
@@ -298,7 +298,7 @@ class KlondikeState extends GameState<String> {
         return false;
     }
 
-    protected KlondikeState removeFromSource(Candidate candidate) {
+    protected KlondikeBoard removeFromSource(Candidate candidate) {
         switch (candidate.origin()) {
             case COLUMN -> removeFromColumn(candidate);
             case DECKPILE -> deckPile.pop();
@@ -307,7 +307,7 @@ class KlondikeState extends GameState<String> {
         return this;
     }
 
-    protected KlondikeState drawDeckCards() {
+    protected KlondikeBoard drawDeckCards() {
         if (checkRecycleDeck()) {
             range(0, drawNumber)
                     .filter(i -> isNotEmpty(deck()))
@@ -349,5 +349,17 @@ class KlondikeState extends GameState<String> {
 
     public List<Stack<Card>> foundations() {
         return foundations;
+    }
+
+    @Override
+    public double score() {
+        if (super.score() == 0) {
+            super.score(calcBoardScore());
+        }
+        return super.score();
+    }
+
+    private double calcBoardScore() {
+        return findOpenCandidates().size();
     }
 }

@@ -17,51 +17,48 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
-public class Spider extends SolveExecutor<SpiderState> {
+public class Spider extends SolveExecutor<SpiderBoard> {
     protected static final int SOLUTION_LIMIT = 1000;
 
-    private final Function<SpiderState, SpiderState> cloner = SpiderState::new;
+    private final Function<SpiderBoard, SpiderBoard> cloner = SpiderBoard::new;
 
     public Spider(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
-        super(new SpiderState(columns, path, totalScore, deck));
-        stateConsumer(this::solve);
+        super(new SpiderBoard(columns, path, totalScore, deck));
+        solveBoard(this::solve);
     }
 
-    protected void solve(SpiderState state) {
+    protected void solve(SpiderBoard board) {
         if (solutions().size() < SOLUTION_LIMIT) {
-            if (state.isCleared()) {
-                solutions().add(state.path());
-            } else {
-                Optional.of(state.findCandidates())
-                        .filter(ObjectUtils::isNotEmpty)
-                        .map(it -> applyCandidates(it, state))
-                        .filter(it -> !it.isEmpty())
-                        .map(super::addAll)
-                        .orElseGet(() -> drawDeck(state));
-            }
+            Optional.of(board.findCandidates())
+                    .filter(ObjectUtils::isNotEmpty)
+                    .map(it -> applyCandidates(it, board))
+                    .filter(ObjectUtils::isNotEmpty)
+                    .map(this::scoreStates)
+                    .ifPresentOrElse(super::addAll, () -> drawDeck(board));
         }
     }
 
-    protected List<SpiderState> applyCandidates(List<Candidate> candidates, SpiderState state) {
+    private List<SpiderBoard> scoreStates(List<SpiderBoard> boards) {
+        boards.forEach(SpiderBoard::score);
+        boards.sort((a, b) -> Double.compare(b.score(), a.score()));
+        return boards;
+    }
+
+    protected List<SpiderBoard> applyCandidates(List<Candidate> candidates, SpiderBoard board) {
         return candidates.stream()
-                .map(it -> cloneState(state).updateState(it))
+                .map(it -> cloner.apply(board).updateBoard(it))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    protected boolean drawDeck(SpiderState state) {
-        if (state.drawDeck()) {
-            return add(state);
+    protected void drawDeck(SpiderBoard board) {
+        if (board.drawDeck()) {
+            add(board);
         }
-        return false;
     }
 
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         return Pair.of(0, new Path<>());
-    }
-
-    private SpiderState cloneState(SpiderState state) {
-        return cloner.apply(state);
     }
 }

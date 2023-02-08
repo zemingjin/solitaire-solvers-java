@@ -3,13 +3,13 @@ package org.solitaire.model;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class StateQueue<T> extends ConcurrentLinkedQueue<T> {
-    public StateQueue(T state) {
-        add(state);
+public class BoardQueue<T> extends ConcurrentLinkedQueue<T> {
+    public BoardQueue(T board) {
+        add(board);
     }
 
-    public StateQueue(Collection<T> states) {
-        addAll(states);
+    public BoardQueue(Collection<T> boards) {
+        addAll(boards);
     }
 
     public boolean isNotEmpty() {

@@ -27,8 +27,8 @@ import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.TWO;
 
-class FreeCellStateTest {
-    private FreeCellState state;
+class FreeCellBoardTest {
+    private FreeCellBoard state;
 
     @BeforeEach
     void setup() {
@@ -47,7 +47,7 @@ class FreeCellStateTest {
 
     @Test
     void test_clone() {
-        var clone = new FreeCellState(state);
+        var clone = new FreeCellBoard(state);
 
         assertNotSame(state, clone);
         assertTrue(reflectionEquals(state, clone));
@@ -151,7 +151,7 @@ class FreeCellStateTest {
     @Test
     void test_moveToTarget() {
         var candidate = state.findCandidates().get(0);
-        var result = state.updateState(candidate);
+        var result = state.updateBoard(candidate);
 
         assertNotNull(result);
         assertSame(state, result);
@@ -159,10 +159,10 @@ class FreeCellStateTest {
         assertEquals(8, result.columns().get(candidate.target()).size());
         assertEquals("6:7d", result.columns().get(candidate.target()).peek().toString());
         assertEquals(1, state.path().size());
-        assertEquals("[7d]", stringOfRaws(state.path().get(0)));
+        assertEquals("7d", stringOfRaws(state.path().get(0)));
         assertTrue(Arrays.stream(state.freeCells()).allMatch(Objects::isNull));
 
-        result = state.updateState(buildCandidate(candidate, 0));
+        result = state.updateBoard(buildCandidate(candidate, 0));
         assertEquals(6, result.columns().get(0).size());
         assertEquals("6:7d", result.columns().get(0).peek().toString());
         assertEquals(2, state.path().size());
@@ -173,7 +173,7 @@ class FreeCellStateTest {
         var candidate = state.findCandidates().get(0);
 
         candidate = buildCandidate(candidate, -1);
-        var result = state.updateState(candidate);
+        var result = state.updateBoard(candidate);
 
         assertNotNull(result);
         assertSame(state, result);
@@ -187,7 +187,7 @@ class FreeCellStateTest {
 
         candidate = buildCandidate(candidate, -1);
         fillFreeCells(0, buildCard(0, "Ad"));
-        var result = state.updateState(candidate);
+        var result = state.updateBoard(candidate);
 
         assertNull(result);
     }
