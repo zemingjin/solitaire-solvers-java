@@ -7,8 +7,8 @@ import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.model.GameSolver;
 import org.solitaire.model.Path;
+import org.solitaire.model.SolveExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,69 +16,50 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @SuppressWarnings("rawtypes")
-public class Klondike implements GameSolver {
+public class Klondike extends SolveExecutor<KlondikeState> {
     protected static final int LIMIT_SOLUTIONS = 1000;
-    private final List<List> solutions = new ArrayList<>();
-    private int totalScenarios;
-    private KlondikeState initState;
     private Function<KlondikeState, KlondikeState> cloner = KlondikeState::new;
 
     public Klondike(Columns columns,
                     Deck deck,
                     List<Stack<Card>> foundations) {
-        initState = new KlondikeState(columns, new Path<>(), 0, deck, new Stack<>(), foundations, true);
-    }
-
-    @Override
-    public List<List> solve() {
-        solve(initState);
-        return solutions;
+        super(new KlondikeState(columns, new Path<>(), 0, deck, new Stack<>(), foundations, true));
+        stateConsumer(this::solve);
     }
 
     protected void solve(KlondikeState state) {
         if (state.isCleared()) {
-            solutions.add(state.path());
-        } else if (solutions.size() < LIMIT_SOLUTIONS) {
-            totalScenarios++;
+            solutions().add(state.path());
+        } else if (solutions().size() < LIMIT_SOLUTIONS) {
             Optional.of(state.findCandidates())
                     .filter(ObjectUtils::isNotEmpty)
-                    .ifPresentOrElse(it -> applyCandidates(it, state), () -> drawDeck(state));
+                    .map(it -> applyCandidates(it, state))
+                    .filter(it -> !it.isEmpty())
+                    .map(super::addAll)
+                    .orElseGet(() -> drawDeck(state));
         }
     }
 
-    protected void drawDeck(KlondikeState state) {
-        Optional.ofNullable(state.drawDeckCards())
-                .ifPresent(this::solve);
+    protected boolean drawDeck(KlondikeState state) {
+        return Optional.ofNullable(state.drawDeckCards())
+                .map(super::add)
+                .orElse(false);
     }
 
-    protected void applyCandidates(List<Candidate> candidates, KlondikeState state) {
-        candidates.stream()
+    protected List<KlondikeState> applyCandidates(List<Candidate> candidates, KlondikeState state) {
+        return candidates.stream()
                 .map(it -> cloner.apply(state).updateStates(it))
                 .filter(Objects::nonNull)
-                .forEach(this::solve);
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
-//        results.forEach(System.out::println);
         return null;
-    }
-
-    @Override
-    public int totalScenarios() {
-        return totalScenarios;
-    }
-
-    protected Klondike initState(KlondikeState initState) {
-        this.initState = initState;
-        return this;
-    }
-
-    public KlondikeState initState() {
-        return initState;
     }
 
     public void cloner(Function<KlondikeState, KlondikeState> cloner) {

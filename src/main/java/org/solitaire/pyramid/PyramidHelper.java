@@ -3,6 +3,7 @@ package org.solitaire.pyramid;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
+import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
 import java.util.List;
@@ -24,14 +25,15 @@ public class PyramidHelper {
     public static Pyramid build(String[] cards) {
         return Optional.of(cards)
                 .map(CardHelper::toCards)
-                .map(PyramidHelper::buildPyramid)
+                .map(PyramidHelper::buildPyramidState)
+                .map(Pyramid::new)
                 .orElseThrow();
     }
 
-    private static Pyramid buildPyramid(Card[] cards) {
+    private static PyramidState buildPyramidState(Card[] cards) {
         assert cards.length == 52 : "Invalid # of cards: " + cards.length;
 
-        return new Pyramid(copyOf(cards, LAST_BOARD), buildDeck(cards));
+        return new PyramidState(copyOf(cards, LAST_BOARD), buildDeck(cards), new Stack<>(), new Path<>(), 3);
     }
 
     private static Stack<Card> buildDeck(Card[] cards) {

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.solitaire.util.CardHelper;
 import org.solitaire.util.IOHelper;
 
+import java.util.Objects;
+
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,7 +28,7 @@ public class GameStateTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = mockState(build(cards).getInitState());
+        state = mockState(Objects.requireNonNull(build(cards).stack().peek().peek()));
     }
 
     @Test
@@ -51,11 +53,5 @@ public class GameStateTest {
         state.removeFromColumn(candidate);
         assertEquals(6, state.columns.get(0).size());
         assertEquals(6, state.columns.get(1).size());
-    }
-
-    @Test
-    public void test_setTotalScore() {
-        state.setTotalScore(state.totalScore - 1);
-        assertEquals(499, state.totalScore);
     }
 }

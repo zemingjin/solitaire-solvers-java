@@ -39,10 +39,8 @@ public class FreeCellHelper {
     }
 
     protected static int getColumn(int at) {
-        assert 0 <= at && at < LAST_BOARD;
-
-        return (at < LAST_LONG)
+        return (at < LAST_LONG + LEN_SHORT)
                 ? at / LEN_LONG
-                : (at - LAST_LONG) / LEN_SHORT + 4;
+                : 4 + (at - LAST_LONG) / LEN_SHORT;
     }
 }

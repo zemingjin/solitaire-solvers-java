@@ -9,6 +9,7 @@ import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidTest.cards;
+import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 
 class PyramidStateTest {
@@ -24,7 +26,7 @@ class PyramidStateTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).initState();
+        state = build(cards).stack().peek().peek();
     }
 
     @Test
@@ -68,6 +70,13 @@ class PyramidStateTest {
         card = state.deck().peek();
         state.updateState(new Card[]{card});
 
+        card = buildCard(LAST_BOARD, "Ad");
+        state.deck().push(card);
+        state.flippedDeck().add(card);
+        state.updateState(new Card[]{card});
+
+        assertNotEquals(state.deck().peek(), card);
+        assertEquals(state.flippedDeck().peek(), card);
     }
 
     @Test

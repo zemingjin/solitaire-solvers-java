@@ -10,7 +10,7 @@ import org.solitaire.util.CardHelper;
 
 import java.util.List;
 
-import static edu.emory.mathcs.backport.java.util.Collections.emptyList;
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -40,14 +40,16 @@ class KlondikeTest {
         state = spy(state);
         CardHelper.useSuit = false;
         klondike = build(CARDS);
-        initState = klondike.initState();
-        assertNotNull(klondike.initState(state));
+        initState = klondike.stack().peek().peek();
+        klondike.stack().clear();
+        klondike.add(state);
         klondike.cloner(it -> state);
     }
 
     @Test
     public void test_solve() {
-        klondike.initState(initState);
+        klondike.stack().clear();
+        klondike.add(initState);
         klondike.cloner(KlondikeState::new);
 
         assertEquals(LIMIT_SOLUTIONS, klondike.solve().size());
@@ -67,9 +69,9 @@ class KlondikeTest {
         var result = klondike.solve();
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(ONE, result.size());
         assertTrue(result.get(0).isEmpty());
-        assertEquals(0, klondike.totalScenarios());
+        assertEquals(ONE, klondike.totalScenarios());
     }
 
     @Test
@@ -81,7 +83,7 @@ class KlondikeTest {
         when(state.findCandidates()).thenReturn(candidates);
         when(state.updateStates(any())).thenReturn(null);
 
-        klondike.solve(state);
+        klondike.solve();
 
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
@@ -89,14 +91,13 @@ class KlondikeTest {
         assertEquals(1, klondike.totalScenarios());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void test_solve_drawDeck() {
         when(state.isCleared()).thenReturn(false);
         when(state.findCandidates()).thenReturn(emptyList());
         when(state.drawDeckCards()).thenReturn(null);
 
-        klondike.solve(state);
+        klondike.solve();
 
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();

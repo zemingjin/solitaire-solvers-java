@@ -2,10 +2,14 @@ package org.solitaire.freecell;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,6 +24,8 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.isCleared;
 import static org.solitaire.util.CardHelper.stringOfRaws;
+import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.TWO;
 
 class FreeCellStateTest {
     private FreeCellState state;
@@ -27,7 +33,7 @@ class FreeCellStateTest {
     @BeforeEach
     void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).initState();
+        state = build(cards).stack().peek().peek();
     }
 
     @Test
@@ -50,12 +56,30 @@ class FreeCellStateTest {
     @Test
     void test_findCandidates() {
         state.freeCells()[0] = buildCard(0, "Ad");
-
+        state.columns().get(6).add(buildCard(0, "6c"));
         var result = state.findCandidates();
 
         assertNotNull(result);
-        assertEquals(4, result.size());
-        assertEquals("Candidate(cards=[0:Ad], origin=FREECELL, from=0, target=7)", result.get(3).toString());
+        assertEquals(5, result.size());
+        assertFalse(result.stream().allMatch(it -> it.cards().size() == 1));
+        assertEquals("Candidate[cards=[23:5d, 27:4s], origin=COLUMN, from=3, target=6]", result.get(1).toString());
+        assertEquals("Candidate[cards=[0:Ad], origin=FREECELL, from=0, target=7]", result.get(4).toString());
+
+        fillFreeCells(TWO, buildCard(0, "Kd"));
+        result = state.findCandidates();
+
+        assertNotNull(result);
+        assertFalse(result.stream().allMatch(it -> it.cards().size() == 1));
+        assertEquals(5, result.size());
+        assertEquals("Candidate[cards=[23:5d, 27:4s], origin=COLUMN, from=3, target=6]", result.get(1).toString());
+
+        fillFreeCells(ONE, buildCard(0, "Kd"));
+        result = state.findCandidates();
+
+        assertNotNull(result);
+        assertTrue(result.stream().allMatch(it -> it.cards().size() == 1));
+        assertEquals(3, result.size());
+        assertEquals("Candidate[cards=[39:Th], origin=COLUMN, from=5, target=4]", result.get(1).toString());
     }
 
     @Test
@@ -71,7 +95,7 @@ class FreeCellStateTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("Candidate(cards=[0:Ad], origin=FREECELL, from=0, target=-1)", result.get(0).toString());
+        assertEquals("Candidate[cards=[0:Ad], origin=FREECELL, from=0, target=-1]", result.get(0).toString());
     }
 
     @Test
@@ -80,7 +104,7 @@ class FreeCellStateTest {
 
         assertNotNull(result);
         assertEquals(8, result.size());
-        assertEquals("Candidate(cards=[23:5d, 27:4s], origin=COLUMN, from=3, target=-1)",
+        assertEquals("Candidate[cards=[23:5d, 27:4s], origin=COLUMN, from=3, target=-1]",
                 result.get(3).toString());
     }
 
@@ -89,7 +113,7 @@ class FreeCellStateTest {
         var result = state.findCandidateAtColumn(0);
 
         assertNotNull(result);
-        assertEquals("Candidate(cards=[6:7d], origin=COLUMN, from=0, target=-1)", result.toString());
+        assertEquals("Candidate[cards=[6:7d], origin=COLUMN, from=0, target=-1]", result.toString());
     }
 
     @Test
@@ -132,10 +156,16 @@ class FreeCellStateTest {
         assertNotNull(result);
         assertSame(state, result);
         assertTrue(isCleared(state.freeCells()));
-        assertEquals(8, result.columns().get(1).size());
-        assertEquals("6:7d", result.columns().get(1).peek().toString());
+        assertEquals(8, result.columns().get(candidate.target()).size());
+        assertEquals("6:7d", result.columns().get(candidate.target()).peek().toString());
         assertEquals(1, state.path().size());
         assertEquals("[7d]", stringOfRaws(state.path().get(0)));
+        assertTrue(Arrays.stream(state.freeCells()).allMatch(Objects::isNull));
+
+        result = state.updateState(buildCandidate(candidate, 0));
+        assertEquals(6, result.columns().get(0).size());
+        assertEquals("6:7d", result.columns().get(0).peek().toString());
+        assertEquals(2, state.path().size());
     }
 
     @Test
@@ -149,6 +179,17 @@ class FreeCellStateTest {
         assertSame(state, result);
         assertFalse(isCleared(state.freeCells()));
         assertEquals("6:7d", result.freeCells()[0].toString());
+    }
+
+    @Test
+    void test_moveToTarget_freeCell_fail() {
+        var candidate = state.findCandidates().get(0);
+
+        candidate = buildCandidate(candidate, -1);
+        fillFreeCells(0, buildCard(0, "Ad"));
+        var result = state.updateState(candidate);
+
+        assertNull(result);
     }
 
 
@@ -172,5 +213,9 @@ class FreeCellStateTest {
 
         state.columns().get(6).clear();
         assertEquals(6, state.maxCardsToMove());
+    }
+
+    private void fillFreeCells(int from, Card card) {
+        range(from, state.freeCells().length).forEach(i -> state.freeCells()[i] = card);
     }
 }

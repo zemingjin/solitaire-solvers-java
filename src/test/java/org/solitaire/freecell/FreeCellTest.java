@@ -31,7 +31,9 @@ class FreeCellTest {
     @BeforeEach
     public void setup() {
         state = spy(state);
-        freeCell = FreeCellHelper.build(FreeCellHelperTest.cards).initState(state);
+        freeCell = FreeCellHelper.build(FreeCellHelperTest.cards);
+        freeCell.stack().clear();
+        freeCell.add(state);
         freeCell.cloner(it -> state);
     }
 
@@ -62,23 +64,7 @@ class FreeCellTest {
         verify(state, times(ONE)).isCleared();
         assertNotNull(result);
         assertEquals(ONE, result.size());
-        assertEquals(ZERO, freeCell.totalScenarios());
-    }
-
-    @Test
-    public void test_applyCandidates() {
-        var candidate = buildCandidate(0, COLUMN, buildCard(0, "Ad"));
-
-        when(state.isCleared()).thenReturn(true);
-        when(state.updateState(eq(candidate))).thenReturn(state);
-
-        freeCell.applyCandidates(List.of(candidate), state);
-
-        assertEquals(ONE, freeCell.solutions().size());
-        assertEquals(ZERO, freeCell.totalScenarios());
-
-        verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).updateState(eq(candidate));
+        assertEquals(ONE, freeCell.totalScenarios());
     }
 
     @Test

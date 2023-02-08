@@ -9,6 +9,7 @@ public class GameState<R> {
     protected final Columns columns;
     protected final Path<R> path;
     protected int totalScore;
+    private double score = 0;
 
     public GameState(Columns columns, Path<R> path) {
         this(columns, path, 0);
@@ -46,10 +47,6 @@ public class GameState<R> {
         return columns.isCleared();
     }
 
-    public void setTotalScore(int totalScore) {
-        this.totalScore = totalScore;
-    }
-
     public Columns columns() {
         return columns;
     }
@@ -60,5 +57,13 @@ public class GameState<R> {
 
     public int totalScore() {
         return totalScore;
+    }
+
+    public double score() {
+        return score;
+    }
+
+    public void score(double score) {
+        this.score = score;
     }
 }

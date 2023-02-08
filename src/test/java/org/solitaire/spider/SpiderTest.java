@@ -45,7 +45,8 @@ class SpiderTest {
         state = spy(state);
         spider = build(cards);
         setField(spider, "cloner", (Cloner) i -> state);
-        setField(spider, "initState", state);
+        spider.stack().clear();
+        spider.add(state);
 
         candidate = mockCandidate();
     }
@@ -58,23 +59,23 @@ class SpiderTest {
         var result = spider.solve();
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(ONE, result.size());
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).path();
-        assertEquals(0, spider.totalScenarios());
+        assertEquals(ONE, spider.totalScenarios());
     }
 
     @Test
     public void test_solve_solution_limit() {
         var mock = mockPath();
-        range(0, SOLUTION_LIMIT).forEach(i -> spider.solutions.add(mock));
+        range(0, SOLUTION_LIMIT).forEach(i -> spider.solutions().add(mock));
 
         var result = spider.solve();
 
         assertNotNull(result);
         assertEquals(SOLUTION_LIMIT, result.size());
         verify(state, times(ZERO)).isCleared();
-        assertEquals(0, spider.totalScenarios());
+        assertEquals(ONE, spider.totalScenarios());
     }
 
     @Test
@@ -83,7 +84,7 @@ class SpiderTest {
         when(state.findCandidates()).thenReturn(mockCandidateList());
         when(state.updateState(candidate)).thenReturn(null);
 
-        spider.solve(state);
+        spider.solve();
 
         verify(state, times(ONE)).isCleared();
         verify(state, times(ONE)).findCandidates();
@@ -93,12 +94,11 @@ class SpiderTest {
 
     @Test
     public void test_solve_applyCandidates_no_recurse() {
-        when(state.isCleared()).thenReturn(true);
         when(state.updateState(candidate)).thenReturn(state);
 
         spider.applyCandidates(mockCandidateList(), state);
 
-        verify(state, times(ONE)).isCleared();
+        verify(state, times(ZERO)).isCleared();
         verify(state, times(ZERO)).findCandidates();
         verify(state, times(ONE)).updateState(candidate);
         assertEquals(0, spider.totalScenarios());
@@ -120,12 +120,11 @@ class SpiderTest {
 
     @Test
     public void test_drawDeck_recurse() {
-        when(state.isCleared()).thenReturn(true);
         when(state.drawDeck()).thenReturn(true);
 
         spider.drawDeck(state);
 
-        verify(state, times(ONE)).isCleared();
+        verify(state, times(ZERO)).isCleared();
         verify(state, times(ZERO)).findCandidates();
         verify(state, times(ONE)).drawDeck();
         assertEquals(0, spider.totalScenarios());
