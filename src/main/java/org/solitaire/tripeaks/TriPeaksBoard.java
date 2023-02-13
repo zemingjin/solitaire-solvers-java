@@ -1,7 +1,7 @@
 package org.solitaire.tripeaks;
 
-import org.solitaire.model.Card;
 import org.solitaire.model.Board;
+import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
 
 import java.util.Collections;

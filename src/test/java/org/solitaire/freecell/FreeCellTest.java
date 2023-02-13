@@ -26,42 +26,42 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 class FreeCellTest {
     private FreeCell freeCell;
     @Mock
-    private FreeCellBoard state;
+    private FreeCellBoard board;
 
     @BeforeEach
     public void setup() {
-        state = spy(state);
+        board = spy(board);
         freeCell = FreeCellHelper.build(FreeCellHelperTest.cards);
         freeCell.stack().clear();
-        freeCell.add(state);
-        freeCell.cloner(it -> state);
+        freeCell.addBoard(board);
+        freeCell.cloner(it -> board);
     }
 
     @Test
     public void test_solve() {
         var candidate = buildCandidate(0, COLUMN, buildCard(0, "Ad"));
 
-        when(state.isCleared()).thenReturn(false);
-        when(state.findCandidates()).thenReturn(List.of(candidate));
-        when(state.updateBoard(eq(candidate))).thenReturn(null);
+        when(board.isCleared()).thenReturn(false);
+        when(board.findCandidates()).thenReturn(List.of(candidate));
+        when(board.updateBoard(eq(candidate))).thenReturn(null);
 
         var result = freeCell.solve();
 
         assertNotNull(result);
         assertEquals(ZERO, result.size());
         assertEquals(ONE, freeCell.totalScenarios());
-        verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).findCandidates();
-        verify(state, times(ONE)).updateBoard(eq(candidate));
+        verify(board, times(ONE)).isCleared();
+        verify(board, times(ONE)).findCandidates();
+        verify(board, times(ONE)).updateBoard(eq(candidate));
     }
 
     @Test
     public void test_solve_cleared() {
-        when(state.isCleared()).thenReturn(true);
+        when(board.isCleared()).thenReturn(true);
 
         var result = freeCell.solve();
 
-        verify(state, times(ONE)).isCleared();
+        verify(board, times(ONE)).isCleared();
         assertNotNull(result);
         assertEquals(ONE, result.size());
         assertEquals(ZERO, freeCell.totalScenarios());

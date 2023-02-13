@@ -8,23 +8,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("rawtypes")
-public class SolveExecutor<T extends Board> implements GameSolver {
-    private final Stack<BoardQueue<T>> stack = new Stack<>();
+public class SolveExecutor<T extends Board<?>> implements GameSolver {
+    private final Stack<BoardStack<T>> stack = new Stack<>();
     private final List<List> solutions = new ArrayList<>();
     private int totalScenarios = 0;
     private int maxStack = 0;
-
+    private Function<T, T> cloner;
     private Consumer<T> solveBoard;
 
     public SolveExecutor(T board) {
-        stack.add(new BoardQueue<>(board));
+        stack.add(new BoardStack<>(board));
     }
 
-    public Stack<BoardQueue<T>> stack() {
+    public Stack<BoardStack<T>> stack() {
         return this.stack;
     }
 
@@ -68,28 +69,28 @@ public class SolveExecutor<T extends Board> implements GameSolver {
         return maxStack;
     }
 
-    private T getBoard(BoardQueue<T> queue) {
+    private T getBoard(BoardStack<T> boards) {
         try {
-            if (queue.isNotEmpty()) {
-                return queue.poll();
+            if (boards.isNotEmpty()) {
+                return boards.pop();
             }
             return null;
         } finally {
-            if (queue.isEmpty()) {
+            if (boards.isEmpty()) {
                 stack.pop();
             }
         }
     }
 
-    public boolean addAll(Collection<T> states) {
-        if (!states.isEmpty()) {
-            return stack().add(new BoardQueue<>(states));
+    public boolean addBoards(Collection<T> boards) {
+        if (!boards.isEmpty()) {
+            return stack().add(new BoardStack<>(boards));
         }
         return false;
     }
 
-    public boolean add(T state) {
-        return stack().add(new BoardQueue<>(state));
+    public boolean addBoard(T board) {
+        return stack().add(new BoardStack<>(board));
     }
 
     private void checkMaxStack() {
@@ -104,5 +105,13 @@ public class SolveExecutor<T extends Board> implements GameSolver {
 
     public int maxStack() {
         return this.maxStack;
+    }
+
+    public T clone(T board) {
+        return requireNonNull(cloner).apply(board);
+    }
+
+    public void cloner(Function<T, T> cloner) {
+        this.cloner = cloner;
     }
 }

@@ -11,7 +11,6 @@ import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
 import java.util.List;
-import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.IntStream.range;
@@ -29,7 +28,6 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
-import static org.solitaire.util.ReflectHelper.setField;
 
 @ExtendWith(MockitoExtension.class)
 class SpiderTest {
@@ -44,9 +42,9 @@ class SpiderTest {
 
         state = spy(state);
         spider = build(cards);
-        setField(spider, "cloner", (Cloner) i -> state);
+        spider.cloner(i -> state);
         spider.stack().clear();
-        spider.add(state);
+        spider.addBoard(state);
 
         candidate = mockCandidate();
     }
@@ -132,7 +130,6 @@ class SpiderTest {
 
     @Test
     public void test_updateColumns() {
-        setField(spider, "cloner", (Cloner) i -> state);
         when(state.updateBoard(candidate)).thenReturn(state);
 
         spider.applyCandidates(mockCandidateList(), state);
@@ -142,7 +139,6 @@ class SpiderTest {
 
     @Test
     public void test_updateColumns_null() {
-        setField(spider, "cloner", (Cloner) i -> state);
         when(state.updateBoard(candidate)).thenReturn(null);
 
         spider.applyCandidates(mockCandidateList(), state);
@@ -190,8 +186,5 @@ class SpiderTest {
         var path = new Path<Card[]>();
         path.add(new Card[]{buildCard(0, "Ah")});
         return path;
-    }
-
-    interface Cloner extends Function<SpiderBoard, SpiderBoard> {
     }
 }

@@ -28,12 +28,12 @@ import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.suitCode;
 
 class KlondikeBoardTest {
-    private KlondikeBoard state;
+    private KlondikeBoard board;
 
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = build(CARDS).stack().peek().peek();
+        board = build(CARDS).stack().peek().peek();
     }
 
     @Test
@@ -42,7 +42,7 @@ class KlondikeBoardTest {
         candidates.add(buildCandidate(0, COLUMN, List.of(buildCard(0, "Ks")), 0));
         candidates.add(buildCandidate(0, COLUMN, List.of(buildCard(0, "Ks")), 1));
 
-        var result = state.optimizeCandidates(candidates);
+        var result = board.optimizeCandidates(candidates);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -50,111 +50,111 @@ class KlondikeBoardTest {
 
     @Test
     public void test_findCandidates() {
-        var result = state.findCandidates();
+        var result = board.findCandidates();
 
         assertNotNull(result);
         assertEquals(3, result.size());
-        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=0]", result.get(0).toString());
+        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=COLUMN, to=0]", result.get(0).toString());
     }
 
     @Test
     public void test_drawDeck_stateChanged_false() {
-        while (isNotEmpty(state.deck)) state.drawDeckCards();
-        state.stateChanged(false);
+        while (isNotEmpty(board.deck)) board.drawDeckCards();
+        board.stateChanged(false);
 
-        state.drawDeckCards();
+        board.drawDeckCards();
 
-        assertEquals(24, state.deckPile().size());
-        assertTrue(state.deck().isEmpty());
+        assertEquals(24, board.deckPile().size());
+        assertTrue(board.deck().isEmpty());
     }
 
     @Test
     public void test_updateStates() {
-        var candidate = buildCandidate(state.findCandidateAtColumn(6), 2);
+        var candidate = buildCandidate(board.findCandidateAtColumn(6), 2);
 
-        assertEquals(7, state.columns().get(6).size());
-        assertEquals(3, state.columns().get(2).size());
-        state.stateChanged = false;
+        assertEquals(7, board.columns().get(6).size());
+        assertEquals(3, board.columns().get(2).size());
+        board.stateChanged = false;
 
-        state = state.updateBoard(candidate);
+        board = board.updateBoard(candidate);
 
-        assertEquals(6, state.columns().get(6).size());
-        assertEquals(4, state.columns().get(2).size());
-        assertTrue(state.stateChanged);
+        assertEquals(6, board.columns().get(6).size());
+        assertEquals(4, board.columns().get(2).size());
+        assertTrue(board.stateChanged);
     }
 
     @Test
     public void test_isScorable() {
-        var card = state.columns().get(1).peek();
+        var card = board.columns().get(1).peek();
 
-        assertTrue(state.isScorable(buildCandidate(1, COLUMN, card)));
-        assertTrue(state.isScorable(buildCandidate(-1, DECKPILE, card)));
+        assertTrue(board.isScorable(buildCandidate(1, COLUMN, card)));
+        assertTrue(board.isScorable(buildCandidate(-1, DECKPILE, card)));
 
-        state.columns().get(1).clear();
-        assertFalse(state.isScorable(buildCandidate(1, COLUMN, card)));
+        board.columns().get(1).clear();
+        assertFalse(board.isScorable(buildCandidate(1, COLUMN, card)));
     }
 
     @Test
     public void test_moveToFoundation() {
         var card = buildCard(0, "Ad");
-        var foundation = state.foundations().get(suitCode(card));
-        state.moveToFoundation(buildCandidate(0, COLUMN, card));
+        var foundation = board.foundations().get(suitCode(card));
+        board.moveToFoundation(buildCandidate(0, COLUMN, card));
         assertTrue(foundation.contains(card));
-        assertEquals(15, state.totalScore());
+        assertEquals(15, board.totalScore());
 
         card = buildCard(0, "2d");
-        state.moveToFoundation(buildCandidate(0, DECKPILE, card));
+        board.moveToFoundation(buildCandidate(0, DECKPILE, card));
         assertEquals(2, foundation.size());
-        assertEquals(25, state.totalScore());
+        assertEquals(25, board.totalScore());
 
         card = buildCard(0, "3d");
-        state.moveToFoundation(buildCandidate(0, COLUMN, card));
+        board.moveToFoundation(buildCandidate(0, COLUMN, card));
         assertEquals(3, foundation.size());
-        assertEquals(30, state.totalScore());
+        assertEquals(30, board.totalScore());
     }
 
     @Test
     public void test_drawDeckCards() {
-        assertEquals(24, state.deck().size());
-        assertEquals(0, state.deckPile().size());
-        assertEquals("21:7d", state.deck().get(21).toString());
+        assertEquals(24, board.deck().size());
+        assertEquals(0, board.deckPile().size());
+        assertEquals("21:7d", board.deck().get(21).toString());
 
-        assertNotNull(state.drawDeckCards());
+        assertNotNull(board.drawDeckCards());
 
-        assertEquals(21, state.deck().size());
-        assertEquals(3, state.deckPile().size());
-        assertEquals("21:7d", state.deckPile().peek().toString());
+        assertEquals(21, board.deck().size());
+        assertEquals(3, board.deckPile().size());
+        assertEquals("21:7d", board.deckPile().peek().toString());
 
-        var card = state.deck().peek();
-        state.deck().clear();
-        state.deck().add(card);
-        assertTrue(state.isDeckCardsAvailable());
+        var card = board.deck().peek();
+        board.deck().clear();
+        board.deck().add(card);
+        assertTrue(board.isDeckCardsAvailable());
 
-        assertNotNull(state.drawDeckCards());
-        assertEquals(0, state.deck().size());
-        assertEquals(4, state.deckPile().size());
-        assertEquals(card.toString(), state.deckPile().peek().toString());
+        assertNotNull(board.drawDeckCards());
+        assertEquals(0, board.deck().size());
+        assertEquals(4, board.deckPile().size());
+        assertEquals(card.toString(), board.deckPile().peek().toString());
 
-        state.stateChanged(true);
-        state.deckPile().pop();
-        assertNotNull(state.drawDeckCards());
-        assertEquals(0, state.deck().size());
-        assertEquals(3, state.deckPile().size());
-        assertEquals("21:7d", state.deckPile().peek().toString());
-        assertFalse(state.stateChanged);
+        board.stateChanged(true);
+        board.deckPile().pop();
+        assertNotNull(board.drawDeckCards());
+        assertEquals(0, board.deck().size());
+        assertEquals(3, board.deckPile().size());
+        assertEquals("21:7d", board.deckPile().peek().toString());
+        assertFalse(board.stateChanged);
 
-        state.deckPile().clear();
-        state.stateChanged(true);
+        board.deckPile().clear();
+        board.stateChanged(true);
 
-        assertNull(state.drawDeckCards());
-        assertFalse(state.isDeckCardsAvailable());
-        assertFalse(state.stateChanged);
+        assertNull(board.drawDeckCards());
+        assertFalse(board.isDeckCardsAvailable());
+        assertFalse(board.stateChanged);
     }
 
     @Test
     public void test_checkColumnsForFoundation() {
-        var column = state.columns().get(5);
-        var foundation = state.foundations().get(0);
+        var column = board.columns().get(5);
+        var foundation = board.foundations().get(0);
 
         column.set(5, buildCard(11, "Ad"));
 
@@ -166,76 +166,76 @@ class KlondikeBoardTest {
 
     @Test
     public void test_appendToTarget() {
-        var candidate = buildCandidate(state.findCandidateAtColumn(6), 2);
-        var column = state.columns().get(2);
+        var candidate = buildCandidate(board.findCandidateAtColumn(6), 2);
+        var column = board.columns().get(2);
 
         assertEquals(3, column.size());
         assertEquals("29:Jh", column.peek().toString());
-        state.moveToTarget(candidate);
+        board.moveToTarget(candidate);
 
         assertEquals(4, column.size());
         assertEquals("51:Tc", column.peek().toString());
-        assertEquals(5, state.totalScore());
+        assertEquals(5, board.totalScore());
     }
 
     @Test
     public void test_removeFromSource_column() {
-        var column = state.columns().get(6);
+        var column = board.columns().get(6);
         assertEquals(7, column.size());
         assertEquals(6, column.getOpenAt());
 
-        var candidate = state.findCandidateAtColumn(6);
+        var candidate = board.findCandidateAtColumn(6);
 
-        state.removeFromSource(candidate);
+        board.removeFromSource(candidate);
         assertEquals(6, column.size());
         assertEquals(5, column.getOpenAt());
-        assertEquals(0, state.totalScore());
+        assertEquals(0, board.totalScore());
 
-        state.drawDeckCards();
-        assertFalse(state.deckPile().isEmpty());
-        assertEquals(3, state.deckPile().size());
+        board.drawDeckCards();
+        assertFalse(board.deckPile().isEmpty());
+        assertEquals(3, board.deckPile().size());
         candidate = buildCandidate(-1, DECKPILE, new LinkedList<>());
 
-        state.removeFromSource(candidate);
+        board.removeFromSource(candidate);
 
-        assertEquals(2, state.deckPile().size());
+        assertEquals(2, board.deckPile().size());
     }
 
 
     @Test
     public void test_findFoundationCandidates() {
-        state.drawDeckCards();
-        var results = state.findFoundationCandidates();
+        board.drawDeckCards();
+        var results = board.findFoundationCandidates();
 
         assertNotNull(results);
         assertTrue(results.isEmpty());
 
         var card = buildCard(0, "Ad");
-        state.columns().get(0).clear();
-        state.columns().get(6).add(card);
+        board.columns().get(0).clear();
+        board.columns().get(6).add(card);
 
-        results = state.findFoundationCandidates();
+        results = board.findFoundationCandidates();
 
         assertNotNull(results);
         assertEquals(1, results.size());
 
-        state.moveToTarget(results.get(0));
-        assertEquals(1, state.foundations().get(suitCode(card)).size());
-        assertEquals("[0:Ad]", state.foundations().get(suitCode(card)).toString());
+        board.moveToTarget(results.get(0));
+        assertEquals(1, board.foundations().get(suitCode(card)).size());
+        assertEquals("[0:Ad]", board.foundations().get(suitCode(card)).toString());
     }
 
     @Test
     public void test_findFoundationCandidateFromDeck() {
-        var collector = new LinkedList<Candidate>();
-        state.findFoundationCandidateFromDeck(collector);
+        var result = board.findFoundationCandidateFromDeck().toList();
 
-        assertTrue(collector.isEmpty());
+        assertEquals(0, result.size());
 
-        state.deckPile.push(buildCard(0, "Ad"));
-        state.findFoundationCandidateFromDeck(collector);
+        board.deckPile.push(buildCard(0, "Ad"));
+        result = board.findFoundationCandidateFromDeck().toList();
 
-        assertEquals(1, collector.size());
-        assertEquals("Candidate[cards=[0:Ad], origin=DECKPILE, from=-1, target=-1]", collector.get(0).toString());
+        assertEquals(1, result.size());
+        assertEquals("Candidate[cards=[0:Ad], origin=FOUNDATION, from=-1, target=DECKPILE, to=-1]",
+                result.get(0).toString());
     }
 
     @Test
@@ -243,58 +243,58 @@ class KlondikeBoardTest {
         var a = buildCard(0, "Ad");
         var b = buildCard(0, "2d");
 
-        assertTrue(state.isFoundationCandidate(a));
-        assertFalse(state.isFoundationCandidate(b));
+        assertTrue(board.isFoundationCandidate(a));
+        assertFalse(board.isFoundationCandidate(b));
 
-        state.foundations().get(suitCode(a)).push(a);
+        board.foundations().get(suitCode(a)).push(a);
 
-        assertTrue(state.isFoundationCandidate(b));
-        assertFalse(state.isFoundationCandidate(buildCard(0, "3d")));
+        assertTrue(board.isFoundationCandidate(b));
+        assertFalse(board.isFoundationCandidate(buildCard(0, "3d")));
     }
 
     @Test
     public void test_isMovable() {
-        var column = state.columns().get(3);
+        var column = board.columns().get(3);
 
-        assertTrue(state.isMovable(buildCandidate(3, COLUMN, column.peek())));
+        assertTrue(board.isMovable(buildCandidate(3, COLUMN, column.peek())));
 
-        assertFalse(state.isMovable(buildCandidate(3, COLUMN, column.get(0))));
+        assertFalse(board.isMovable(buildCandidate(3, COLUMN, column.get(0))));
 
-        state.drawDeckCards();
-        assertTrue(state.isMovable(buildCandidate(-1, DECKPILE, state.deckPile.peek())));
+        board.drawDeckCards();
+        assertTrue(board.isMovable(buildCandidate(-1, DECKPILE, board.deckPile.peek())));
 
-        assertFalse(state.isMovable(buildCandidate(-1, FOUNDATION, column.get(0))));
+        assertFalse(board.isMovable(buildCandidate(-1, FOUNDATION, column.get(0))));
 
         var card = buildCard(0, "Kd");
 
-        assertFalse(state.isMovable(card, column));
+        assertFalse(board.isMovable(card, column));
 
         column.clear();
         column.add(card);
-        assertFalse(state.isMovable(card, column));
+        assertFalse(board.isMovable(card, column));
 
         card = buildCard(0, "Qd");
         column.add(card);
-        assertTrue(state.isMovable(card, column));
+        assertTrue(board.isMovable(card, column));
     }
 
     @Test
     public void test_isNotSameColumn() {
-        var card = state.columns().get(3).peek();
+        var card = board.columns().get(3).peek();
 
-        assertTrue(state.isNotSameColumn(0, buildCandidate(3, COLUMN, card)));
-        assertFalse(state.isNotSameColumn(3, buildCandidate(3, COLUMN, card)));
-        assertTrue(state.isNotSameColumn(3, buildCandidate(3, DECKPILE, card)));
+        assertTrue(board.isNotSameColumn(0, buildCandidate(3, COLUMN, card)));
+        assertFalse(board.isNotSameColumn(3, buildCandidate(3, COLUMN, card)));
+        assertTrue(board.isNotSameColumn(3, buildCandidate(3, DECKPILE, card)));
     }
 
     @Test
     public void test_findTargets() {
-        var targets = state.findMovableCandidates();
+        var targets = board.findMovableCandidates();
 
         assertNotNull(targets);
         assertEquals(3, targets.size());
-        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=0]", targets.get(0).toString());
-        assertEquals("Candidate[cards=[38:5c], origin=COLUMN, from=4, target=5]", targets.get(1).toString());
+        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=COLUMN, to=0]", targets.get(0).toString());
+        assertEquals("Candidate[cards=[38:5c], origin=COLUMN, from=4, target=COLUMN, to=5]", targets.get(1).toString());
     }
 
     @Test
@@ -302,15 +302,15 @@ class KlondikeBoardTest {
         var card = buildCard(34, "9h");
         var candidate = buildCandidate(0, COLUMN, List.of(card));
 
-        var result = state.findTarget(candidate);
+        var result = board.findTarget(candidate);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(6, result.get(0).target());
+        assertEquals(6, result.get(0).to());
 
-        state.columns().get(6).clear();
+        board.columns().get(6).clear();
 
-        result = state.findTarget(candidate);
+        result = board.findTarget(candidate);
         assertNotNull(result);
         assertEquals(0, result.size());
     }
@@ -320,50 +320,50 @@ class KlondikeBoardTest {
         var card = buildCard(34, "Kh");
         var candidate = buildCandidate(1, COLUMN, List.of(card));
 
-        state.columns().get(1).add(card);
-        state.columns().get(0).clear();
+        board.columns().get(1).add(card);
+        board.columns().get(0).clear();
 
-        var result = state.findTarget(candidate);
+        var result = board.findTarget(candidate);
 
         assertNotNull(result);
-        assertEquals("Candidate[cards=[34:Kh], origin=COLUMN, from=1, target=0]", result.get(0).toString());
+        assertEquals("Candidate[cards=[34:Kh], origin=COLUMN, from=1, target=COLUMN, to=0]", result.get(0).toString());
 
         candidate = buildCandidate(-1, DECKPILE, List.of(card));
-        state.deckPile().add(card);
+        board.deckPile().add(card);
 
-        result = state.findTarget(candidate);
+        result = board.findTarget(candidate);
 
         assertNotNull(result);
-        assertEquals("Candidate[cards=[34:Kh], origin=DECKPILE, from=-1, target=0]", result.get(0).toString());
+        assertEquals("Candidate[cards=[34:Kh], origin=DECKPILE, from=-1, target=DECKPILE, to=0]", result.get(0).toString());
     }
 
     @Test
     public void test_findOpenCandidates() {
-        var result = state.findOpenCandidates();
+        var result = board.findOpenCandidates();
 
         assertNotNull(result);
         assertEquals(7, result.size());
-        assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=-1]", result.get(0).toString());
+        assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=COLUMN, to=-1]", result.get(0).toString());
 
-        state.drawDeckCards();
-        result = state.findOpenCandidates();
+        board.drawDeckCards();
+        result = board.findOpenCandidates();
 
         assertNotNull(result);
         assertEquals(8, result.size());
-        assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=-1]", result.get(0).toString());
-        assertEquals("Candidate[cards=[21:7d], origin=DECKPILE, from=-1, target=-1]", result.get(7).toString());
+        assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=COLUMN, to=-1]", result.get(0).toString());
+        assertEquals("Candidate[cards=[21:7d], origin=DECKPILE, from=-1, target=DECKPILE, to=-1]", result.get(7).toString());
     }
 
     @Test
     public void test_findCandidate() {
-        var result = state.findCandidateAtColumn(0);
+        var result = board.findCandidateAtColumn(0);
 
         assertEquals(1, result.cards().size());
         assertEquals(0, result.from());
         assertEquals(COLUMN, result.origin());
         assertEquals("24:Th", result.cards().get(0).toString());
 
-        result = state.findCandidateAtColumn(6);
+        result = board.findCandidateAtColumn(6);
         assertEquals(1, result.cards().size());
         assertEquals(6, result.from());
         assertEquals(COLUMN, result.origin());
@@ -372,67 +372,67 @@ class KlondikeBoardTest {
 
     @Test
     public void test_getOrderedCards() {
-        var result = state.getOrderedCards(state.columns().get(0));
+        var result = board.getOrderedCards(board.columns().get(0));
 
         assertEquals(1, result.size());
         assertEquals("24:Th", result.get(0).toString());
 
-        result = state.getOrderedCards(state.columns().get(6));
+        result = board.getOrderedCards(board.columns().get(6));
         assertEquals(1, result.size());
         assertEquals("[51:Tc]", result.toString());
 
-        state.columns().get(5).add(state.columns().get(4).peek());
-        result = state.getOrderedCards(state.columns().get(5));
+        board.columns().get(5).add(board.columns().get(4).peek());
+        result = board.getOrderedCards(board.columns().get(5));
 
         assertEquals(2, result.size());
 
-        state.columns().get(0).add(state.columns().get(1).pop());
-        state.columns().get(0).add(state.columns().get(1).pop());
-        result = state.getOrderedCards(state.columns().get(0));
+        board.columns().get(0).add(board.columns().get(1).pop());
+        board.columns().get(0).add(board.columns().get(1).pop());
+        result = board.getOrderedCards(board.columns().get(0));
 
         assertEquals(3, result.size());
 
-        state.columns().get(0).clear();
-        assertTrue(state.getOrderedCards(state.columns().get(0)).isEmpty());
+        board.columns().get(0).clear();
+        assertTrue(board.getOrderedCards(board.columns().get(0)).isEmpty());
     }
 
     @Test
     public void test_isDuplicate() {
-        var card = state.columns().get(0).peek();
-        var a = buildCandidate(0, COLUMN, List.of(card), 1);
+        var cards = List.of(board.columns().get(0).peek());
+        var a = buildCandidate(0, COLUMN, cards, 1);
 
-        assertTrue(state.isDuplicate(a, buildCandidate(0, COLUMN, List.of(card), 2)));
+        assertTrue(board.isDuplicate(a, buildCandidate(0, COLUMN, cards, 2)));
 
-        assertFalse(state.isDuplicate(a, buildCandidate(3, COLUMN, List.of(card), 2)));
-        assertFalse(state.isDuplicate(a, buildCandidate(0, DECKPILE, List.of(card), 2)));
+        assertFalse(board.isDuplicate(a, buildCandidate(3, COLUMN, cards, 2)));
+        assertFalse(board.isDuplicate(a, buildCandidate(0, DECKPILE, cards, 2)));
     }
 
     @Test
     public void test_isImmediateToFoundation() {
         var card = buildCard(0, "Ad");
 
-        assertTrue(state.isImmediateToFoundation(card));
+        assertTrue(board.isImmediateToFoundation(card));
 
-        var foundation = state.foundations().get(suitCode(card));
+        var foundation = board.foundations().get(suitCode(card));
         foundation.add(card);
         card = buildCard(0, "2d");
 
-        assertTrue(state.isImmediateToFoundation(card));
+        assertTrue(board.isImmediateToFoundation(card));
 
         foundation.add(card);
-        assertTrue(state.isImmediateToFoundation(card));
+        assertTrue(board.isImmediateToFoundation(card));
 
         card = buildCard(0, "3d");
-        assertFalse(state.isImmediateToFoundation(card));
+        assertFalse(board.isImmediateToFoundation(card));
     }
 
     @Test
     public void test_isCleared() {
-        assertFalse(state.isCleared());
+        assertFalse(board.isCleared());
 
-        mockFullFoundations(state.foundations());
+        mockFullFoundations(board.foundations());
 
-        assertTrue(state.isCleared());
+        assertTrue(board.isCleared());
     }
 
     private void mockFullFoundations(List<Stack<Card>> foundations) {

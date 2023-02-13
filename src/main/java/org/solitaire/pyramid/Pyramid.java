@@ -5,22 +5,19 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.SolveExecutor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
 public class Pyramid extends SolveExecutor<PyramidBoard> {
     public static final String KING = "K";
     public static final String ACE = "A";
-    private final Function<PyramidBoard, PyramidBoard> cloner = PyramidBoard::new;
 
     public Pyramid(PyramidBoard board) {
         super(board);
         solveBoard(this::solve);
+        cloner(PyramidBoard::new);
     }
 
     protected void solve(PyramidBoard board) {
@@ -28,26 +25,19 @@ public class Pyramid extends SolveExecutor<PyramidBoard> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .filter(ObjectUtils::isNotEmpty)
-                .map(this::scoreStates)
-                .ifPresentOrElse(super::addAll, () -> drawDeck(board));
-    }
-
-    private List<PyramidBoard> scoreStates(List<PyramidBoard> boards) {
-        boards.forEach(PyramidBoard::score);
-        boards.sort((a, b) -> Double.compare(b.score(), a.score()));
-        return boards;
+                .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
     }
 
     protected List<PyramidBoard> applyCandidates(List<Card[]> candidates, PyramidBoard board) {
         return candidates.stream()
-                .map(it -> cloner.apply(board).updateBoard(it))
+                .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(ArrayList::new));
+                .toList();
     }
 
     protected void drawDeck(PyramidBoard board) {
         Optional.ofNullable(board.drawDeckCards())
-                .ifPresent(super::add);
+                .ifPresent(super::addBoard);
     }
 
     @SuppressWarnings("unchecked")

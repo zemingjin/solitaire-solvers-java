@@ -49,13 +49,13 @@ class SolveExecutorTest {
 
     @Test
     void test_add() {
-        assertTrue(executor.add(board));
+        assertTrue(executor.addBoard(board));
         assertEquals(TWO, executor.stack().size());
     }
 
     @Test
     void test_addAll() {
-        assertTrue(executor.addAll(List.of(board, board)));
+        assertTrue(executor.addBoards(List.of(board, board)));
         assertEquals(TWO, executor.stack().size());
         assertEquals(TWO, executor.stack().peek().size());
     }

@@ -132,7 +132,7 @@ public class SpiderBoard extends GameBoard<Card[]> {
 
     private int targetChainLength(Candidate candidate) {
         return isMatchingTargetSuit(candidate)
-                ? getOrderedCardsAtColumn(columns.get(candidate.target())).size()
+                ? getOrderedCardsAtColumn(columns.get(candidate.to())).size()
                 : 0;
     }
 
@@ -164,7 +164,7 @@ public class SpiderBoard extends GameBoard<Card[]> {
     }
 
     private boolean isMatchingTargetSuit(Candidate candidate) {
-        return Optional.of(columns.get(candidate.target()))
+        return Optional.of(columns.get(candidate.to()))
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> candidate.peek().isSameSuit(it.peek()))
                 .orElse(true);
@@ -240,7 +240,7 @@ public class SpiderBoard extends GameBoard<Card[]> {
     }
 
     protected SpiderBoard checkForRun(Candidate candidate) {
-        Optional.of(candidate.target())
+        Optional.of(candidate.to())
                 .map(columns::get)
                 .filter(ObjectUtils::isNotEmpty)
                 .filter(it -> 13 <= it.size())

@@ -9,22 +9,18 @@ import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
 import org.solitaire.model.SolveExecutor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
 public class Spider extends SolveExecutor<SpiderBoard> {
     protected static final int SOLUTION_LIMIT = 1000;
 
-    private final Function<SpiderBoard, SpiderBoard> cloner = SpiderBoard::new;
-
     public Spider(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
         super(new SpiderBoard(columns, path, totalScore, deck));
         solveBoard(this::solve);
+        cloner(SpiderBoard::new);
     }
 
     protected void solve(SpiderBoard board) {
@@ -33,27 +29,20 @@ public class Spider extends SolveExecutor<SpiderBoard> {
                     .filter(ObjectUtils::isNotEmpty)
                     .map(it -> applyCandidates(it, board))
                     .filter(ObjectUtils::isNotEmpty)
-                    .map(this::scoreStates)
-                    .ifPresentOrElse(super::addAll, () -> drawDeck(board));
+                    .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
         }
-    }
-
-    private List<SpiderBoard> scoreStates(List<SpiderBoard> boards) {
-        boards.forEach(SpiderBoard::score);
-        boards.sort((a, b) -> Double.compare(b.score(), a.score()));
-        return boards;
     }
 
     protected List<SpiderBoard> applyCandidates(List<Candidate> candidates, SpiderBoard board) {
         return candidates.stream()
-                .map(it -> cloner.apply(board).updateBoard(it))
+                .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(ArrayList::new));
+                .toList();
     }
 
     protected void drawDeck(SpiderBoard board) {
         if (board.drawDeck()) {
-            add(board);
+            addBoard(board);
         }
     }
 

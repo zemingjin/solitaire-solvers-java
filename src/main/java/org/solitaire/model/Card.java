@@ -20,6 +20,10 @@ public record Card(int at, String value, String suit, String raw) {
         };
     }
 
+    public int rank() {
+        return VALUES.indexOf(value) + 1;
+    }
+
     @Override
     public int hashCode() {
         return toString().hashCode();
@@ -58,6 +62,10 @@ public record Card(int at, String value, String suit, String raw) {
         var diff = abs(VALUES.indexOf(this.value) - VALUES.indexOf(value));
 
         return diff == 1 || diff == 12;
+    }
+
+    public boolean isHigherOfSameSuit(Card other) {
+        return isSameSuit(other) && isHigherOrder(other);
     }
 
     public boolean isHigherWithDifferentColor(Card other) {

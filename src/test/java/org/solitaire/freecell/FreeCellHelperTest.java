@@ -38,6 +38,4 @@ class FreeCellHelperTest {
         assertEquals(4, getColumn(LAST_LONG));
         assertEquals(7, getColumn(LAST_BOARD - 1));
     }
-
-
 }

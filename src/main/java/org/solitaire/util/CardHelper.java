@@ -35,6 +35,12 @@ public class CardHelper {
     }};
     public static boolean useSuit = true;
 
+    public static int rank(Card card) {
+        return Optional.ofNullable(card)
+                .map(Card::rank)
+                .orElse(0);
+    }
+
     public static int diffOfValues(Card a, Card b) {
         assert nonNull(a);
         var aValue = VALUES.indexOf(a.value());

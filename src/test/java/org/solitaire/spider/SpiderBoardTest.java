@@ -188,12 +188,12 @@ class SpiderBoardTest {
         var candidate = buildCandidate(state.findCandidateAtColumn(5), 9);
 
         assertEquals(6, state.columns().get(candidate.from()).size());
-        assertEquals(5, state.columns().get(candidate.target()).size());
+        assertEquals(5, state.columns().get(candidate.to()).size());
         var clone = state.updateBoard(candidate);
 
         assertNotNull(clone);
         assertEquals(4, clone.columns().get(candidate.from()).size());
-        assertEquals(7, clone.columns().get(candidate.target()).size());
+        assertEquals(7, clone.columns().get(candidate.to()).size());
     }
 
     @Test
@@ -257,7 +257,7 @@ class SpiderBoardTest {
     @Test
     public void test_appendToTarget() {
         var candidate = buildCandidate(state.findCandidateAtColumn(5), 9);
-        var column = state.columns().get(candidate.target());
+        var column = state.columns().get(candidate.to());
 
         assertEquals(5, column.size());
         assertEquals("53:3h", column.peek().toString());
@@ -296,8 +296,8 @@ class SpiderBoardTest {
 
         assertNotNull(targets);
         assertEquals(4, targets.size());
-        assertEquals(7, targets.get(0).target());
-        assertEquals(9, targets.get(1).target());
+        assertEquals(7, targets.get(0).to());
+        assertEquals(9, targets.get(1).to());
     }
 
     @Test
@@ -313,13 +313,13 @@ class SpiderBoardTest {
         assertNotNull(result);
         assertSame(a, result);
 
-        state.columns().get(b.target()).set(4, buildCard(0, "Ts"));
+        state.columns().get(b.to()).set(4, buildCard(0, "Ts"));
         result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(b, result);
 
-        state.columns().get(a.target()).set(5, buildCard(0, "Ts"));
-        state.columns().get(a.target()).set(4, buildCard(0, "Js"));
+        state.columns().get(a.to()).set(5, buildCard(0, "Ts"));
+        state.columns().get(a.to()).set(4, buildCard(0, "Js"));
         result = state.selectCandidate(List.of(a, b));
         assertNotNull(result);
         assertSame(a, result);
@@ -331,14 +331,14 @@ class SpiderBoardTest {
         var result = state.matchCandidateToTargets(candidate).toList();
 
         assertNotNull(result);
-        assertEquals(4, result.get(0).target());
-        assertEquals("Candidate[cards=[33:2h], origin=COLUMN, from=5, target=4]", result.get(0).toString());
+        assertEquals(4, result.get(0).to());
+        assertEquals("Candidate[cards=[33:2h], origin=COLUMN, from=5, target=COLUMN, to=4]", result.get(0).toString());
 
         candidate = state.findCandidateAtColumn(1);
         result = state.matchCandidateToTargets(candidate).toList();
         assertNotNull(result);
-        assertEquals(7, result.get(0).target());
-        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=7]", result.get(0).toString());
+        assertEquals(7, result.get(0).to());
+        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=COLUMN, to=7]", result.get(0).toString());
     }
 
     @Test
@@ -350,7 +350,7 @@ class SpiderBoardTest {
         var result = state.findTargetColumn(9, candidate);
 
         assertNotNull(result);
-        assertEquals("Candidate[cards=[33:2h], origin=COLUMN, from=5, target=9]", result.toString());
+        assertEquals("Candidate[cards=[33:2h], origin=COLUMN, from=5, target=COLUMN, to=9]", result.toString());
 
         candidate = buildCandidate(9, COLUMN, buildCard(0, "2h"));
         assertNull(state.findTargetColumn(9, candidate));
@@ -362,16 +362,16 @@ class SpiderBoardTest {
 
         assertNotNull(candidates);
         assertEquals(10, candidates.size());
-        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=-1]", candidates.get(0).toString());
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=-1]", candidates.get(9).toString());
+        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=COLUMN, to=-1]", candidates.get(0).toString());
+        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=COLUMN, to=-1]", candidates.get(9).toString());
 
         state.columns().get(0).clear();
         candidates = state.findOpenCandidates().toList();
 
         assertNotNull(candidates);
         assertEquals(9, candidates.size());
-        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=-1]", candidates.get(0).toString());
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=-1]", candidates.get(8).toString());
+        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=COLUMN, to=-1]", candidates.get(0).toString());
+        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=COLUMN, to=-1]", candidates.get(8).toString());
     }
 
     @Test
@@ -379,10 +379,10 @@ class SpiderBoardTest {
         var candidate = state.findCandidateAtColumn(0);
 
         assertNotNull(candidate);
-        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=-1]", candidate.toString());
+        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=COLUMN, to=-1]", candidate.toString());
 
         candidate = state.findCandidateAtColumn(state.columns().size() - 1);
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=-1]", candidate.toString());
+        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=COLUMN, to=-1]", candidate.toString());
     }
 
     @Test

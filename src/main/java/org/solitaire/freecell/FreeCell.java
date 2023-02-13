@@ -11,8 +11,6 @@ import org.solitaire.model.SolveExecutor;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Heineman’s Staged Deepening (HSD)
@@ -22,45 +20,31 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("rawtypes")
 public class FreeCell extends SolveExecutor<FreeCellBoard> {
-    private Function<FreeCellBoard, FreeCellBoard> cloner = FreeCellBoard::new;
-
     public FreeCell(Columns columns) {
         super(new FreeCellBoard(columns, new Path<>(), new Card[4], new Card[4]));
         solveBoard(this::solve);
+        cloner(FreeCellBoard::new);
     }
 
-    protected void solve(FreeCellBoard state) {
-        Optional.of(state)
+    protected void solve(FreeCellBoard board) {
+        Optional.of(board)
                 .map(FreeCellBoard::findCandidates)
                 .filter(ObjectUtils::isNotEmpty)
-                .map(it -> applyCandidates(it, state))
+                .map(it -> applyCandidates(it, board))
                 .filter(ObjectUtils::isNotEmpty)
-                .map(this::scoreStates)
-                .ifPresent(super::addAll);
+                .ifPresent(super::addBoards);
     }
 
-    protected List<FreeCellBoard> applyCandidates(List<Candidate> candidates, FreeCellBoard state) {
+    protected List<FreeCellBoard> applyCandidates(List<Candidate> candidates, FreeCellBoard board) {
         return candidates.stream()
-                .map(it -> cloner.apply(state).updateBoard(it))
+                .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * @return the list of States sorted by their scores in descending order.
-     */
-    protected List<FreeCellBoard> scoreStates(List<FreeCellBoard> list) {
-        list.forEach(FreeCellBoard::score);
-        list.sort((a, b) -> Double.compare(b.score(), a.score()));
-        return list;
+                .map(FreeCellBoard::checkFoundationCandidates)
+                .toList();
     }
 
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         throw new RuntimeException("Not applicable");
-    }
-
-    public void cloner(Function<FreeCellBoard, FreeCellBoard> cloner) {
-        this.cloner = cloner;
     }
 }

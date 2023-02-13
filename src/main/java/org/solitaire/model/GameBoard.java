@@ -40,7 +40,7 @@ public class GameBoard<R> implements Board<R> {
     protected void appendToTargetColumn(Candidate candidate) {
         var cards = candidate.cards();
 
-        columns.get(candidate.target()).addAll(cards);
+        columns.get(candidate.to()).addAll(cards);
     }
 
     @Override

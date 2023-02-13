@@ -11,7 +11,6 @@ import org.solitaire.model.Path;
 import org.solitaire.util.IOHelper;
 
 import java.util.List;
-import java.util.function.Function;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
@@ -24,7 +23,6 @@ import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidHelper.getClickScore;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
-import static org.solitaire.util.ReflectHelper.setField;
 
 @ExtendWith(MockitoExtension.class)
 class PyramidTest {
@@ -39,9 +37,9 @@ class PyramidTest {
     public void setup() {
         state = spy(state);
         pyramid = build(cards);
-        setField(pyramid, "cloner", (Function<PyramidBoard, PyramidBoard>) it -> state);
+        pyramid.cloner(it -> state);
         pyramid.stack().clear();
-        pyramid.add(state);
+        pyramid.addBoard(state);
     }
 
     @Test

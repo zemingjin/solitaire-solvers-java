@@ -51,7 +51,7 @@ class SolitaireAppTest {
         var ex = assertThrows(RuntimeException.class, () -> app.getSolverType(new String[]{TEST_FILE}));
 
         assertNotNull(ex);
-        assertEquals("Missing solver type; '-t', '-p', '-k', or '-s'", ex.getMessage());
+        assertEquals("Missing solver type; '-t', '-p', '-k', '-f', or '-s'", ex.getMessage());
     }
 
 }

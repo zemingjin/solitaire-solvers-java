@@ -5,13 +5,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.SolveExecutor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.rangeClosed;
@@ -20,11 +17,11 @@ import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 @SuppressWarnings("rawtypes")
 public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
     private static final int BOARD_BONUS = 5000;
-    private final Function<TriPeaksBoard, TriPeaksBoard> cloner = TriPeaksBoard::new;
 
     public TriPeaks(Card[] cards, Stack<Card> wastePile) {
         super(new TriPeaksBoard(cards, wastePile));
         solveBoard(this::solve);
+        cloner(TriPeaksBoard::new);
     }
 
     private void solve(TriPeaksBoard board) {
@@ -32,27 +29,20 @@ public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .filter(ObjectUtils::isNotEmpty)
-                .map(this::scoreStates)
-                .ifPresentOrElse(super::addAll, () -> drawDeck(board));
-    }
-
-    private List<TriPeaksBoard> scoreStates(List<TriPeaksBoard> boards) {
-        boards.forEach(TriPeaksBoard::score);
-        boards.sort((a, b) -> Double.compare(b.score(), a.score()));
-        return boards;
+                .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
     }
 
     private List<TriPeaksBoard> applyCandidates(List<Card> candidates, TriPeaksBoard board) {
         return candidates.stream()
-                .map(it -> cloner.apply(board).updateBoard(it))
+                .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(ArrayList::new));
+                .toList();
     }
 
     private void drawDeck(TriPeaksBoard board) {
         Optional.ofNullable(board.getTopDeckCard())
                 .map(board::updateBoard)
-                .ifPresent(super::add);
+                .ifPresent(super::addBoard);
     }
 
     @SuppressWarnings("unchecked")

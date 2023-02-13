@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
@@ -24,6 +25,7 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
+import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
 import static org.solitaire.util.CardHelper.diffOfValues;
@@ -69,27 +71,25 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     protected List<Candidate> findFoundationCandidates() {
-        return Optional.of(findFoundationCandidatesFromColumns())
-                .map(this::findFoundationCandidateFromDeck)
-                .orElseThrow();
+        return Stream.of(findFoundationCandidatesFromColumns(), findFoundationCandidateFromDeck())
+                .flatMap(it -> it)
+                .toList();
     }
 
-    private List<Candidate> findFoundationCandidatesFromColumns() {
+    private Stream<Candidate> findFoundationCandidatesFromColumns() {
         return range(0, columns().size())
                 .filter(i -> isNotEmpty(columns.get(i)))
                 .filter(i -> isFoundationCandidate(columns.get(i).peek()))
-                .mapToObj(i -> buildCandidate(i, COLUMN, columns.get(i).peek()))
-                .collect(Collectors.toCollection(LinkedList::new));
+                .mapToObj(i -> buildCandidate(i, COLUMN, FOUNDATION, columns.get(i).peek()));
     }
 
-    protected List<Candidate> findFoundationCandidateFromDeck(List<Candidate> collector) {
-        if (isNotEmpty(deckPile)) {
-            Optional.of(deckPile.peek())
-                    .filter(this::isFoundationCandidate)
-                    .map(it -> buildCandidate(-1, DECKPILE, it))
-                    .ifPresent(collector::add);
-        }
-        return collector;
+    protected Stream<Candidate> findFoundationCandidateFromDeck() {
+        return Optional.of(deckPile)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(Stack::peek)
+                .filter(this::isFoundationCandidate)
+                .map(it -> buildCandidate(-1, FOUNDATION, DECKPILE, it))
+                .stream();
     }
 
     protected boolean isFoundationCandidate(Card card) {
@@ -244,7 +244,7 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     protected boolean isDuplicate(Candidate a, Candidate b) {
-        return a.origin() == b.origin() && a.from() == b.from() && a.target() != b.target();
+        return a.origin() == b.origin() && a.from() == b.from() && a.target() == b.target() && a.to() != b.to();
     }
 
     protected boolean isImmediateToFoundation(Card card) {
