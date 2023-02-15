@@ -14,15 +14,15 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.SpiderHelper.build;
 
-public class GameStateTest {
+public class GameBoardTest {
     protected static final String TEST_FILE = "games/spider/spider-122922-expert.txt";
 
     public final static String[] cards = IOHelper.loadFile(TEST_FILE);
 
-    private GameState<Card[]> state;
+    private GameBoard<Card[]> state;
 
-    private static GameState<Card[]> mockState(GameState<Card[]> state) {
-        return new GameState<>(new Columns(state.columns), new Path<>(state.path), state.totalScore);
+    private static GameBoard<Card[]> mockState(GameBoard<Card[]> state) {
+        return new GameBoard<>(new Columns(state.columns), new Path<>(state.path), state.totalScore);
     }
 
     @BeforeEach

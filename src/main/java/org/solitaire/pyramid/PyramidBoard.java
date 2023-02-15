@@ -1,5 +1,7 @@
 package org.solitaire.pyramid;
 
+import org.apache.commons.lang3.ObjectUtils;
+import org.solitaire.model.Board;
 import org.solitaire.model.Card;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
@@ -28,14 +30,15 @@ import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
 
-public class PyramidState {
-    protected Card[] cards;
-    protected Stack<Card> deck;
-    protected Stack<Card> flippedDeck;
-    protected Path<Card[]> path;
-    protected int recycleCount;
+public class PyramidBoard implements Board<Card[]> {
+    private final Card[] cards;
+    private final Stack<Card> deck;
+    private final Stack<Card> flippedDeck;
+    private final Path<Card[]> path;
+    private int recycleCount;
+    private double score = 0;
 
-    public PyramidState(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
+    public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
         this.cards = cards;
         this.deck = deck;
         this.flippedDeck = flippedDeck;
@@ -43,7 +46,7 @@ public class PyramidState {
         this.recycleCount = recycleCount;
     }
 
-    public PyramidState(PyramidState that) {
+    public PyramidBoard(PyramidBoard that) {
         this(cloneArray(that.cards),
                 cloneStack(that.deck),
                 cloneStack(that.flippedDeck),
@@ -71,6 +74,10 @@ public class PyramidState {
         return recycleCount;
     }
 
+    public void recycleCount(int recycleCount) {
+        this.recycleCount = recycleCount;
+    }
+
     public boolean isCleared() {
         return CardHelper.isCleared(cards);
     }
@@ -86,7 +93,9 @@ public class PyramidState {
                 .peek(i -> checkKing(collect, openCards.get(i)))
                 .forEach(i -> findPairsOf13(collect, openCards, i));
 
-        checkKing(collect, openCards.get(openCards.size() - 1));
+        if (ObjectUtils.isNotEmpty(openCards)) {
+            checkKing(collect, openCards.get(openCards.size() - 1));
+        }
         return collect;
     }
 
@@ -153,7 +162,7 @@ public class PyramidState {
     /***************************************************************************************************************
      * Update State
      **************************************************************************************************************/
-    public PyramidState drawDeckCards() {
+    public PyramidBoard drawDeckCards() {
         if (checkDeck()) {
             flippedDeck.push(deck.pop());
             return this;
@@ -170,7 +179,7 @@ public class PyramidState {
         return isNotEmpty(deck);
     }
 
-    protected PyramidState updateState(Card[] candidate) {
+    protected PyramidBoard updateBoard(Card[] candidate) {
         stream(candidate).forEach(this::removeCardFromBoard);
         path.add(candidate);
         return this;
@@ -190,5 +199,12 @@ public class PyramidState {
             return true;
         }
         return false;
+    }
+
+    public double score() {
+        if (score == 0) {
+            score = findCandidates().size();
+        }
+        return score;
     }
 }

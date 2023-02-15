@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidHelper.getClickScore;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
 class PyramidTest {
@@ -30,14 +31,15 @@ class PyramidTest {
 
     private Pyramid pyramid;
     @Mock
-    private PyramidState state;
+    private PyramidBoard state;
 
     @BeforeEach
     public void setup() {
         state = spy(state);
-        pyramid = build(cards).cloner(it -> state);
+        pyramid = build(cards);
+        pyramid.cloner(it -> state);
         pyramid.stack().clear();
-        pyramid.add(state);
+        pyramid.addBoard(state);
     }
 
     @Test
@@ -50,7 +52,7 @@ class PyramidTest {
         assertNotNull(result);
         assertEquals(ONE, result.size());
         assertEquals("[]", result.get(0).toString());
-        assertEquals(ONE, pyramid.totalScenarios());
+        assertEquals(ZERO, pyramid.totalScenarios());
     }
 
     @SuppressWarnings("unchecked")
@@ -63,7 +65,7 @@ class PyramidTest {
         assertEquals(28, counts.size());
         assertNotNull(result);
         assertEquals(1290, result.getLeft());
-        assertEquals(5468, pyramid.totalScenarios());
+        assertEquals(4956, pyramid.totalScenarios());
     }
 
     private List<String> getItemCounts(List<Card[]> list) {

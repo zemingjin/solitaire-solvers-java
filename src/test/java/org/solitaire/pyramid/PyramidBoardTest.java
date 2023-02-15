@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
 
+import java.util.Objects;
+
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,8 +22,8 @@ import static org.solitaire.pyramid.PyramidTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 
-class PyramidStateTest {
-    private PyramidState state;
+class PyramidBoardTest {
+    private PyramidBoard state;
 
     @BeforeEach
     public void setup() {
@@ -35,7 +37,7 @@ class PyramidStateTest {
 
         assertNotNull(result);
         assertEquals(3, result.size());
-        assertEquals("[Kc]", stringOfRaws(result.get(0)));
+        assertEquals("Kc", stringOfRaws(result.get(0)));
     }
 
     @Test
@@ -45,35 +47,35 @@ class PyramidStateTest {
         var card = state.flippedDeck().peek();
         var c = new Card[]{card};
 
-        state.updateState(c);
+        state.updateBoard(c);
 
         assertFalse(state.isOpen(card));
-        assertTrue(state.flippedDeck.isEmpty());
+        assertTrue(state.flippedDeck().isEmpty());
         assertTrue(state.path().contains(c));
         assertEquals(1, state.path().size());
-        assert state.path.peek() != null;
-        assertEquals("51:Kc", state.path.peek()[0].toString());
+        assert state.path().peek() != null;
+        assertEquals("51:Kc", Objects.requireNonNull(state.path().peek())[0].toString());
 
         card = state.deck().peek();
         c = new Card[]{card, state.cards()[LAST_BOARD - 1]};
-        state.updateState(c);
+        state.updateBoard(c);
 
         assertFalse(state.isOpen(card));
-        assertEquals(22, state.deck.size());
-        assertEquals("49:6c", state.deck.peek().toString());
+        assertEquals(22, state.deck().size());
+        assertEquals("49:6c", state.deck().peek().toString());
         assertTrue(state.path().contains(c));
         assertEquals(2, state.path().size());
-        assert state.path.peek() != null;
-        assertEquals("50:Kh", state.path.peek()[0].toString());
+        assert state.path().peek() != null;
+        assertEquals("50:Kh", Objects.requireNonNull(state.path().peek())[0].toString());
 
         state.drawDeckCards();
         card = state.deck().peek();
-        state.updateState(new Card[]{card});
+        state.updateBoard(new Card[]{card});
 
         card = buildCard(LAST_BOARD, "Ad");
         state.deck().push(card);
         state.flippedDeck().add(card);
-        state.updateState(new Card[]{card});
+        state.updateBoard(new Card[]{card});
 
         assertNotEquals(state.deck().peek(), card);
         assertEquals(state.flippedDeck().peek(), card);
@@ -82,27 +84,27 @@ class PyramidStateTest {
     @Test
     public void test_recycle() {
         assertNotNull(state.drawDeckCards());
-        assertEquals(23, state.deck.size());
-        assertEquals(1, state.flippedDeck.size());
+        assertEquals(23, state.deck().size());
+        assertEquals(1, state.flippedDeck().size());
 
         while (!state.deck().isEmpty()) {
             state.flippedDeck().push(state.deck().pop());
         }
-        state.recycleCount = 1;
+        state.recycleCount(1);
         assertNull(state.drawDeckCards());
         assertEquals(24, state.flippedDeck().size());
 
-        state.recycleCount = 2;
+        state.recycleCount(2);
         assertNotNull(state.drawDeckCards());
-        assertEquals(23, state.deck.size());
-        assertEquals(1, state.flippedDeck.size());
-        assertEquals("51:Kc", state.flippedDeck.peek().toString());
-        assertEquals("50:Kh", state.deck.peek().toString());
+        assertEquals(23, state.deck().size());
+        assertEquals(1, state.flippedDeck().size());
+        assertEquals("51:Kc", state.flippedDeck().peek().toString());
+        assertEquals("50:Kh", state.deck().peek().toString());
     }
 
     @Test
     public void test_cloneBoard() {
-        var cloned = new PyramidState(state);
+        var cloned = new PyramidBoard(state);
 
         assertNotSame(state, cloned);
         assertTrue(reflectionEquals(state, cloned));

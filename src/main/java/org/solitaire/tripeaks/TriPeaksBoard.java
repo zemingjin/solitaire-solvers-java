@@ -1,5 +1,6 @@
 package org.solitaire.tripeaks;
 
+import org.solitaire.model.Board;
 import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
 
@@ -21,25 +22,40 @@ import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
 
-public class TriPeaksState {
+public class TriPeaksBoard implements Board<Card> {
     private static final int C = LAST_BOARD + LAST_DECK - 1;
     private final IntUnaryOperator reverse = i -> C - i;
     private final IntUnaryOperator reverseBoard = i -> LAST_BOARD - i - 1;
 
-    protected Card[] cards;
-    protected Stack<Card> wastePile;
+    private Card[] cards;
+    private Stack<Card> wastePile;
+    private double score = 0;
 
-    public TriPeaksState(Card[] cards, Stack<Card> wastePile) {
+    public TriPeaksBoard(Card[] cards, Stack<Card> wastePile) {
         cards(cards);
         wastePile(wastePile);
     }
 
-    protected TriPeaksState(TriPeaksState that) {
+    protected TriPeaksBoard(TriPeaksBoard that) {
         this(cloneArray(that.cards), cloneStack(that.wastePile));
     }
 
-    protected boolean isCleared() {
+    @Override
+    public boolean isCleared() {
         return CardHelper.isCleared(cards, 0, LAST_BOARD);
+    }
+
+    @Override
+    public List<Card> path() {
+        return wastePile;
+    }
+
+    @Override
+    public double score() {
+        if (score == 0) {
+            score = findCandidates().size();
+        }
+        return score;
     }
 
     protected List<Card> findCandidates() {
@@ -67,7 +83,7 @@ public class TriPeaksState {
                 .orElse(null);
     }
 
-    protected TriPeaksState updateState(Card card) {
+    protected TriPeaksBoard updateBoard(Card card) {
         if (nonNull(card)) {
             cards[card.at()] = null;
             wastePile.push(card);

@@ -30,10 +30,10 @@ public class PyramidHelper {
                 .orElseThrow();
     }
 
-    private static PyramidState buildPyramidState(Card[] cards) {
+    private static PyramidBoard buildPyramidState(Card[] cards) {
         assert cards.length == 52 : "Invalid # of cards: " + cards.length;
 
-        return new PyramidState(copyOf(cards, LAST_BOARD), buildDeck(cards), new Stack<>(), new Path<>(), 3);
+        return new PyramidBoard(copyOf(cards, LAST_BOARD), buildDeck(cards), new Stack<>(), new Path<>(), 3);
     }
 
     private static Stack<Card> buildDeck(Card[] cards) {

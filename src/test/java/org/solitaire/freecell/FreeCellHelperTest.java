@@ -20,7 +20,7 @@ class FreeCellHelperTest {
 
         assertNotNull(freeCell);
 
-        var state = (FreeCellState) freeCell.stack().peek().peek();
+        var state = (FreeCellBoard) freeCell.stack().peek().peek();
 
         assertNotNull(state);
         assertNotNull(state.columns());
@@ -38,6 +38,4 @@ class FreeCellHelperTest {
         assertEquals(4, getColumn(LAST_LONG));
         assertEquals(7, getColumn(LAST_BOARD - 1));
     }
-
-
 }

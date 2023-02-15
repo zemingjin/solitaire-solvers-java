@@ -35,6 +35,12 @@ public class CardHelper {
     }};
     public static boolean useSuit = true;
 
+    public static int rank(Card card) {
+        return Optional.ofNullable(card)
+                .map(Card::rank)
+                .orElse(0);
+    }
+
     public static int diffOfValues(Card a, Card b) {
         assert nonNull(a);
         var aValue = VALUES.indexOf(a.value());
@@ -125,8 +131,9 @@ public class CardHelper {
 
     public static String stringOfRaws(Card[] cards) {
         return Optional.of(cards)
-                .map(it -> Arrays.toString(Stream.of(cards).map(Card::raw).toArray()))
-                .orElseThrow();
+                .filter(it -> it.length == 1)
+                .map(it -> it[0].raw())
+                .orElseGet(() -> Arrays.toString(Stream.of(cards).map(Card::raw).toArray()));
     }
 
     public static String stringOfRaws(List<Card> cards) {

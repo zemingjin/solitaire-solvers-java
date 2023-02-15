@@ -5,51 +5,44 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.SolveExecutor;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
-import static org.solitaire.tripeaks.TriPeaksHelper.removeDeckCardsAtEnd;
 
 @SuppressWarnings("rawtypes")
-public class TriPeaks extends SolveExecutor<TriPeaksState> {
+public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
     private static final int BOARD_BONUS = 5000;
 
     public TriPeaks(Card[] cards, Stack<Card> wastePile) {
-        super(new TriPeaksState(cards, wastePile));
-        stateConsumer(this::solve);
+        super(new TriPeaksBoard(cards, wastePile));
+        solveBoard(this::solve);
+        cloner(TriPeaksBoard::new);
     }
 
-    private void solve(TriPeaksState state) {
-        if (state.isCleared()) {
-            removeDeckCardsAtEnd(state.wastePile);
-            solutions().add(state.wastePile);
-        } else {
-            Optional.of(state.findCandidates())
-                    .filter(ObjectUtils::isNotEmpty)
-                    .map(it -> Pair.of(it, state))
-                    .map(this::applyCandidates)
-                    .map(super::addAll)
-                    .orElseGet(() -> drawDeck(state));
-        }
+    private void solve(TriPeaksBoard board) {
+        Optional.of(board.findCandidates())
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .filter(ObjectUtils::isNotEmpty)
+                .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
     }
 
-    private List<TriPeaksState> applyCandidates(Pair<List<Card>, TriPeaksState> pair) {
-        return pair.getLeft().stream()
-                .map(it -> new TriPeaksState(pair.getRight()).updateState(it))
-                .collect(Collectors.toCollection(ArrayList::new));
+    private List<TriPeaksBoard> applyCandidates(List<Card> candidates, TriPeaksBoard board) {
+        return candidates.stream()
+                .map(it -> clone(board).updateBoard(it))
+                .filter(Objects::nonNull)
+                .toList();
     }
 
-    private boolean drawDeck(TriPeaksState state) {
-        return Optional.ofNullable(state.getTopDeckCard())
-                .map(state::updateState)
-                .map(super::add)
-                .orElse(false);
+    private void drawDeck(TriPeaksBoard board) {
+        Optional.ofNullable(board.getTopDeckCard())
+                .map(board::updateBoard)
+                .ifPresent(super::addBoard);
     }
 
     @SuppressWarnings("unchecked")

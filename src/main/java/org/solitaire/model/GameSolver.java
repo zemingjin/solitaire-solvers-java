@@ -8,6 +8,8 @@ import java.util.List;
 public interface GameSolver {
     List<List> solve();
 
+    int maxDepth();
+
     Pair<Integer, List> getMaxScore(List<List> results);
 
     int totalScenarios();

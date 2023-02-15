@@ -35,7 +35,7 @@ class KlondikeHelperTest {
     @Test
     public void test_clone() {
         var state = KlondikeHelper.build(CARDS).stack().peek().peek();
-        var clone = new KlondikeState(state);
+        var clone = new KlondikeBoard(state);
 
         assertTrue(reflectionEquals(clone, state));
     }

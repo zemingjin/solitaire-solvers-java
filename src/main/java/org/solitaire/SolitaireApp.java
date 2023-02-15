@@ -2,6 +2,7 @@ package org.solitaire;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
+import org.solitaire.freecell.FreeCellHelper;
 import org.solitaire.klondike.KlondikeHelper;
 import org.solitaire.model.GameBuilder;
 import org.solitaire.model.GameSolver;
@@ -27,6 +28,7 @@ public class SolitaireApp {
     public static final String SPIDER = "-s";
     public static final String PYRAMID = "-p";
     public static final String KLONDIKE = "-k";
+    public static final String FREECELL = "-f";
     public static final String NOSUITS = "-n";
     @SuppressWarnings("rawtypes")
     private static final Function<GameSolver, Pair<GameSolver, List<List>>> solveIt = it -> Pair.of(it, it.solve());
@@ -36,6 +38,7 @@ public class SolitaireApp {
         put(PYRAMID, PyramidHelper::build);
         put(SPIDER, SpiderHelper::build);
         put(KLONDIKE, KlondikeHelper::build);
+        put(FREECELL, FreeCellHelper::build);
     }};
 
     public static void main(String[] args) {
@@ -59,8 +62,8 @@ public class SolitaireApp {
                 .orElseThrow();
         stopWatch.stop();
 
-        System.out.printf("Found %,d solutions in %,d scenarios - total time: %s.\n",
-                results.getRight().size(), solver.totalScenarios(), stopWatch.formatTime());
+        System.out.printf("Found %,d solutions in %,d scenarios - total time: %s with maximum depth of %d.\n",
+                results.getRight().size(), solver.totalScenarios(), stopWatch.formatTime(), solver.maxDepth());
         checkShortestPath(results.getRight());
         checkLongestPath(results.getRight());
         checkMaxScore(results);
@@ -81,7 +84,7 @@ public class SolitaireApp {
         return Arrays.stream(args, 1, args.length)
                 .filter(BUILDERS::containsKey)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Missing solver type; '-t', '-p', '-k', or '-s'"));
+                .orElseThrow(() -> new RuntimeException("Missing solver type; '-t', '-p', '-k', '-f', or '-s'"));
     }
 
     protected void checkUseSuits(String[] args) {
