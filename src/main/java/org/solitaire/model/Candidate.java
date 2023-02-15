@@ -27,8 +27,8 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
         return new Candidate(cards, origin, from, origin, to);
     }
 
-    public static Candidate buildCandidate(Candidate that, int to) {
-        return new Candidate(that.cards, that.origin, that.from, that.target, to);
+    public static Candidate buildColumnCandidate(Candidate that, int to) {
+        return new Candidate(that.cards, that.origin, that.from, COLUMN, to);
     }
 
     public Card peek() {
@@ -40,11 +40,15 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
     }
 
     public boolean isFromColumn() {
-        return origin == COLUMN;
+        return COLUMN == origin;
     }
 
     public boolean isToColumn() {
-        return target == COLUMN;
+        return COLUMN == target;
+    }
+
+    public boolean isFromFreeCell() {
+        return FREECELL == origin;
     }
 
     public boolean isToFreeCell() {

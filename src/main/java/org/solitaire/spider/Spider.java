@@ -18,20 +18,23 @@ public class Spider extends SolveExecutor<SpiderBoard> {
     protected static final int SOLUTION_LIMIT = 1000;
 
     public Spider(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
-        super(new SpiderBoard(columns, path, totalScore, deck));
+        super(new SpiderBoard(columns, path, totalScore, deck), SpiderBoard::new);
         solveBoard(this::solve);
-        cloner(SpiderBoard::new);
     }
 
     protected void solve(SpiderBoard board) {
-        if (solutions().size() < SOLUTION_LIMIT) {
-            Optional.of(board.findCandidates())
-                    .filter(ObjectUtils::isNotEmpty)
-                    .map(it -> applyCandidates(it, board))
-                    .filter(ObjectUtils::isNotEmpty)
-                    .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
-        }
+        Optional.of(board.findCandidates())
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .filter(ObjectUtils::isNotEmpty)
+                .ifPresentOrElse(this::addBoards, () -> drawDeck(board));
     }
+
+    @Override
+    public boolean isContinuing() {
+        return super.isContinuing() && solutions().size() < SOLUTION_LIMIT;
+    }
+
 
     protected List<SpiderBoard> applyCandidates(List<Candidate> candidates, SpiderBoard board) {
         return candidates.stream()

@@ -2,6 +2,7 @@ package org.solitaire.model;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -10,6 +11,7 @@ public class GameBoard<R> implements Board<R> {
     protected final Path<R> path;
     protected int totalScore;
     private double score = 0;
+    private List<Candidate> candidates;
 
     public GameBoard(Columns columns, Path<R> path) {
         this(columns, path, 0);
@@ -68,5 +70,18 @@ public class GameBoard<R> implements Board<R> {
 
     public void score(double score) {
         this.score = score;
+    }
+
+    public void candidates(List<Candidate> candidates) {
+        this.candidates = candidates;
+    }
+
+    public List<Candidate> candidates() {
+        return candidates;
+    }
+
+    public List<Candidate> add(List<Candidate> collector, Candidate item) {
+        collector.add(item);
+        return collector;
     }
 }

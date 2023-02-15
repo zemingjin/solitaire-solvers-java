@@ -20,9 +20,15 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
     private int maxStack = 0;
     private Function<T, T> cloner;
     private Consumer<T> solveBoard;
+    private boolean singleSolution = false;
 
     public SolveExecutor(T board) {
         stack.add(new BoardStack<>(board));
+    }
+
+    public SolveExecutor(T board, Function<T, T> cloner) {
+        this(board);
+        cloner(cloner);
     }
 
     public Stack<BoardStack<T>> stack() {
@@ -33,9 +39,13 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
         this.solveBoard = solveBoard;
     }
 
+    public void singleSolution(boolean singleSolution) {
+        this.singleSolution = singleSolution;
+    }
+
     @Override
     public List<List> solve() {
-        while (!stack.isEmpty()) {
+        while (isContinuing() && !stack.isEmpty()) {
             checkMaxStack();
 
             Optional.ofNullable(stack.peek())
@@ -43,6 +53,10 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
                     .ifPresent(this::processBoard);
         }
         return solutions();
+    }
+
+    public boolean isContinuing() {
+        return !singleSolution || solutions.size() != 1;
     }
 
     private void processBoard(T board) {
@@ -70,16 +84,12 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
     }
 
     private T getBoard(BoardStack<T> boards) {
-        try {
-            if (boards.isNotEmpty()) {
-                return boards.pop();
-            }
-            return null;
-        } finally {
-            if (boards.isEmpty()) {
-                stack.pop();
-            }
+        var board = boards.pop();
+
+        if (boards.isEmpty()) {
+            stack.pop();
         }
+        return board;
     }
 
     public boolean addBoards(Collection<T> boards) {
@@ -90,7 +100,7 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
     }
 
     public boolean addBoard(T board) {
-        return stack().add(new BoardStack<>(board));
+        return addBoards(new BoardStack<>(board));
     }
 
     private void checkMaxStack() {

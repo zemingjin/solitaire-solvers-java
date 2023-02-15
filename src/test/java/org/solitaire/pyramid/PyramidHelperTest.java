@@ -21,6 +21,7 @@ import static org.solitaire.pyramid.PyramidHelper.isRowCleared;
 import static org.solitaire.pyramid.PyramidHelper.row;
 import static org.solitaire.pyramid.PyramidTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.toArray;
 
 class PyramidHelperTest {
     private Pyramid pyramid;
@@ -54,18 +55,18 @@ class PyramidHelperTest {
         var a = buildCard(1, "As");
         var b = buildCard(27, "Qs");
 
-        assertSame(b, cardAt(new Card[]{a, b}));
-        assertSame(b, cardAt(new Card[]{b, a}));
+        assertSame(b, cardAt(toArray(a, b)));
+        assertSame(b, cardAt(toArray(b, a)));
 
         b = buildCard(30, "Qs");
 
-        assertSame(a, cardAt(new Card[]{a, b}));
-        assertSame(a, cardAt(new Card[]{b, a}));
+        assertSame(a, cardAt(toArray(a, b)));
+        assertSame(a, cardAt(toArray(b, a)));
 
         b = buildCard(1, "Qs");
 
-        assertSame(a, cardAt(new Card[]{a, b}));
-        assertSame(b, cardAt(new Card[]{b, a}));
+        assertSame(a, cardAt(toArray(a, b)));
+        assertSame(b, cardAt(toArray(b, a)));
     }
 
 

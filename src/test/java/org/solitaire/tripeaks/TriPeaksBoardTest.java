@@ -2,42 +2,61 @@ package org.solitaire.tripeaks;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.solitaire.model.Card;
 import org.solitaire.util.CardHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
 import static org.solitaire.tripeaks.TriPeaksTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.toArray;
 
 class TriPeaksBoardTest {
-    private TriPeaksBoard state;
+    private TriPeaksBoard board;
 
     @BeforeEach
     void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).stack().peek().peek();
+        board = build(cards).stack().peek().peek();
     }
 
     @Test
-    public void test_findAdjacentCards() {
-        var openCards = state.findCandidates();
+    void test_findCandidates() {
+        var candidates = board.findCandidates();
 
-        assertNotNull(openCards);
-        assertFalse(openCards.isEmpty());
-        assertEquals(2, openCards.size());
-        assertTrue(openCards.get(0).toString().startsWith("25:T"));
-        assertTrue(openCards.get(1).toString().startsWith("22:Q"));
+        assertNotNull(candidates);
+        assertEquals(2, candidates.size());
+        assertEquals("[25:Tc, 22:Qh]", candidates.toString());
+        assertNull(board.candidates());
+    }
+
+    @Test
+    void test_score() {
+        assertEquals(2, board.score());
+        assertNotNull(board.candidates());
+        assertEquals("[25:Tc, 22:Qh]", board.candidates().toString());
+    }
+
+    @Test
+    void test_updateBoard() {
+        var card = board.findCandidates().get(0);
+
+        var result = board.updateBoard(card);
+
+        assertSame(board, result);
+        assertEquals(card, board.path().get(board.path().size() - 1));
+
+        assertNull(board.updateBoard(null));
     }
 
     @Test
     public void test_isOpenCard() {
-        var state = new TriPeaksBoard(new Card[]{null, null, null, null, null}, null);
+        var state = new TriPeaksBoard(toArray(null, null, null, null, null), null);
 
         assertTrue(state.isOpenCard(buildCard(0, "Ad")));
     }

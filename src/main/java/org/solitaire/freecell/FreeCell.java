@@ -21,9 +21,8 @@ import java.util.Optional;
 @SuppressWarnings("rawtypes")
 public class FreeCell extends SolveExecutor<FreeCellBoard> {
     public FreeCell(Columns columns) {
-        super(new FreeCellBoard(columns, new Path<>(), new Card[4], new Card[4]));
+        super(new FreeCellBoard(columns, new Path<>(), new Card[4], new Card[4]), FreeCellBoard::new);
         solveBoard(this::solve);
-        cloner(FreeCellBoard::new);
     }
 
     protected void solve(FreeCellBoard board) {
@@ -32,7 +31,7 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .filter(ObjectUtils::isNotEmpty)
-                .ifPresent(super::addBoards);
+                .ifPresent(this::addBoards);
     }
 
     protected List<FreeCellBoard> applyCandidates(List<Candidate> candidates, FreeCellBoard board) {

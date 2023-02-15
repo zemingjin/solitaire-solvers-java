@@ -43,11 +43,4 @@ public class TriPeaksHelper {
 
         return 28 <= card.at();
     }
-
-    protected static void removeDeckCardsAtEnd(Stack<Card> cards) {
-        while (isFromDeck(cards.peek())) {
-            cards.pop();
-        }
-    }
-
 }

@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.TWO;
 
@@ -23,6 +25,13 @@ class BoardStackTest {
         assert queue.peek() != null;
         assertEquals(TWO, queue.peek().score());
         assertEquals(ONE, queue.get(0).score());
+    }
+
+    @Test
+    void test_isNotEmpty() {
+        assertTrue(queue.isNotEmpty());
+        queue.clear();
+        assertFalse(queue.isNotEmpty());
     }
 
     record MockBoard(List<Card> path, double score) implements Board<Card> {

@@ -37,7 +37,11 @@ public class SpiderBoard extends GameBoard<Card[]> {
     }
 
     public SpiderBoard(SpiderBoard that) {
-        this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore, new Deck(that.deck));
+        this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore(), new Deck(that.deck()));
+    }
+
+    public Deck deck() {
+        return deck;
     }
 
     @Override
@@ -49,6 +53,12 @@ public class SpiderBoard extends GameBoard<Card[]> {
      * Find/Match/Sort Candidates
      *************************************************************************************************************/
     protected List<Candidate> findCandidates() {
+        if (candidates() != null) {
+            var result = candidates();
+
+            candidates(null);
+            return result;
+        }
         return Optional.of(findOpenCandidates()
                         .flatMap(this::matchCandidateToTargets))
                 .map(this::handleMultiples)
@@ -212,7 +222,7 @@ public class SpiderBoard extends GameBoard<Card[]> {
                 .filter(it -> it != candidate.from())
                 .map(columns::get)
                 .filter(it -> it.isEmpty() || it.peek().isHigherOrder(card))
-                .map(it -> buildCandidate(candidate, colAt))
+                .map(it -> Candidate.buildColumnCandidate(candidate, colAt))
                 .orElse(null);
     }
 
@@ -293,6 +303,7 @@ public class SpiderBoard extends GameBoard<Card[]> {
     }
 
     private double calcBoardScore() {
-        return findCandidates().size();
+        candidates(findCandidates());
+        return candidates().size();
     }
 }

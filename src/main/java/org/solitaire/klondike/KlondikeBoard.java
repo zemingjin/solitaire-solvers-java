@@ -30,7 +30,6 @@ import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
 import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.suitCode;
-import static org.solitaire.util.CollectionUtil.add;
 
 class KlondikeBoard extends GameBoard<String> {
     private static final int drawNumber = 3;
@@ -64,6 +63,12 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     protected List<Candidate> findCandidates() {
+        if (candidates() != null) {
+            var candidates = candidates();
+
+            candidates(null);
+            return candidates;
+        }
         var candidates = Optional.of(findFoundationCandidates())
                 .filter(ObjectUtils::isNotEmpty)
                 .orElseGet(this::findMovableCandidates);
@@ -88,7 +93,7 @@ class KlondikeBoard extends GameBoard<String> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(Stack::peek)
                 .filter(this::isFoundationCandidate)
-                .map(it -> buildCandidate(-1, FOUNDATION, DECKPILE, it))
+                .map(it -> buildCandidate(-1, DECKPILE, FOUNDATION, it))
                 .stream();
     }
 
@@ -119,7 +124,7 @@ class KlondikeBoard extends GameBoard<String> {
     private LinkedList<Candidate> checkColumnsForAppendables(Candidate candidate) {
         return range(0, columns.size())
                 .filter(i -> isMatchingColumn(i, candidate))
-                .mapToObj(i -> buildCandidate(candidate, i))
+                .mapToObj(i -> Candidate.buildColumnCandidate(candidate, i))
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
@@ -360,6 +365,7 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     private double calcBoardScore() {
-        return findOpenCandidates().size();
+        candidates(findCandidates());
+        return candidates().size();
     }
 }

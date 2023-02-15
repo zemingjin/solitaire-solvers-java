@@ -1,8 +1,11 @@
 package org.solitaire.freecell;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 import org.solitaire.util.CardHelper;
 import org.solitaire.util.IOHelper;
 
@@ -10,8 +13,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
+import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,10 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.freecell.FreeCellHelper.build;
 import static org.solitaire.model.Candidate.buildCandidate;
-import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.Origin.DECKPILE;
+import static org.solitaire.model.Origin.FOUNDATION;
+import static org.solitaire.model.Origin.FREECELL;
+import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.isCleared;
+import static org.solitaire.util.CardHelper.suitCode;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.TWO;
+import static org.solitaire.util.CardHelperTest.ZERO;
 
 class FreeCellBoardTest {
     private static final String TEST_FILE = "games/freecell/freecell-020623-easy.txt";
@@ -58,30 +68,40 @@ class FreeCellBoardTest {
 
     @Test
     void test_findCandidates() {
-        board.freeCells()[0] = buildCard(0, "Ad");
-        board.columns().get(6).add(buildCard(0, "6c"));
+        board.freeCells()[0] = card("Ad");
+        board.columns().get(6).add(card("6c"));
+
         var result = board.findCandidates();
 
         assertNotNull(result);
         assertEquals(9, result.size());
         assertTrue(result.stream().allMatch(it -> it.cards().size() == 1));
-        assertEquals("Candidate[cards=[13:2d], origin=COLUMN, from=1, target=COLUMN, to=7]", result.get(0).toString());
+        assertEquals("Candidate[cards=[13:2d], origin=COLUMN, from=1, target=COLUMN, to=7]",
+                result.get(0).toString());
 
-        fillFreeCells(TWO, buildCard(0, "Kd"));
+        fillFreeCells(TWO, card("Kd"));
+        board.columns().get(1).clear();
         result = board.findCandidates();
 
         assertNotNull(result);
         assertTrue(result.stream().allMatch(it -> it.cards().size() == 1));
-        assertEquals(9, result.size());
-        assertEquals("Candidate[cards=[13:2d], origin=COLUMN, from=1, target=COLUMN, to=7]", result.get(0).toString());
+        assertEquals(17, result.size());
+        assertEquals("Candidate[cards=[6:6c], origin=COLUMN, from=0, target=COLUMN, to=1]",
+                result.get(0).toString());
 
-        fillFreeCells(ONE, buildCard(0, "Kd"));
-        result = board.findCandidates();
+    }
+
+    @Test
+    void test_findCandidates_noFreeCells() {
+        fillFreeCells(0, card("Kd"));
+
+        var result = board.findCandidates();
 
         assertNotNull(result);
-        assertTrue(result.stream().allMatch(it -> it.cards().size() == 1));
         assertEquals(1, result.size());
-        assertEquals("Candidate[cards=[13:2d], origin=COLUMN, from=1, target=COLUMN, to=7]", result.get(0).toString());
+        assertTrue(result.stream().allMatch(it -> it.cards().size() == 1));
+        assertEquals("Candidate[cards=[13:2d], origin=COLUMN, from=1, target=COLUMN, to=7]",
+                result.get(0).toString());
     }
 
     @Test
@@ -91,7 +111,7 @@ class FreeCellBoardTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        board.freeCells()[0] = buildCard(0, "Ac");
+        board.freeCells()[0] = card("Ac");
 
         result = board.findCandidates();
 
@@ -140,7 +160,7 @@ class FreeCellBoardTest {
 
     @Test
     void test_removeFromOrigin_freecell() {
-        board.freeCells()[0] = buildCard(0, "Ad");
+        board.freeCells()[0] = card("Ad");
         var candidates = board.findCandidates();
         var candidate = candidates.get(2);
         var result = board.removeFromOrigin(candidate);
@@ -164,7 +184,7 @@ class FreeCellBoardTest {
         assertEquals("2d", board.path().get(0).peek().raw());
         assertTrue(Arrays.stream(board.freeCells()).allMatch(Objects::isNull));
 
-        result = board.updateBoard(buildCandidate(candidate, 0));
+        result = board.updateBoard(Candidate.buildColumnCandidate(candidate, 0));
         assertEquals(8, result.columns().get(0).size());
         assertEquals("13:2d", result.columns().get(0).peek().toString());
         assertEquals(2, board.path().size());
@@ -202,11 +222,98 @@ class FreeCellBoardTest {
         var results = board.findCandidates();
         var candidate = results.get(2);
 
-        fillFreeCells(0, buildCard(0, "Ad"));
+        fillFreeCells(0, card("Ad"));
 
         assertThrows(NoSuchElementException.class, () -> board.updateBoard(candidate));
     }
 
+    @Test
+    void test_updateBoard() {
+        var card = board.columns().get(0).peek();
+
+        var result = board.updateBoard(buildCandidate(0, COLUMN, FREECELL, card));
+
+        assertNotNull(result);
+        assertFalse(board.columns().get(0).contains(card));
+        assertSame(card, board.freeCells()[0]);
+
+        result = board.updateBoard(new Candidate(List.of(card), FREECELL, 0, COLUMN, 0));
+        assertNotNull(result);
+        assertTrue(board.columns().get(0).contains(card));
+        assertNull(board.freeCells()[0]);
+
+        result = board.updateBoard(new Candidate(List.of(card), COLUMN, 0, FOUNDATION, -1));
+        assertNotNull(result);
+        assertFalse(board.columns().get(0).contains(card));
+        assertSame(card, board.foundations()[suitCode(card)]);
+
+        var crd = board.columns().get(0).peek();
+        assertThrows(RuntimeException.class,
+                () -> board.updateBoard(new Candidate(List.of(crd), COLUMN, 0, DECKPILE, -1)));
+    }
+
+    @Test
+    void test_isFoundationable() {
+        var card = card("Ad");
+        assertTrue(board.isFoundationable(card));
+
+        board.foundations()[suitCode(card)] = card;
+
+        assertTrue(board.isFoundationable(card("2d")));
+        assertFalse(board.isFoundationable(card("2c")));
+
+        assertThrows(NullPointerException.class, () -> board.isFoundationable(null));
+    }
+
+    @Test
+    void test_isMovable() {
+        var cards = List.of(card("5d"));
+        var pair = Pair.of(0, buildCandidate(0, COLUMN, cards));
+
+        assertTrue(board.isMovable(pair));
+
+        cards = List.of(card("6d"), card("5d"), card("4d"), card("3d"), card("2d"), card("Ad"));
+        pair = Pair.of(0, buildCandidate(0, COLUMN, cards));
+
+        assertFalse(board.isMovable(pair));
+
+        assertThrows(NullPointerException.class, () -> board.isMovable(null));
+    }
+
+    @Test
+    void test_checkColumnToFoundation() {
+        board.columns().get(0).clear();
+        var card = board.columns().get(1).peek();
+
+        board.checkColumnToFoundation();
+
+        assertSame(card, board.foundations()[suitCode(card)]);
+    }
+
+    @Test
+    void test_checkFreeCellToFoundation() {
+        var card = board.columns().get(6).peek();
+        board.updateBoard(buildCandidate(6, COLUMN, FREECELL, card));
+        card = board.columns().get(1).peek();
+
+        board.checkFoundationCandidates();
+        assertSame(card, board.foundations()[suitCode(card)]);
+        assertTrue(Stream.of(board.freeCells()).allMatch(Objects::isNull));
+
+        card = board.columns().get(7).peek();
+        board.updateBoard(buildCandidate(7, COLUMN, FREECELL, card));
+
+        board.checkFoundationCandidates();
+        assertSame(card, board.freeCells()[0]);
+    }
+
+    @Test
+    void test_checkFoundationCandidates() {
+        board.updateBoard(buildCandidate(0, COLUMN, FREECELL, board.columns().get(0).peek()));
+        var result = board.checkFoundationCandidates();
+
+        assertSame(board, result);
+    }
 
     @Test
     void test_maxCardsToMove() {
@@ -235,7 +342,107 @@ class FreeCellBoardTest {
     }
 
     @Test
+    void test_getCardsInSequence() {
+        assertEquals(ONE, board.getCardsInSequence(board.columns().get(0)));
+
+        board.columns().get(0).add(card("5d"));
+        assertEquals(TWO, board.getCardsInSequence(board.columns().get(0)));
+
+        board.columns().get(0).clear();
+        assertEquals(ZERO, board.getCardsInSequence(board.columns().get(0)));
+    }
+
+    @Test
     void test_score() {
-        assertEquals(-13.681122337132251, requireNonNull(board).score());
+        var card = board.columns().get(6).peek();
+        board.updateBoard(buildCandidate(6, COLUMN, FOUNDATION, card));
+        board.columns().get(6).clear();
+
+        assertEquals(-103.06828480530368, board.score());
+    }
+
+    @Test
+    void test_calcBlockingScore() {
+        var card = board.columns().get(6).peek();
+        board.updateBoard(buildCandidate(6, COLUMN, FOUNDATION, card));
+
+        assertEquals(-68.33622446742645, board.calcBlockingScore());
+    }
+
+    @Test
+    void test_calcBlockingScore_mockFoundations() {
+        mockFoundations();
+        assertEquals(-33.07473847133366, board.calcBlockingScore());
+    }
+
+    @Test
+    void test_getLowestFoundationRank() {
+        assertEquals(0, board.getLowestFoundationRank());
+
+        board.foundations()[0] = card("Qd");
+        board.foundations()[1] = card("Kh");
+        board.foundations()[2] = card("Tc");
+        board.foundations()[3] = card("Js");
+
+        assertEquals(10, board.getLowestFoundationRank());
+    }
+
+    @Test
+    void test_calcInSequenceScore() {
+        assertEquals(8, board.calcInSequenceScore());
+
+        board.columns().set(0, mockGoodColumn());
+        assertEquals(15, board.calcInSequenceScore());
+    }
+
+    @Test
+    void test_isGoodColumn() {
+        assertFalse(board.isGoodColumn(board.columns().get(0)));
+
+        var column = mockGoodColumn();
+
+        assertTrue(board.isGoodColumn(column));
+
+        column.remove(0);
+        column.add(card("9c"));
+        assertFalse(board.isGoodColumn(column));
+    }
+
+    private static Column mockGoodColumn() {
+        return new Column() {
+            {
+                add(card("Ks"));
+                add(card("Qd"));
+                add(card("Js"));
+                add(card("Th"));
+            }
+        };
+    }
+
+    private void mockFoundations() {
+        var a = card("Kd");
+        var b = card("9h");
+        var c = card("5c");
+        var d = card("As");
+
+        board.foundations()[suitCode(a)] = a;
+        board.foundations()[suitCode(b)] = b;
+        board.foundations()[suitCode(c)] = c;
+        board.foundations()[suitCode(d)] = d;
+
+        clearColumns();
+    }
+
+    private void clearColumns() {
+        board.columns().forEach(column -> {
+            for (int i = column.size() - 1; i >= 0; i--) {
+                var card = column.get(i);
+                var foundation = board.foundations()[suitCode(card)];
+
+                if (nonNull(foundation) && card.isSameSuit(foundation) && card.rank() <= foundation.rank()) {
+                    column.remove(i);
+                }
+            }
+        });
     }
 }
