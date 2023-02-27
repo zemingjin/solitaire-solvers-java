@@ -22,6 +22,7 @@ class TriPeaksTest {
     @BeforeEach
     public void setup() {
         triPeaks = build(cards);
+        triPeaks.singleSolution(false);
     }
 
     @SuppressWarnings("unchecked")

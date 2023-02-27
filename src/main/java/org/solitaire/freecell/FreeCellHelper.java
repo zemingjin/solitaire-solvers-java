@@ -19,7 +19,7 @@ public class FreeCellHelper {
         return new FreeCell(buildBoard(cards));
     }
 
-    private static Columns buildBoard(String[] cards) {
+    public static Columns buildBoard(String[] cards) {
         assert cards != null && cards.length == LAST_BOARD : "Invalid source cards: " + Arrays.toString(cards);
 
         var columns = new Columns(8);

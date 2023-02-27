@@ -19,7 +19,7 @@ public class GameBoardTest {
 
     public final static String[] cards = IOHelper.loadFile(TEST_FILE);
 
-    private GameBoard<Card[]> state;
+    private GameBoard<Card[]> board;
 
     private static GameBoard<Card[]> mockState(GameBoard<Card[]> state) {
         return new GameBoard<>(new Columns(state.columns), new Path<>(state.path), state.totalScore);
@@ -28,30 +28,30 @@ public class GameBoardTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = mockState(Objects.requireNonNull(build(cards).stack().peek().peek()));
+        board = mockState(Objects.requireNonNull(build(cards).stack().peek().peek()));
     }
 
     @Test
     public void test_equals() {
-        var other = mockState(state);
+        var other = mockState(board);
 
-        assertTrue(reflectionEquals(other, state));
+        assertTrue(reflectionEquals(other, board));
     }
 
     @Test
     public void test_removeFromColumn_success() {
-        var candidate = buildCandidate(0, COLUMN, state.columns.get(0).peek());
+        var candidate = buildCandidate(0, COLUMN, board.columns.get(0).peek());
 
-        state.removeFromColumn(candidate);
-        assertEquals(5, state.columns.get(0).size());
+        board.removeFromColumn(candidate);
+        assertEquals(5, board.columns.get(0).size());
     }
 
     @Test
     public void test_removeFromColumn_skip() {
-        var candidate = buildCandidate(1, COLUMN, state.columns.get(0).peek());
+        var candidate = buildCandidate(1, COLUMN, board.columns.get(0).peek());
 
-        state.removeFromColumn(candidate);
-        assertEquals(6, state.columns.get(0).size());
-        assertEquals(6, state.columns.get(1).size());
+        board.removeFromColumn(candidate);
+        assertEquals(6, board.columns.get(0).size());
+        assertEquals(6, board.columns.get(1).size());
     }
 }

@@ -29,23 +29,23 @@ class PyramidTest {
     protected static final String TEST_FILE = "games/pyramid/pyramid-121122-expert.txt";
     protected static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
+    @Mock private PyramidBoard board;
+
     private Pyramid pyramid;
-    @Mock
-    private PyramidBoard state;
 
     @BeforeEach
     public void setup() {
-        state = spy(state);
+        board = spy(board);
         pyramid = build(cards);
-        pyramid.cloner(it -> state);
+        pyramid.cloner(it -> board);
         pyramid.stack().clear();
-        pyramid.addBoard(state);
+        pyramid.addBoard(board);
     }
 
     @Test
     public void test_solve() {
-        when(state.path()).thenReturn(new Path<>());
-        when(state.isCleared()).thenReturn(true);
+        when(board.path()).thenReturn(new Path<>());
+        when(board.isCleared()).thenReturn(true);
 
         var result = pyramid.solve();
 

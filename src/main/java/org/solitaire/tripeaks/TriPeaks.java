@@ -19,9 +19,8 @@ public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
     private static final int BOARD_BONUS = 5000;
 
     public TriPeaks(Card[] cards, Stack<Card> wastePile) {
-        super(new TriPeaksBoard(cards, wastePile));
+        super(new TriPeaksBoard(cards, wastePile), TriPeaksBoard::new);
         solveBoard(this::solve);
-        cloner(TriPeaksBoard::new);
     }
 
     private void solve(TriPeaksBoard board) {

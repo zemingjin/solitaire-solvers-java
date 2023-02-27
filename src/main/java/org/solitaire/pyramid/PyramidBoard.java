@@ -1,6 +1,5 @@
 package org.solitaire.pyramid;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.solitaire.model.Board;
 import org.solitaire.model.Card;
 import org.solitaire.model.Path;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
@@ -26,9 +24,9 @@ import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD_INDEX;
 import static org.solitaire.pyramid.PyramidHelper.isBoardCard;
 import static org.solitaire.pyramid.PyramidHelper.row;
-import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
+import static org.solitaire.util.CardHelper.toArray;
 
 public class PyramidBoard implements Board<Card[]> {
     private final Card[] cards;
@@ -36,7 +34,8 @@ public class PyramidBoard implements Board<Card[]> {
     private final Stack<Card> flippedDeck;
     private final Path<Card[]> path;
     private int recycleCount;
-    private double score = 0;
+    private transient double score = 0;
+    private transient List<Card[]> candidates;
 
     public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
         this.cards = cards;
@@ -82,41 +81,44 @@ public class PyramidBoard implements Board<Card[]> {
         return CardHelper.isCleared(cards);
     }
 
+    protected List<Card[]> candidates() {
+        return candidates;
+    }
+
+    protected void candidates(List<Card[]> candidates) {
+        this.candidates = candidates;
+    }
+
     /***************************************************************************************************************
      * Find Candidates
      **************************************************************************************************************/
     protected List<Card[]> findCandidates() {
+        if (candidates() != null) {
+            var save = candidates();
+
+            candidates(null);
+            return save;
+        }
         var collect = new LinkedList<Card[]>();
         var openCards = findOpenCards();
 
-        range(0, openCards.size() - 1)
-                .peek(i -> checkKing(collect, openCards.get(i)))
+        range(0, openCards.size())
                 .forEach(i -> findPairsOf13(collect, openCards, i));
-
-        if (ObjectUtils.isNotEmpty(openCards)) {
-            checkKing(collect, openCards.get(openCards.size() - 1));
-        }
         return collect;
     }
 
     private void findPairsOf13(LinkedList<Card[]> collect, List<Card> openCards, int i) {
-        range(i + 1, openCards.size())
-                .mapToObj(j -> new Card[]{openCards.get(i), openCards.get(j)})
-                .filter(it -> isAddingTo13(it[0], it[1]))
-                .forEach(collect::add);
-    }
+        var card = openCards.get(i);
 
-    private void checkKing(List<Card[]> collect, Card card) {
         if (card.isKing()) {
-            collect.add(0, new Card[]{card});
+            collect.add(0, toArray(card));
+        } else {
+            range(i + 1, openCards.size())
+                    .mapToObj(openCards::get)
+                    .filter(it -> it.isNotKing() && (card.rank() + it.rank()) == 13)
+                    .map(it -> toArray(card, it))
+                    .forEach(collect::add);
         }
-    }
-
-    private boolean isAddingTo13(Card a, Card b) {
-        requireNonNull(a);
-        requireNonNull(b);
-
-        return VALUES.indexOf(a.value()) + VALUES.indexOf(b.value()) == 11;
     }
 
     protected List<Card> findOpenCards() {
@@ -201,10 +203,16 @@ public class PyramidBoard implements Board<Card[]> {
         return false;
     }
 
+    @Override
     public double score() {
         if (score == 0) {
-            score = findCandidates().size();
+            candidates(findCandidates());
+            score(candidates.size());
         }
         return score;
+    }
+
+    protected void score(double score) {
+        this.score = score;
     }
 }

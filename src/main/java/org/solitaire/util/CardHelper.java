@@ -20,7 +20,6 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
 
-@SuppressWarnings("rawtypes")
 public class CardHelper {
     public static final String DIAMOND = "♦";   // \u2666
     public static final String SPADE = "♠";     // \u2660
@@ -52,7 +51,7 @@ public class CardHelper {
     }
 
     public static int suitCode(Card card) {
-        return switch (card.suit().toLowerCase()) {
+        return switch (requireNonNull(card).suit().toLowerCase()) {
             case "d" -> 0;
             case "h" -> 1;
             case "c" -> 2;
@@ -109,6 +108,10 @@ public class CardHelper {
                 useSuit ? value.charAt(0) + getSuit(value.substring(1)) : value);
     }
 
+    public static Card card(String value) {
+        return buildCard(0, value);
+    }
+
     public static boolean isCleared(Card[] cards) {
         return isCleared(cards, 0, cards.length);
     }
@@ -140,20 +143,24 @@ public class CardHelper {
         return stringOfRaws(cards.toArray(Card[]::new));
     }
 
+    @SuppressWarnings("rawtypes")
     public static void checkShortestPath(List<List> results) {
         checkPath(results, (a, b) -> a.size() <= b.size() ? a : b, "Shortest");
     }
 
+    @SuppressWarnings("rawtypes")
     public static void checkLongestPath(List<List> results) {
         checkPath(results, (a, b) -> a.size() >= b.size() ? a : b, "Longest");
     }
 
+    @SuppressWarnings("rawtypes")
     public static void checkMaxScore(Pair<GameSolver, List<List>> pair) {
         Optional.ofNullable(pair.getLeft().getMaxScore(pair.getRight()))
                 .filter(p -> p.getLeft() > 0)
                 .ifPresent(p -> System.out.printf("Max Score(%,d): %s\n", p.getLeft(), string(p.getRight())));
     }
 
+    @SuppressWarnings("rawtypes")
     private static void checkPath(List<List> results, BinaryOperator<List> accumulator, String type) {
         requireNonNull(results);
 
@@ -177,5 +184,10 @@ public class CardHelper {
         if (list.indexOf(card) != list.lastIndexOf(card)) {
             throw new RuntimeException("Duplicated cards: " + card);
         }
+    }
+
+    @SafeVarargs
+    public static <T> T[] toArray(T... items) {
+        return items;
     }
 }

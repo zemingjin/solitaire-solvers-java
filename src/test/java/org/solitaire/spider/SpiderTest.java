@@ -10,6 +10,7 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
+import java.util.Collection;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -26,13 +27,32 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
 class SpiderTest {
-    @Mock
-    private SpiderBoard state;
+    static class MockSpider extends Spider {
+        private boolean first = true;
+
+        public MockSpider(SpiderBoard board) {
+            super(board.columns(), board.path(), board.totalScore(), board.deck());
+        }
+
+        @Override
+        public boolean addBoards(Collection<SpiderBoard> boards) {
+            if (first) {
+                first = false;
+                return super.addBoards(boards);
+            }
+            first = true;
+            return false;
+        }
+    }
+
+    @Mock private SpiderBoard board;
+
     private Spider spider;
     private Candidate candidate;
 
@@ -40,26 +60,27 @@ class SpiderTest {
     public void setup() {
         CardHelper.useSuit = false;
 
-        state = spy(state);
-        spider = build(cards);
-        spider.cloner(i -> state);
+        board = spy(board);
+        spider = new MockSpider(build(cards).stack().peek().peek());
+        spider.singleSolution(true);
+        spider.cloner(i -> board);
         spider.stack().clear();
-        spider.addBoard(state);
+        spider.addBoard(board);
 
         candidate = mockCandidate();
     }
 
     @Test
     public void test_solve_cleared() {
-        when(state.isCleared()).thenReturn(true);
-        when(state.path()).thenReturn(mockPath());
+        when(board.isCleared()).thenReturn(true);
+        when(board.path()).thenReturn(mockPath());
 
         var result = spider.solve();
 
         assertNotNull(result);
         assertEquals(ONE, result.size());
-        verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).path();
+        verify(board, times(ONE)).isCleared();
+        verify(board, times(ONE)).path();
         assertEquals(ZERO, spider.totalScenarios());
     }
 
@@ -72,96 +93,87 @@ class SpiderTest {
 
         assertNotNull(result);
         assertEquals(SOLUTION_LIMIT, result.size());
-        verify(state, times(ONE)).isCleared();
-        assertEquals(ONE, spider.totalScenarios());
+        verify(board, times(ZERO)).isCleared();
+        assertEquals(ZERO, spider.totalScenarios());
     }
 
     @Test
     public void test_solve_applyCandidates() {
-        when(state.isCleared()).thenReturn(false);
-        when(state.findCandidates()).thenReturn(mockCandidateList());
-        when(state.updateBoard(candidate)).thenReturn(null);
+        when(board.isCleared()).thenReturn(false);
+        when(board.findCandidates()).thenReturn(mockCandidateList());
+        when(board.updateBoard(candidate)).thenReturn(board);
 
         spider.solve();
 
-        verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).findCandidates();
-        verify(state, times(ONE)).updateBoard(candidate);
+        verify(board, times(ONE)).isCleared();
+        verify(board, times(ONE)).findCandidates();
+        verify(board, times(ONE)).updateBoard(candidate);
+        verify(board, times(ZERO)).drawDeck();
         assertEquals(1, spider.totalScenarios());
     }
 
     @Test
     public void test_solve_applyCandidates_no_recurse() {
-        when(state.updateBoard(candidate)).thenReturn(state);
+        when(board.updateBoard(candidate)).thenReturn(board);
 
-        spider.applyCandidates(mockCandidateList(), state);
+        spider.applyCandidates(mockCandidateList(), board);
 
-        verify(state, times(ZERO)).isCleared();
-        verify(state, times(ZERO)).findCandidates();
-        verify(state, times(ONE)).updateBoard(candidate);
+        verify(board, times(ZERO)).isCleared();
+        verify(board, times(ZERO)).findCandidates();
+        verify(board, times(ONE)).updateBoard(candidate);
         assertEquals(0, spider.totalScenarios());
     }
 
     @Test
     public void test_solve_drawDeck() {
-        when(state.isCleared()).thenReturn(false);
-        when(state.findCandidates()).thenReturn(emptyList());
-        when(state.drawDeck()).thenReturn(false);
+        when(board.isCleared()).thenReturn(false);
+        when(board.findCandidates()).thenReturn(emptyList());
+        when(board.drawDeck()).thenReturn(true);
 
         spider.solve();
 
-        verify(state, times(ONE)).isCleared();
-        verify(state, times(ONE)).findCandidates();
-        verify(state, times(ONE)).drawDeck();
+        verify(board, times(ONE)).isCleared();
+        verify(board, times(ONE)).findCandidates();
+        verify(board, times(ONE)).drawDeck();
         assertEquals(1, spider.totalScenarios());
-    }
-
-    @Test
-    public void test_drawDeck_recurse() {
-        when(state.drawDeck()).thenReturn(true);
-
-        spider.drawDeck(state);
-
-        verify(state, times(ZERO)).isCleared();
-        verify(state, times(ZERO)).findCandidates();
-        verify(state, times(ONE)).drawDeck();
-        assertEquals(0, spider.totalScenarios());
+        assertTrue(((MockSpider) spider).first);
     }
 
     @Test
     public void test_updateColumns() {
-        when(state.updateBoard(candidate)).thenReturn(state);
+        when(board.updateBoard(candidate)).thenReturn(board);
 
-        spider.applyCandidates(mockCandidateList(), state);
+        spider.applyCandidates(mockCandidateList(), board);
 
-        verify(state, times(ONE)).updateBoard(candidate);
+        verify(board, times(ONE)).updateBoard(candidate);
     }
 
     @Test
     public void test_updateColumns_null() {
-        when(state.updateBoard(candidate)).thenReturn(null);
+        when(board.updateBoard(candidate)).thenReturn(null);
 
-        spider.applyCandidates(mockCandidateList(), state);
+        spider.applyCandidates(mockCandidateList(), board);
 
-        verify(state, times(ONE)).updateBoard(candidate);
+        verify(board, times(ONE)).updateBoard(candidate);
     }
 
     @Test
     public void test_drawDeck() {
-        when(state.drawDeck()).thenReturn(false);
+        when(board.drawDeck()).thenReturn(true);
 
-        spider.drawDeck(state);
+        spider.drawDeck(board);
 
-        verify(state, times(ONE)).drawDeck();
+        verify(board, times(ONE)).drawDeck();
+        assertTrue(((MockSpider) spider).first);
     }
 
     @Test
     public void test_drawDeck_fail() {
-        when(state.drawDeck()).thenReturn(false);
+        when(board.drawDeck()).thenReturn(false);
 
-        spider.drawDeck(state);
+        spider.drawDeck(board);
 
-        verify(state, times(ONE)).drawDeck();
+        verify(board, times(ONE)).drawDeck();
     }
 
     @Test
@@ -184,7 +196,7 @@ class SpiderTest {
 
     private Path<Card[]> mockPath() {
         var path = new Path<Card[]>();
-        path.add(new Card[]{buildCard(0, "Ah")});
+        path.add(toArray(buildCard(0, "Ah")));
         return path;
     }
 }

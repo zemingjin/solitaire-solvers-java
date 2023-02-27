@@ -15,104 +15,111 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.stringOfRaws;
+import static org.solitaire.util.CardHelper.toArray;
 
 class PyramidBoardTest {
-    private PyramidBoard state;
+    private PyramidBoard board;
 
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        state = build(cards).stack().peek().peek();
+        board = build(cards).stack().peek().peek();
     }
 
     @Test
     public void test_findCandidates() {
-        var result = state.findCandidates();
+        var result = board.findCandidates();
 
         assertNotNull(result);
         assertEquals(3, result.size());
         assertEquals("Kc", stringOfRaws(result.get(0)));
+        assertNull(board.candidates());
+
+        assertEquals(3.0, board.score());
+        assertSame(board.candidates(), board.findCandidates());
+        assertNull(board.candidates());
     }
 
     @Test
     public void test_updateState() {
-        state.drawDeckCards();
+        board.drawDeckCards();
 
-        var card = state.flippedDeck().peek();
-        var c = new Card[]{card};
+        var card = board.flippedDeck().peek();
+        var c = toArray(card);
 
-        state.updateBoard(c);
+        board.updateBoard(c);
 
-        assertFalse(state.isOpen(card));
-        assertTrue(state.flippedDeck().isEmpty());
-        assertTrue(state.path().contains(c));
-        assertEquals(1, state.path().size());
-        assert state.path().peek() != null;
-        assertEquals("51:Kc", Objects.requireNonNull(state.path().peek())[0].toString());
+        assertFalse(board.isOpen(card));
+        assertTrue(board.flippedDeck().isEmpty());
+        assertTrue(board.path().contains(c));
+        assertEquals(1, board.path().size());
+        assert board.path().peek() != null;
+        assertEquals("51:Kc", Objects.requireNonNull(board.path().peek())[0].toString());
 
-        card = state.deck().peek();
-        c = new Card[]{card, state.cards()[LAST_BOARD - 1]};
-        state.updateBoard(c);
+        card = board.deck().peek();
+        c = new Card[]{card, board.cards()[LAST_BOARD - 1]};
+        board.updateBoard(c);
 
-        assertFalse(state.isOpen(card));
-        assertEquals(22, state.deck().size());
-        assertEquals("49:6c", state.deck().peek().toString());
-        assertTrue(state.path().contains(c));
-        assertEquals(2, state.path().size());
-        assert state.path().peek() != null;
-        assertEquals("50:Kh", Objects.requireNonNull(state.path().peek())[0].toString());
+        assertFalse(board.isOpen(card));
+        assertEquals(22, board.deck().size());
+        assertEquals("49:6c", board.deck().peek().toString());
+        assertTrue(board.path().contains(c));
+        assertEquals(2, board.path().size());
+        assert board.path().peek() != null;
+        assertEquals("50:Kh", Objects.requireNonNull(board.path().peek())[0].toString());
 
-        state.drawDeckCards();
-        card = state.deck().peek();
-        state.updateBoard(new Card[]{card});
+        board.drawDeckCards();
+        card = board.deck().peek();
+        board.updateBoard(toArray(card));
 
         card = buildCard(LAST_BOARD, "Ad");
-        state.deck().push(card);
-        state.flippedDeck().add(card);
-        state.updateBoard(new Card[]{card});
+        board.deck().push(card);
+        board.flippedDeck().add(card);
+        board.updateBoard(toArray(card));
 
-        assertNotEquals(state.deck().peek(), card);
-        assertEquals(state.flippedDeck().peek(), card);
+        assertNotEquals(board.deck().peek(), card);
+        assertEquals(board.flippedDeck().peek(), card);
     }
 
     @Test
     public void test_recycle() {
-        assertNotNull(state.drawDeckCards());
-        assertEquals(23, state.deck().size());
-        assertEquals(1, state.flippedDeck().size());
+        assertNotNull(board.drawDeckCards());
+        assertEquals(23, board.deck().size());
+        assertEquals(1, board.flippedDeck().size());
 
-        while (!state.deck().isEmpty()) {
-            state.flippedDeck().push(state.deck().pop());
+        while (!board.deck().isEmpty()) {
+            board.flippedDeck().push(board.deck().pop());
         }
-        state.recycleCount(1);
-        assertNull(state.drawDeckCards());
-        assertEquals(24, state.flippedDeck().size());
+        board.recycleCount(1);
+        assertNull(board.drawDeckCards());
+        assertEquals(24, board.flippedDeck().size());
 
-        state.recycleCount(2);
-        assertNotNull(state.drawDeckCards());
-        assertEquals(23, state.deck().size());
-        assertEquals(1, state.flippedDeck().size());
-        assertEquals("51:Kc", state.flippedDeck().peek().toString());
-        assertEquals("50:Kh", state.deck().peek().toString());
+        board.recycleCount(2);
+        assertNotNull(board.drawDeckCards());
+        assertEquals(23, board.deck().size());
+        assertEquals(1, board.flippedDeck().size());
+        assertEquals("51:Kc", board.flippedDeck().peek().toString());
+        assertEquals("50:Kh", board.deck().peek().toString());
     }
 
     @Test
     public void test_cloneBoard() {
-        var cloned = new PyramidBoard(state);
+        var cloned = new PyramidBoard(board);
 
-        assertNotSame(state, cloned);
-        assertTrue(reflectionEquals(state, cloned));
+        assertNotSame(board, cloned);
+        assertTrue(reflectionEquals(board, cloned));
     }
 
     @Test
     public void test_findCardsAddingTo13() {
-        var cards = state.findCandidates();
+        var cards = board.findCandidates();
 
         assertNotNull(cards);
         assertEquals(3, cards.size());
@@ -120,7 +127,7 @@ class PyramidBoardTest {
 
     @Test
     public void test_findOpenCards() {
-        var cards = state.findOpenCards();
+        var cards = board.findOpenCards();
 
         assertNotNull(cards);
         assertEquals(8, cards.size());
@@ -128,40 +135,40 @@ class PyramidBoardTest {
 
     @Test
     void test_isOpenDeckCard() {
-        assertTrue(state.isOpenDeckCard(state.deck().peek()));
-        assertFalse(state.isOpenDeckCard(state.deck().get(0)));
+        assertTrue(board.isOpenDeckCard(board.deck().peek()));
+        assertFalse(board.isOpenDeckCard(board.deck().get(0)));
     }
 
     @Test
     void test_isOpenBoardCard() {
-        assertTrue(state.isOpenBoardCard(27));
-        assertTrue(state.isOpenBoardCard(22));
-        assertFalse(state.isOpenBoardCard(20));
-        assertFalse(state.isOpenBoardCard(28));
-        assertFalse(state.isOpenBoardCard(-1));
+        assertTrue(board.isOpenBoardCard(27));
+        assertTrue(board.isOpenBoardCard(22));
+        assertFalse(board.isOpenBoardCard(20));
+        assertFalse(board.isOpenBoardCard(28));
+        assertFalse(board.isOpenBoardCard(-1));
     }
 
     @Test
     void test_isOpenAt() {
-        assertTrue(state.isOpenAt(27));
-        assertTrue(state.isOpenAt(21));
-        assertFalse(state.isOpenAt(20));
+        assertTrue(board.isOpenAt(27));
+        assertTrue(board.isOpenAt(21));
+        assertFalse(board.isOpenAt(20));
 
         range(21, LAST_BOARD)
-                .forEach(i -> state.cards()[i] = null);
+                .forEach(i -> board.cards()[i] = null);
 
-        assertTrue(state.isOpenAt(20));
-        assertTrue(state.isOpenAt(19));
-        assertTrue(state.isOpenAt(18));
-        assertTrue(state.isOpenAt(17));
-        assertTrue(state.isOpenAt(16));
-        assertTrue(state.isOpenAt(15));
-        assertFalse(state.isOpenAt(14));
+        assertTrue(board.isOpenAt(20));
+        assertTrue(board.isOpenAt(19));
+        assertTrue(board.isOpenAt(18));
+        assertTrue(board.isOpenAt(17));
+        assertTrue(board.isOpenAt(16));
+        assertTrue(board.isOpenAt(15));
+        assertFalse(board.isOpenAt(14));
 
         range(19, 21)
-                .forEach(i -> state.cards()[i] = null);
+                .forEach(i -> board.cards()[i] = null);
 
-        assertTrue(state.isOpenAt(14));
+        assertTrue(board.isOpenAt(14));
     }
 
 }

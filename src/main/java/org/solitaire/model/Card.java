@@ -47,6 +47,10 @@ public record Card(int at, String value, String suit, String raw) {
         return KING.equals(value);
     }
 
+    public boolean isNotKing() {
+        return !isKing();
+    }
+
     public boolean isAce() {
         return ACE.equals(value);
     }

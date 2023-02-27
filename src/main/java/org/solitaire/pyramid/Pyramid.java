@@ -15,9 +15,8 @@ public class Pyramid extends SolveExecutor<PyramidBoard> {
     public static final String ACE = "A";
 
     public Pyramid(PyramidBoard board) {
-        super(board);
+        super(board, PyramidBoard::new);
         solveBoard(this::solve);
-        cloner(PyramidBoard::new);
     }
 
     protected void solve(PyramidBoard board) {

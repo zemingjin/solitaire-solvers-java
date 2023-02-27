@@ -4,7 +4,7 @@ import java.util.List;
 
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.FOUNDATION;
-import static org.solitaire.model.Origin.FREECELL;
+import static org.solitaire.util.CardHelper.stringOfRaws;
 
 public record Candidate(List<Card> cards, Origin origin, int from, Origin target, int to) {
     public static Candidate buildCandidate(int from, Origin origin, Origin target, Card card) {
@@ -27,8 +27,34 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
         return new Candidate(cards, origin, from, origin, to);
     }
 
-    public static Candidate buildCandidate(Candidate that, int to) {
-        return new Candidate(that.cards, that.origin, that.from, that.target, to);
+    public static Candidate buildColumnCandidate(Candidate that, int to) {
+        return new Candidate(that.cards, that.origin, that.from, COLUMN, to);
+    }
+
+    public String notation() {
+        return originNotation() + targetNotation() + ":" + valueNotation();
+    }
+
+    private String originNotation() {
+        return switch (origin) {
+            case COLUMN -> Integer.toString(from);
+            case FREECELL -> "f";
+            case DECKPILE -> "d";
+            default -> throw new RuntimeException("Invalid Origin: " + this);
+        };
+    }
+
+    private String targetNotation() {
+        return switch (target) {
+            case COLUMN -> Integer.toString(to);
+            case FREECELL -> "f";
+            case FOUNDATION -> "F";
+            default -> throw new RuntimeException("Invalid Target: " + this);
+        };
+    }
+
+    private String valueNotation() {
+        return stringOfRaws(cards().toArray(Card[]::new));
     }
 
     public Card peek() {
@@ -39,16 +65,8 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
         return peek().isKing();
     }
 
-    public boolean isFromColumn() {
-        return origin == COLUMN;
-    }
-
     public boolean isToColumn() {
-        return target == COLUMN;
-    }
-
-    public boolean isToFreeCell() {
-        return FREECELL == target;
+        return COLUMN == target;
     }
 
     public boolean isToFoundation() {

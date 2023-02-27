@@ -32,6 +32,16 @@ public class CardTest {
     }
 
     @Test
+    void test_isHigherOfSameSuit() {
+        var card = buildCard("2d");
+
+        assertTrue(card.isHigherOfSameSuit(buildCard("Ad")));
+        assertFalse(card.isHigherOfSameSuit(buildCard("Ac")));
+        assertFalse(card.isHigherOfSameSuit(buildCard("3d")));
+        assertFalse(card.isHigherOfSameSuit(buildCard("3s")));
+    }
+
+    @Test
     public void test_isAdjacent() {
         assertTrue(buildCard("3d").isAdjacent(buildCard("2c")));
         assertTrue(buildCard("6d").isAdjacent(buildCard("5c")));
@@ -70,6 +80,13 @@ public class CardTest {
 
         b = CardHelper.buildCard(31, "Ah");
         assertNotEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    void test_isKing() {
+        assertTrue(buildCard("Kh").isKing());
+        assertTrue(buildCard("Ah").isNotKing());
+        assertFalse(buildCard("Kh").isNotKing());
     }
 
     @Test

@@ -10,13 +10,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 import static org.solitaire.tripeaks.TriPeaksHelper.toCards;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.toArray;
 
 class TriPeaksHelperTest {
     private Card[] cards;
 
     @BeforeEach
     public void setup() {
-        cards = new Card[]{buildCard(29, "Ac"), buildCard(2, "Ac")};
+        cards = toArray(buildCard(29, "Ac"), buildCard(2, "Ac"));
     }
 
     @Test
