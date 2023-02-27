@@ -181,7 +181,7 @@ class FreeCellBoardTest {
         assertEquals(7, result.columns().get(candidate.to()).size());
         assertEquals("13:2d", result.columns().get(candidate.to()).peek().toString());
         assertEquals(1, board.path().size());
-        assertEquals("2d", board.path().get(0).peek().raw());
+        assertEquals("17:2d", board.path().get(0));
         assertTrue(Arrays.stream(board.freeCells()).allMatch(Objects::isNull));
 
         result = board.updateBoard(Candidate.buildColumnCandidate(candidate, 0));
@@ -249,7 +249,7 @@ class FreeCellBoardTest {
 
         var crd = board.columns().get(0).peek();
         assertThrows(RuntimeException.class,
-                () -> board.updateBoard(new Candidate(List.of(crd), COLUMN, 0, DECKPILE, -1)));
+                () -> board.updateBoard(new Candidate(List.of(crd), DECKPILE, 0, COLUMN, -1)));
     }
 
     @Test

@@ -32,7 +32,7 @@ import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.suitCode;
 
-public class FreeCellBoard extends GameBoard<Candidate> {
+public class FreeCellBoard extends GameBoard<String> {
     private static final Function<List<Card>, Consumer<Card>> check = collector -> card -> {
         if (collector.isEmpty() || card.isHigherWithDifferentColor(collector.get(0))) {
             collector.add(0, card);
@@ -41,7 +41,7 @@ public class FreeCellBoard extends GameBoard<Candidate> {
     private final Card[] freeCells;
     private final Card[] foundations;
 
-    public FreeCellBoard(Columns columns, Path<Candidate> path, Card[] freeCells, Card[] foundations) {
+    public FreeCellBoard(Columns columns, Path<String> path, Card[] freeCells, Card[] foundations) {
         super(columns, path);
         this.freeCells = freeCells;
         this.foundations = foundations;
@@ -177,7 +177,7 @@ public class FreeCellBoard extends GameBoard<Candidate> {
     }
 
     protected FreeCellBoard moveToTarget(Candidate candidate) {
-        path.add(candidate);
+        path.add(candidate.notation());
         switch (candidate.target()) {
             case COLUMN -> moveToColumn(candidate);
             case FREECELL -> toFreeCell(candidate.peek());
@@ -247,7 +247,9 @@ public class FreeCellBoard extends GameBoard<Candidate> {
     }
 
     /*****************************************************************************************************************
-     * Score the board
+     * HSD's heuristic: for each foundation pile, locate within the columns the next card that should be placed there,
+     * and count the cards found on top of it. The sum of this count for each foundation is what the heuristic
+     * returns. This number is multiplied by 2 if there are no available FreeCells or there are empty foundation piles.
      ****************************************************************************************************************/
     @Override
     public double score() {

@@ -8,7 +8,6 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
-import org.solitaire.util.CardHelper;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -267,7 +266,7 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     protected KlondikeBoard moveToTarget(Candidate candidate) {
-        path.add(CardHelper.stringOfRaws(candidate.cards()));
+        path.add(candidate.notation());
 
         if (candidate.isToColumn()) {
             appendToTargetColumn(candidate);
