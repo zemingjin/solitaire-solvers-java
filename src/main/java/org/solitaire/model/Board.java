@@ -7,5 +7,7 @@ public interface Board<R> {
 
     List<R> path();
 
+    List<String> verify();
+
     int score();
 }

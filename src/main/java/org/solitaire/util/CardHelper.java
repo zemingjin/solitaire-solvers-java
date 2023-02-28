@@ -1,5 +1,6 @@
 package org.solitaire.util;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
@@ -164,9 +165,16 @@ public class CardHelper {
 
     @SuppressWarnings("rawtypes")
     public static void checkMaxScore(Pair<GameSolver, List<List>> pair) {
-        Optional.ofNullable(pair.getLeft().getMaxScore(pair.getRight()))
-                .filter(p -> p.getLeft() > 0)
-                .ifPresent(p -> System.out.printf("Max Score(%,d): %s\n", p.getLeft(), string(p.getRight())));
+        try {
+            Optional.ofNullable(pair)
+                    .map(Pair::getRight)
+                    .filter(ObjectUtils::isNotEmpty)
+                    .map(it -> pair.getLeft().getMaxScore(it))
+                    .filter(p -> p.getLeft() > 0)
+                    .ifPresent(p -> System.out.printf("Max Score(%,d): %s\n", p.getLeft(), string(p.getRight())));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     @SuppressWarnings("rawtypes")

@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
@@ -28,8 +29,8 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.Stream.concat;
 import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Candidate.buildFoundationCandidate;
 import static org.solitaire.model.Origin.COLUMN;
-import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.Origin.FREECELL;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.cloneArray;
@@ -64,7 +65,8 @@ public class FreeCellBoard extends GameBoard<String> {
         return Optional.of(findToColumnCandidates())
                 .map(it -> concat(it.stream(), findColumnToFreeCellCandidates(it)))
                 .map(it -> concat(it, getFoundationCandidates()))
-                .map(Stream::toList)
+                .map(it -> it.collect(Collectors.toList()))
+                .map(this::cleanupCandidates)
                 .orElseThrow();
     }
 
@@ -74,7 +76,7 @@ public class FreeCellBoard extends GameBoard<String> {
                 .toList();
     }
 
-    private Stream<Candidate> findColumnToFreeCellCandidates(List<Candidate> toColumns) {
+    protected Stream<Candidate> findColumnToFreeCellCandidates(List<Candidate> toColumns) {
         final IntPredicate isNotInToColumns = i -> toColumns.stream().allMatch(c -> c.from() != i);
 
         if (countFreeCells() > 0) {
@@ -172,6 +174,42 @@ public class FreeCellBoard extends GameBoard<String> {
         return 0;
     }
 
+    private List<Candidate> cleanupCandidates(List<Candidate> candidates) {
+        for (int i = 0; i < candidates.size() - 1; i++) {
+            var a = candidates.get(i);
+            for (int j = i + 1; j < candidates.size(); j++) {
+                var b = candidates.get(j);
+
+                if (a.peek().equals(b.peek())) {
+                    if (a.isToFoundation()) {
+                        candidates.set(j, null);
+                    } else if (b.isToFoundation()) {
+                        candidates.set(i, null);
+                    }
+                }
+            }
+        }
+        return candidates.stream().filter(Objects::nonNull).toList();
+    }
+
+    protected Stream<Candidate> getFoundationCandidates() {
+        return concat(getFreeCellToFoundation(), getColumnToFoundation());
+    }
+
+    protected Stream<Candidate> getColumnToFoundation() {
+        return range(0, columns.size())
+                .filter(i -> ObjectUtils.isNotEmpty(columns.get(i)))
+                .filter(i -> isFoundationable(columns.get(i).peek()))
+                .mapToObj(i -> buildFoundationCandidate(columns.get(i).peek(), COLUMN, i));
+    }
+
+    protected Stream<Candidate> getFreeCellToFoundation() {
+        return range(0, freeCells.length)
+                .filter(i -> nonNull(freeCells[i]))
+                .filter(i -> isFoundationable(freeCells[i]))
+                .mapToObj(i -> buildFoundationCandidate(freeCells[i], FREECELL, i));
+    }
+
     /*****************************************************************************************************************
      * Apply candidate
      ****************************************************************************************************************/
@@ -242,24 +280,6 @@ public class FreeCellBoard extends GameBoard<String> {
         return countFreeCells() + countEmptyColumns() + (columns().get(to).isEmpty() ? 0 : 1);
     }
 
-    protected Stream<Candidate> getFoundationCandidates() {
-        return concat(getFreeCellToFoundation(), getColumnToFoundation());
-    }
-
-    protected Stream<Candidate> getColumnToFoundation() {
-        return range(0, columns.size())
-                .filter(i -> ObjectUtils.isNotEmpty(columns.get(i)))
-                .filter(i -> isFoundationable(columns.get(i).peek()))
-                .mapToObj(i -> buildCandidate(i, COLUMN, FOUNDATION, columns.get(i).peek()));
-    }
-
-    protected Stream<Candidate> getFreeCellToFoundation() {
-        return range(0, freeCells.length)
-                .filter(i -> nonNull(freeCells[i]))
-                .filter(i -> isFoundationable(freeCells[i]))
-                .mapToObj(i -> buildCandidate(i, FREECELL, FOUNDATION, freeCells[i]));
-    }
-
     /*****************************************************************************************************************
      * HSD's heuristic: for each foundation pile, locate within the columns the next card that should be placed there,
      * and count the cards found on top of it. The sum of this count for each foundation is what the heuristic
@@ -268,7 +288,10 @@ public class FreeCellBoard extends GameBoard<String> {
     @Override
     public int score() {
         if (super.score() == 0) {
-            score(calcHsdHeuristic());
+            var hsdHeuristic = calcHsdHeuristic();
+            var foundationScore = Stream.of(foundations).mapToInt(CardHelper::rank).sum();
+
+            score(hsdHeuristic + foundationScore);
         }
         return super.score();
     }
@@ -308,7 +331,8 @@ public class FreeCellBoard extends GameBoard<String> {
         return nonNull(card) ? CardHelper.nextCard(card) : card("A" + suit(suitCode));
     }
 
-    protected List<String> verifyBoard() {
+    @Override
+    public List<String> verify() {
         return BoardHelper.verifyBoard(columns());
     }
 }

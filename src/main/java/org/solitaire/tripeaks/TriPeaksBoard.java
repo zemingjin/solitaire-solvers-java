@@ -134,7 +134,8 @@ public class TriPeaksBoard implements Board<Card> {
         this.wastePile = wastePile;
     }
 
-    protected List<String> verify() {
+    @Override
+    public List<String> verify() {
         return verifyBoard(allCards());
     }
 

@@ -1,10 +1,22 @@
 package org.solitaire.util;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.solitaire.model.GameSolver;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.solitaire.util.CardHelper.CLUB;
 import static org.solitaire.util.CardHelper.DIAMOND;
 import static org.solitaire.util.CardHelper.HEART;
@@ -12,6 +24,7 @@ import static org.solitaire.util.CardHelper.SPADE;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.checkDuplicates;
+import static org.solitaire.util.CardHelper.checkMaxScore;
 import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.getSuit;
 import static org.solitaire.util.CardHelper.rank;
@@ -25,11 +38,17 @@ public class CardHelperTest {
     public static final int ONE = 1;
     public static final int TWO = 2;
     public static final int THREE = 3;
+    public static final int FOUR = 4;
     public static final int SIX = 6;
+
+    @Mock GameSolver gameSolver;
+    @Mock RuntimeException exception;
 
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
+        gameSolver = spy(gameSolver);
+        exception = spy(exception);
     }
 
     @Test
@@ -89,5 +108,18 @@ public class CardHelperTest {
         assertEquals("[Ad, 2d]", stringOfRaws(toArray(card("Ad"), card("2d"))));
 
         assertEquals("[]", stringOfRaws(toArray()));
+    }
+
+    @Test
+    void test_checkMaxScore_exception() {
+        @SuppressWarnings("rawtypes")
+        List<List> list = new ArrayList<>();
+
+        list.add(List.of("ABC"));
+        when(gameSolver.getMaxScore(eq(list))).thenThrow(exception);
+
+        checkMaxScore(Pair.of(gameSolver, list));
+
+        verify(exception).printStackTrace();
     }
 }

@@ -47,13 +47,13 @@ public class FreeCellBoardTest {
 
     @Test
     void test_verifyBoard() {
-        var result = board.verifyBoard();
+        var result = board.verify();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
         board.columns().get(0).add(card("Ad"));
-        result = board.verifyBoard();
+        result = board.verify();
         assertNotNull(result);
         assertEquals(1, result.size());
     }
@@ -99,7 +99,7 @@ public class FreeCellBoardTest {
 
         assertNotNull(result);
         assertTrue(result.stream().allMatch(it -> it.cards().size() == 1));
-        assertEquals(10, result.size());
+        assertEquals(9, result.size());
         assertEquals("Candidate[cards=[6:6c], origin=COLUMN, from=0, target=COLUMN, to=1]",
                 result.get(0).toString());
     }
@@ -144,8 +144,8 @@ public class FreeCellBoardTest {
         result = board.findCandidates();
 
         assertNotNull(result);
-        assertEquals(9, result.size());
-        assertEquals("Candidate[cards=[0:Ac], origin=FREECELL, from=0, target=COLUMN, to=1]", result.get(1).toString());
+        assertEquals(8, result.size());
+        assertEquals("Candidate[cards=[0:Ac], origin=FREECELL, from=0, target=FOUNDATION, to=0]", result.get(6).toString());
     }
 
     @Test
@@ -176,6 +176,15 @@ public class FreeCellBoardTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("6:6c", result.get(0).toString());
+    }
+
+    @Test
+    void test_findColumnToFreeCellCandidates() {
+        var toColumns = List.of(new Candidate(List.of(board.columns().get(1).peek()), COLUMN, 1, COLUMN, 7));
+
+        var candidates = board.findColumnToFreeCellCandidates(toColumns).toList();
+
+        assertEquals(6, candidates.size());
     }
 
     @Test
@@ -381,15 +390,15 @@ public class FreeCellBoardTest {
         var card = board.columns().get(6).peek();
         board.updateBoard(buildCandidate(6, COLUMN, FOUNDATION, card));
 
-        assertEquals(-6, board.score());
+        assertEquals(-5, board.score());
 
         board.score(0);
         fillFreeCells(0, card("Js"));
-        assertEquals(-12, board.score());
+        assertEquals(-11, board.score());
 
         board.columns().get(7).clear();
         board.score(0);
-        assertEquals(-6, board.score());
+        assertEquals(-5, board.score());
 
         board.columns().get(1).clear();
         board.score(0);

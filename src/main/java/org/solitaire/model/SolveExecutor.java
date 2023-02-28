@@ -10,6 +10,7 @@ import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("rawtypes")
@@ -22,9 +23,10 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
     private Function<T, T> cloner;
     private Consumer<T> solveBoard;
     private boolean singleSolution = false;
+    private boolean solveByHSD;
 
     public SolveExecutor(T board) {
-        stack.add(new BoardStack<>(board));
+        addBoard(board);
     }
 
     public SolveExecutor(T board, Function<T, T> cloner) {
@@ -46,14 +48,17 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
 
     @Override
     public List<List> solve() {
-        while (isContinuing() && !stack.isEmpty()) {
-            checkMaxStack();
+        var verify = board().verify();
 
-            Optional.ofNullable(stack.peek())
-                    .map(this::getBoard)
-                    .ifPresent(this::processBoard);
+        if (verify.isEmpty()) {
+            while (isContinuing() && !stack.isEmpty()) {
+                checkMaxStack();
+
+                Optional.ofNullable(stack.peek()).map(this::getBoard).ifPresent(this::processBoard);
+            }
+            return solutions();
         }
-        return solutions();
+        throw new RuntimeException(verify.toString());
     }
 
     public boolean isContinuing() {
@@ -63,6 +68,9 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
     private void processBoard(T board) {
         if (board.isCleared()) {
             solutions.add(board.path());
+            if (nonNull(board.path())) {
+                System.out.printf("%d: %s\n", board.path().size(), board.path());
+            }
         } else {
             totalScenarios++;
             requireNonNull(solveBoard).accept(board);
@@ -128,5 +136,13 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
 
     public void cloner(Function<T, T> cloner) {
         this.cloner = cloner;
+    }
+
+    protected boolean solveByHSD() {
+        return solveByHSD;
+    }
+
+    public void solveByHSD(boolean solveByHSD) {
+        this.solveByHSD = solveByHSD;
     }
 }

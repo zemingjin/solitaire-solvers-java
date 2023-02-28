@@ -17,6 +17,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
@@ -25,8 +26,7 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 class SolveExecutorTest {
     private static final String ABC = "ABC";
 
-    @Mock
-    Board<String> board;
+    @Mock Board<String> board;
 
     private SolveExecutor<Board<String>> executor;
 
@@ -61,7 +61,7 @@ class SolveExecutorTest {
         var result = executor.solve();
 
         verify(board).isCleared();
-        verify(board).path();
+        verify(board, times(FOUR)).path();
         assertEquals("[[ABC]]", result.toString());
         assertEquals(ZERO, executor.totalScenarios());
         assertEquals(ONE, executor.maxStack());

@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
+import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.IOHelper.loadFile;
 import static org.solitaire.util.CardHelper.useSuit;
 
