@@ -34,7 +34,7 @@ public record Card(int at, String value, String suit, String raw) {
         return Optional.ofNullable(obj)
                 .filter(it -> it instanceof Card)
                 .map(Card.class::cast)
-                .map(it -> it.raw.equals(raw))
+                .map(it -> it.raw.equalsIgnoreCase(raw))
                 .orElse(false);
     }
 

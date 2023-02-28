@@ -34,7 +34,7 @@ public class PyramidBoard implements Board<Card[]> {
     private final Stack<Card> flippedDeck;
     private final Path<Card[]> path;
     private int recycleCount;
-    private transient double score = 0;
+    private transient int score = 0;
     private transient List<Card[]> candidates;
 
     public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
@@ -204,7 +204,7 @@ public class PyramidBoard implements Board<Card[]> {
     }
 
     @Override
-    public double score() {
+    public int score() {
         if (score == 0) {
             candidates(findCandidates());
             score(candidates.size());
@@ -212,7 +212,7 @@ public class PyramidBoard implements Board<Card[]> {
         return score;
     }
 
-    protected void score(double score) {
+    protected void score(int score) {
         this.score = score;
     }
 }

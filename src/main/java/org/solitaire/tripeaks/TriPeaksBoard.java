@@ -29,8 +29,6 @@ public class TriPeaksBoard implements Board<Card> {
 
     private Card[] cards;
     private Stack<Card> wastePile;
-    private transient double score = 0;
-    private transient List<Card> candidates;
 
     public TriPeaksBoard(Card[] cards, Stack<Card> wastePile) {
         cards(cards);
@@ -52,25 +50,11 @@ public class TriPeaksBoard implements Board<Card> {
     }
 
     @Override
-    public double score() {
-        if (score == 0) {
-            candidates = findCandidates();
-            score = candidates.size();
-        }
-        return score;
-    }
-
-    protected List<Card> candidates() {
-        return candidates;
+    public int score() {
+        return wastePile.size();
     }
 
     protected List<Card> findCandidates() {
-        if (candidates != null) {
-            var result = candidates;
-
-            candidates = null;
-            return result;
-        }
         return Optional.of(wastePile.peek())
                 .map(this::findAdjacentCardsFromBoard)
                 .orElseGet(Collections::emptyList);

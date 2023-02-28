@@ -23,8 +23,8 @@ class BoardStackTest {
     void test_construct() {
         assertEquals(TWO, queue.size());
         assert queue.peek() != null;
-        assertEquals(TWO, queue.peek().score());
-        assertEquals(ONE, queue.get(0).score());
+        assertEquals(ONE, queue.peek().score());
+        assertEquals(TWO, queue.get(0).score());
     }
 
     @Test
@@ -34,7 +34,7 @@ class BoardStackTest {
         assertFalse(queue.isNotEmpty());
     }
 
-    record MockBoard(List<Card> path, double score) implements Board<Card> {
+    record MockBoard(List<Card> path, int score) implements Board<Card> {
         @Override
         public boolean isCleared() {
             return false;

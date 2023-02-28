@@ -7,6 +7,5 @@ public interface Board<R> {
 
     List<R> path();
 
-    double score();
-
+    int score();
 }

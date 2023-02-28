@@ -32,14 +32,11 @@ class TriPeaksBoardTest {
         assertNotNull(candidates);
         assertEquals(2, candidates.size());
         assertEquals("[25:Tc, 22:Qh]", candidates.toString());
-        assertNull(board.candidates());
     }
 
     @Test
     void test_score() {
-        assertEquals(2, board.score());
-        assertNotNull(board.candidates());
-        assertEquals("[25:Tc, 22:Qh]", board.candidates().toString());
+        assertEquals(1, board.score());
     }
 
     @Test
