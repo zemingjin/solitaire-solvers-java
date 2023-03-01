@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
@@ -24,6 +25,7 @@ import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD_INDEX;
 import static org.solitaire.pyramid.PyramidHelper.isBoardCard;
 import static org.solitaire.pyramid.PyramidHelper.row;
+import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.toArray;
@@ -214,5 +216,13 @@ public class PyramidBoard implements Board<Card[]> {
 
     protected void score(int score) {
         this.score = score;
+    }
+
+    protected Card[] allCards() {
+        return Stream.concat(Stream.of(cards), deck.stream()).toArray(Card[]::new);
+    }
+
+    protected List<String> verify() {
+        return verifyBoard(allCards());
     }
 }

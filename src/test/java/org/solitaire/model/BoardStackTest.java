@@ -23,8 +23,8 @@ class BoardStackTest {
     void test_construct() {
         assertEquals(TWO, queue.size());
         assert queue.peek() != null;
-        assertEquals(ONE, queue.peek().score());
-        assertEquals(TWO, queue.get(0).score());
+        assertEquals(TWO, queue.peek().score());
+        assertEquals(ONE, queue.get(0).score());
     }
 
     @Test

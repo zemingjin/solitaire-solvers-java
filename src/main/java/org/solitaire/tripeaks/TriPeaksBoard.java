@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.IntUnaryOperator;
+import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 import static java.util.Objects.isNull;
@@ -19,6 +20,7 @@ import static java.util.stream.IntStream.rangeClosed;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
+import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
 
@@ -116,11 +118,27 @@ public class TriPeaksBoard implements Board<Card> {
         return isNull(cards[at]) && isNull(cards[at + 1]);
     }
 
+    public Card[] cards() {
+        return cards;
+    }
+
     public void cards(Card[] cards) {
         this.cards = cards;
     }
 
+    public Stack<Card> wastePile() {
+        return wastePile;
+    }
+
     public void wastePile(Stack<Card> wastePile) {
         this.wastePile = wastePile;
+    }
+
+    protected List<String> verify() {
+        return verifyBoard(allCards());
+    }
+
+    private Card[] allCards() {
+        return Stream.concat(Stream.of(cards), wastePile.stream()).toArray(Card[]::new);
     }
 }

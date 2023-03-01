@@ -25,9 +25,9 @@ import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
-class PyramidTest {
+public class PyramidTest {
     protected static final String TEST_FILE = "games/pyramid/pyramid-121122-expert.txt";
-    protected static final String[] cards = IOHelper.loadFile(TEST_FILE);
+    public static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
     @Mock private PyramidBoard board;
 

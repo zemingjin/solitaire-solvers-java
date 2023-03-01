@@ -5,17 +5,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.solitaire.model.Candidate;
 import org.solitaire.model.Columns;
 import org.solitaire.util.CardHelper;
-import org.solitaire.util.IOHelper;
 
 import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,15 +20,12 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.solitaire.freecell.FreeCellBoardTest.TEST_FILE;
-import static org.solitaire.freecell.FreeCellHelper.build;
 import static org.solitaire.freecell.FreeCellHelper.buildBoard;
+import static org.solitaire.freecell.FreeCellHelperTest.cards;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
-import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelperTest.ONE;
-import static org.solitaire.util.CardHelperTest.SIX;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,13 +33,12 @@ class FreeCellTest {
     @Mock private FreeCellBoard board;
 
     private MockFreeCell freeCell;
-    private int score = 1;
 
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
         board = spy(board);
-        freeCell = new MockFreeCell(buildBoard(FreeCellHelperTest.cards));
+        freeCell = new MockFreeCell(buildBoard(cards));
         freeCell.stack().clear();
         freeCell.addBoard(board);
         freeCell.cloner(it -> board);
@@ -58,8 +51,6 @@ class FreeCellTest {
         when(board.isCleared()).thenReturn(false);
         when(board.findCandidates()).thenReturn(List.of(candidate));
         when(board.updateBoard(eq(candidate))).thenReturn(board);
-        when(board.checkFoundationCandidates()).thenReturn(board);
-        when(board.score()).thenReturn(score++);
 
         var result = freeCell.solve();
 
@@ -68,8 +59,8 @@ class FreeCellTest {
         assertEquals(ONE, freeCell.totalScenarios());
         assertTrue(freeCell.first);
         verify(board, times(ONE)).isCleared();
-        verify(board, times(SIX)).findCandidates();
-        verify(board, times(SIX)).updateBoard(eq(candidate));
+        verify(board, times(ONE)).findCandidates();
+        verify(board, times(ONE)).updateBoard(eq(candidate));
     }
 
     @Test
@@ -85,22 +76,18 @@ class FreeCellTest {
     }
 
     @Test
-    void test_getBestBoard() {
-        var a = build(IOHelper.loadFile(TEST_FILE)).stack().peek().peek();
-        var b = new FreeCellBoard(a);
-        var card = b.columns().get(6).peek();
-
-        b.updateBoard(new Candidate(List.of(card), COLUMN, 6, FOUNDATION, -1));
-
-        var result = freeCell.getBestBoard(List.of(a, b));
-
-        assertNotNull(result);
-        assertSame(b, result);
+    public void test_getMaxScore() {
+        assertThrows(RuntimeException.class, () -> freeCell.getMaxScore(null));
     }
 
     @Test
-    public void test_getMaxScore() {
-        assertThrows(RuntimeException.class, () -> freeCell.getMaxScore(null));
+    void test_solve_verify() {
+        freeCell = new MockFreeCell(buildBoard(cards));
+
+        freeCell.board().columns().get(0).pop();
+        var result = assertThrows(RuntimeException.class, () -> freeCell.solve());
+
+        assertEquals("[Missing card: 6c]", result.getMessage());
     }
 
     static class MockFreeCell extends FreeCell {

@@ -21,6 +21,7 @@ import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.toArray;
 
@@ -30,7 +31,32 @@ class PyramidBoardTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        board = build(cards).stack().peek().peek();
+        board = build(cards).board();
+    }
+
+    @Test
+    void test_verify() {
+        var result = board.verify();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+
+        board.deck().add(card("Ad"));
+
+        result = board.verify();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Duplicated card: Ad", result.get(0));
+
+        board.deck().pop();
+        board.cards()[0] = null;
+
+        result = board.verify();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Missing card: 2s", result.get(0));
     }
 
     @Test

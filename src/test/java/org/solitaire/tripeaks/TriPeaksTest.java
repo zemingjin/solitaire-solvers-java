@@ -12,17 +12,29 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
 import static org.solitaire.util.IOHelper.loadFile;
+import static org.solitaire.util.CardHelper.useSuit;
 
-class TriPeaksTest {
+public class TriPeaksTest {
     public static final String TEST_FILE = "games/tripeaks/tripeaks-120822-expert.txt";
 
-    protected static final String[] cards = loadFile(TEST_FILE);
+    public static final String[] cards = loadFile(TEST_FILE);
+
     private TriPeaks triPeaks;
 
     @BeforeEach
     public void setup() {
+        useSuit = false;
         triPeaks = build(cards);
         triPeaks.singleSolution(false);
+    }
+
+    @Test
+    void test_solve() {
+        triPeaks.board().cards()[0] = null;
+
+        var result = assertThrows(RuntimeException.class, () -> triPeaks.solve());
+
+        assertEquals("[Missing card: 5c]", result.getMessage());
     }
 
     @SuppressWarnings("unchecked")
