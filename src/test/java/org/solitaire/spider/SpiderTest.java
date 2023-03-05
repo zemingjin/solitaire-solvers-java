@@ -33,26 +33,7 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
 class SpiderTest {
-    static class MockSpider extends Spider {
-        private boolean first = true;
-
-        public MockSpider(SpiderBoard board) {
-            super(board.columns(), board.path(), board.totalScore(), board.deck());
-        }
-
-        @Override
-        public boolean addBoards(Collection<SpiderBoard> boards) {
-            if (first) {
-                first = false;
-                return super.addBoards(boards);
-            }
-            first = true;
-            return false;
-        }
-    }
-
     @Mock private SpiderBoard board;
-
     private Spider spider;
     private Candidate candidate;
 
@@ -198,5 +179,23 @@ class SpiderTest {
         var path = new Path<Card[]>();
         path.add(toArray(buildCard(0, "Ah")));
         return path;
+    }
+
+    static class MockSpider extends Spider {
+        private boolean first = true;
+
+        public MockSpider(SpiderBoard board) {
+            super(board.columns(), board.path(), board.totalScore(), board.deck());
+        }
+
+        @Override
+        public boolean addBoards(Collection<SpiderBoard> boards) {
+            if (first) {
+                first = false;
+                return super.addBoards(boards);
+            }
+            first = true;
+            return false;
+        }
     }
 }

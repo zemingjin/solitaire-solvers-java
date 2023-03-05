@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
@@ -24,6 +25,7 @@ import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD_INDEX;
 import static org.solitaire.pyramid.PyramidHelper.isBoardCard;
 import static org.solitaire.pyramid.PyramidHelper.row;
+import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.toArray;
@@ -34,7 +36,7 @@ public class PyramidBoard implements Board<Card[]> {
     private final Stack<Card> flippedDeck;
     private final Path<Card[]> path;
     private int recycleCount;
-    private transient double score = 0;
+    private transient int score = 0;
     private transient List<Card[]> candidates;
 
     public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
@@ -204,7 +206,7 @@ public class PyramidBoard implements Board<Card[]> {
     }
 
     @Override
-    public double score() {
+    public int score() {
         if (score == 0) {
             candidates(findCandidates());
             score(candidates.size());
@@ -212,7 +214,15 @@ public class PyramidBoard implements Board<Card[]> {
         return score;
     }
 
-    protected void score(double score) {
+    protected void score(int score) {
         this.score = score;
+    }
+
+    protected Card[] allCards() {
+        return Stream.concat(Stream.of(cards), deck.stream()).toArray(Card[]::new);
+    }
+
+    protected List<String> verify() {
+        return verifyBoard(allCards());
     }
 }

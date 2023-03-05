@@ -47,7 +47,7 @@ class SpiderBoardTest {
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        board = build(cards).stack().peek().peek();
+        board = build(cards).board();
     }
 
     @Test
@@ -375,16 +375,16 @@ class SpiderBoardTest {
 
         assertNotNull(candidates);
         assertEquals(10, candidates.size());
-        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=COLUMN, to=-1]", candidates.get(0).toString());
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=COLUMN, to=-1]", candidates.get(9).toString());
+        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=null, to=-1]", candidates.get(0).toString());
+        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=null, to=-1]", candidates.get(9).toString());
 
         board.columns().get(0).clear();
         candidates = board.findOpenCandidates().toList();
 
         assertNotNull(candidates);
         assertEquals(9, candidates.size());
-        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=COLUMN, to=-1]", candidates.get(0).toString());
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=COLUMN, to=-1]", candidates.get(8).toString());
+        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=null, to=-1]", candidates.get(0).toString());
+        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=null, to=-1]", candidates.get(8).toString());
     }
 
     @Test
@@ -392,10 +392,10 @@ class SpiderBoardTest {
         var candidate = board.findCandidateAtColumn(0);
 
         assertNotNull(candidate);
-        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=COLUMN, to=-1]", candidate.toString());
+        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=null, to=-1]", candidate.toString());
 
         candidate = board.findCandidateAtColumn(board.columns().size() - 1);
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=COLUMN, to=-1]", candidate.toString());
+        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=null, to=-1]", candidate.toString());
     }
 
     @Test

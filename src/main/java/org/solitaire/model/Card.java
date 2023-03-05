@@ -32,9 +32,10 @@ public record Card(int at, String value, String suit, String raw) {
     @Override
     public boolean equals(Object obj) {
         return Optional.ofNullable(obj)
-                .filter(it -> it instanceof Card)
+                .filter(Card.class::isInstance)
                 .map(Card.class::cast)
-                .map(it -> it.raw.equals(raw))
+                .map(Card::raw)
+                .map(raw::equalsIgnoreCase)
                 .orElse(false);
     }
 

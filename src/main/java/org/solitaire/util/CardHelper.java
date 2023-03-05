@@ -52,9 +52,9 @@ public class CardHelper {
 
     public static int suitCode(Card card) {
         return switch (requireNonNull(card).suit().toLowerCase()) {
-            case "d" -> 0;
-            case "h" -> 1;
-            case "c" -> 2;
+            case "c" -> 0;
+            case "d" -> 1;
+            case "h" -> 2;
             default -> 3;
         };
     }
@@ -110,6 +110,15 @@ public class CardHelper {
 
     public static Card card(String value) {
         return buildCard(0, value);
+    }
+
+    public static Card nextCard(Card card) {
+        return card(nextValue(card.value()) + card.suit());
+    }
+
+    public static String nextValue(String value) {
+        var at = VALUES.indexOf(value);
+        return VALUES.substring(at + 1, at + 2);
     }
 
     public static boolean isCleared(Card[] cards) {

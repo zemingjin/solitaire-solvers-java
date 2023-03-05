@@ -1,6 +1,7 @@
 package org.solitaire.model;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,7 @@ public class GameBoard<R> implements Board<R> {
     protected final Columns columns;
     protected final Path<R> path;
     protected int totalScore;
-    private double score = 0;
+    private int score = 0;
     private List<Candidate> candidates;
 
     public GameBoard(Columns columns, Path<R> path) {
@@ -64,11 +65,11 @@ public class GameBoard<R> implements Board<R> {
     }
 
     @Override
-    public double score() {
+    public int score() {
         return score;
     }
 
-    public void score(double score) {
+    public void score(int score) {
         this.score = score;
     }
 
@@ -83,5 +84,9 @@ public class GameBoard<R> implements Board<R> {
     public List<Candidate> add(List<Candidate> collector, Candidate item) {
         collector.add(item);
         return collector;
+    }
+
+    public int countEmptyColumns() {
+        return (int) columns.stream().filter(ObjectUtils::isEmpty).count();
     }
 }

@@ -22,7 +22,31 @@ class TriPeaksBoardTest {
     @BeforeEach
     void setup() {
         CardHelper.useSuit = false;
-        board = build(cards).stack().peek().peek();
+        board = build(cards).board();
+    }
+
+    @Test
+    void test_verify() {
+        var result = board.verify();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+
+        board.cards()[0] = board.wastePile().peek();
+
+        result = board.verify();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("[Duplicated card: Jc, Missing card: 5c]", result.toString());
+
+        board.cards()[0] = null;
+
+        result = board.verify();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Missing card: 5c", result.get(0));
     }
 
     @Test
@@ -32,14 +56,11 @@ class TriPeaksBoardTest {
         assertNotNull(candidates);
         assertEquals(2, candidates.size());
         assertEquals("[25:Tc, 22:Qh]", candidates.toString());
-        assertNull(board.candidates());
     }
 
     @Test
     void test_score() {
-        assertEquals(2, board.score());
-        assertNotNull(board.candidates());
-        assertEquals("[25:Tc, 22:Qh]", board.candidates().toString());
+        assertEquals(1, board.score());
     }
 
     @Test

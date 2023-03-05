@@ -23,6 +23,16 @@ public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
         solveBoard(this::solve);
     }
 
+    @Override
+    public List<List> solve() {
+        var verify = board().verify();
+
+        if (verify.isEmpty()) {
+            return super.solve();
+        }
+        throw new RuntimeException(verify.toString());
+    }
+
     private void solve(TriPeaksBoard board) {
         Optional.of(board.findCandidates())
                 .filter(ObjectUtils::isNotEmpty)

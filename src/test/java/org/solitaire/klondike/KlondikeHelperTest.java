@@ -22,7 +22,7 @@ class KlondikeHelperTest {
 
     @Test
     public void test_build() {
-        var klondike = KlondikeHelper.build(CARDS).stack().peek().peek();
+        var klondike = KlondikeHelper.build(CARDS).board();
 
         assertNotNull(klondike);
         assertEquals("23:Ts", klondike.deck().peek().toString());
@@ -34,7 +34,7 @@ class KlondikeHelperTest {
 
     @Test
     public void test_clone() {
-        var state = KlondikeHelper.build(CARDS).stack().peek().peek();
+        var state = KlondikeHelper.build(CARDS).board();
         var clone = new KlondikeBoard(state);
 
         assertTrue(reflectionEquals(clone, state));

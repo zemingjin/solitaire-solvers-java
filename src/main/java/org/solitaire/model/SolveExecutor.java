@@ -15,6 +15,7 @@ import static java.util.Objects.requireNonNull;
 @SuppressWarnings("rawtypes")
 public class SolveExecutor<T extends Board<?>> implements GameSolver {
     private final Stack<BoardStack<T>> stack = new Stack<>();
+    protected final Consumer<T> addBoard = board -> addBoards(new BoardStack<>(board));
     private final List<List> solutions = new ArrayList<>();
     private int totalScenarios = 0;
     private int maxStack = 0;
@@ -107,6 +108,10 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
         if (stack.size() > maxStack()) {
             maxStack = stack.size();
         }
+    }
+
+    public T board() {
+        return stack.peek().peek();
     }
 
     public List<List> solutions() {

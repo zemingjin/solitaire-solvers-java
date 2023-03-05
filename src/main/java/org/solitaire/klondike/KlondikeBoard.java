@@ -356,14 +356,14 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     @Override
-    public double score() {
+    public int score() {
         if (super.score() == 0) {
             super.score(calcBoardScore());
         }
         return super.score();
     }
 
-    private double calcBoardScore() {
+    private int calcBoardScore() {
         candidates(findCandidates());
         return candidates().size();
     }

@@ -24,7 +24,7 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
     }
 
     public static Candidate buildCandidate(int from, Origin origin, List<Card> cards, int to) {
-        return new Candidate(cards, origin, from, origin, to);
+        return new Candidate(cards, origin, from, null, to);
     }
 
     public static Candidate buildColumnCandidate(Candidate that, int to) {

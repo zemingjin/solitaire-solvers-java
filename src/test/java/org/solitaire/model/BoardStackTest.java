@@ -34,7 +34,7 @@ class BoardStackTest {
         assertFalse(queue.isNotEmpty());
     }
 
-    record MockBoard(List<Card> path, double score) implements Board<Card> {
+    record MockBoard(List<Card> path, int score) implements Board<Card> {
         @Override
         public boolean isCleared() {
             return false;
