@@ -222,7 +222,8 @@ public class PyramidBoard implements Board<Card[]> {
         return Stream.concat(Stream.of(cards), deck.stream()).toArray(Card[]::new);
     }
 
-    protected List<String> verify() {
+    @Override
+    public List<String> verify() {
         return verifyBoard(allCards());
     }
 }

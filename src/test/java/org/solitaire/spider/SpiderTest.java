@@ -28,6 +28,7 @@ import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.toArray;
+import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
@@ -61,7 +62,7 @@ class SpiderTest {
         assertNotNull(result);
         assertEquals(ONE, result.size());
         verify(board, times(ONE)).isCleared();
-        verify(board, times(ONE)).path();
+        verify(board, times(FOUR)).path();
         assertEquals(ZERO, spider.totalScenarios());
     }
 

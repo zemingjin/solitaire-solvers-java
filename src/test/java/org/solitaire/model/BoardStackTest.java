@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,6 +39,11 @@ class BoardStackTest {
         @Override
         public boolean isCleared() {
             return false;
+        }
+
+        @Override
+        public List<String> verify() {
+            return emptyList();
         }
     }
 

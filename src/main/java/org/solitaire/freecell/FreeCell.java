@@ -8,13 +8,15 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.Path;
 import org.solitaire.model.SolveExecutor;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparingInt;
+import static java.util.Objects.isNull;
 import static java.util.stream.IntStream.range;
 
 /**
@@ -27,45 +29,74 @@ import static java.util.stream.IntStream.range;
  */
 @SuppressWarnings("rawtypes")
 public class FreeCell extends SolveExecutor<FreeCellBoard> {
+    private static final int DEP_LIMIT = 6;
     private static final Function<List<FreeCellBoard>, List<FreeCellBoard>> reduceBoards =
-            boards -> range(boards.size() / 2, boards.size()).mapToObj(boards::get).toList();
+            boards -> range(boards.size() * 3 / 5, boards.size()).mapToObj(boards::get).toList();
+    protected final Function<List<FreeCellBoard>, FreeCellBoard> getBestBoard =
+            boards -> boards.stream().reduce(null, (a, b) -> isNull(a) || b.score() >= a.score() ? b : a);
 
     public FreeCell(Columns columns) {
         super(new FreeCellBoard(columns, new Path<>(), new Card[4], new Card[4]), FreeCellBoard::new);
-        solveBoard(this::solve);
+        solveBoard(solveByHSD() ? this::solveByHSD : this::solveByDFS);
     }
 
-    @Override
-    public List<List> solve() {
-        var verify = board().verifyBoard();
-
-        if (verify.isEmpty()) {
-            return super.solve();
-        }
-        throw new RuntimeException(verify.toString());
-    }
-
-    protected void solve(FreeCellBoard board) {
+    protected void solveByDFS(FreeCellBoard board) {
         Optional.of(board)
                 .map(FreeCellBoard::findCandidates)
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
-                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> it.sorted(comparingInt(FreeCellBoard::score)).toList())
                 .map(reduceBoards)
                 .ifPresent(this::addBoards);
     }
 
-    protected List<FreeCellBoard> applyCandidates(List<Candidate> candidates, FreeCellBoard board) {
+    protected void solveByHSD(FreeCellBoard board) {
+        Optional.of(hsdSearch(board))
+                .filter(ObjectUtils::isNotEmpty)
+                .map(getBestBoard)
+                .ifPresent(super::addBoard);
+    }
+
+    private List<FreeCellBoard> hsdSearch(FreeCellBoard board) {
+        var boards = List.of(board);
+
+        for (int i = 1; i <= DEP_LIMIT; i++) {
+            var next = search(boards);
+
+            if (next.isEmpty()) {
+                break;
+            } else {
+                boards = next;
+            }
+        }
+        return boards;
+    }
+
+    /**
+     * @param boards the given boards
+     * @return the boards of next depth.
+     */
+    private List<FreeCellBoard> search(Collection<FreeCellBoard> boards) {
+        return boards.stream().flatMap(this::search).toList();
+    }
+
+    private Stream<FreeCellBoard> search(FreeCellBoard board) {
+        return Optional.of(board)
+                .map(FreeCellBoard::findCandidates)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .stream()
+                .flatMap(it -> it);
+    }
+
+    protected Stream<FreeCellBoard> applyCandidates(List<Candidate> candidates, FreeCellBoard board) {
         return candidates.stream()
-                .map(it -> clone(board).updateBoard(it))
-                .filter(Objects::nonNull)
-                .sorted(comparingInt(FreeCellBoard::score))
-                .collect(Collectors.toList());
+                .map(it -> Optional.ofNullable(clone(board)).map(b -> b.updateBoard(it)).orElse(null))
+                .filter(Objects::nonNull);
     }
 
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         throw new RuntimeException("Not applicable");
     }
-
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.util.CardHelper.stringOfRaws;
+import static org.solitaire.util.CardHelper.suitCode;
 
 public record Candidate(List<Card> cards, Origin origin, int from, Origin target, int to) {
     public static Candidate buildCandidate(int from, Origin origin, Origin target, Card card) {
@@ -29,6 +30,10 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
 
     public static Candidate buildColumnCandidate(Candidate that, int to) {
         return new Candidate(that.cards, that.origin, that.from, COLUMN, to);
+    }
+
+    public static Candidate buildFoundationCandidate(Card card, Origin origin, int from) {
+        return new Candidate(List.of(card), origin, from, FOUNDATION, suitCode(card));
     }
 
     public String notation() {

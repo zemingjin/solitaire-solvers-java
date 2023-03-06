@@ -6,6 +6,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Collections.emptyList;
+
 @Slf4j
 public class GameBoard<R> implements Board<R> {
     protected final Columns columns;
@@ -62,6 +64,11 @@ public class GameBoard<R> implements Board<R> {
 
     public int totalScore() {
         return totalScore;
+    }
+
+    @Override
+    public List<String> verify() {
+        return emptyList();
     }
 
     @Override
