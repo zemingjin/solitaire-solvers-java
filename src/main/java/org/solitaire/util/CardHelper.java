@@ -207,4 +207,8 @@ public class CardHelper {
     public static <T> T[] toArray(T... items) {
         return items;
     }
+
+    public static Card higherCardOfSameSuit(Card card) {
+        return card.isKing() ? card : card(VALUES.charAt(card.rank()) + card.suit());
+    }
 }

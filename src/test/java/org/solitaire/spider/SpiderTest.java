@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.solitaire.model.Candidate;
-import org.solitaire.model.Card;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
@@ -16,20 +15,23 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
-import static org.solitaire.util.CardHelper.toArray;
+import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.SIX;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,6 +52,21 @@ class SpiderTest {
         spider.addBoard(board);
 
         candidate = mockCandidate();
+    }
+
+    @Test
+    void test_solveByHSD() {
+        spider = build(cards);
+        spider.singleSolution(true);
+        spider.solveBoard(spider::solveByHSD);
+
+        assertEquals(SIX, spider.hsdDepth());
+
+        spider.solveByHSD(spider.stack().peek().pop());
+        spider.solveByHSD(spider.stack().peek().pop());
+        var board = spider.board();
+        assertNotNull(board);
+        assertEquals(16, board.path().size());
     }
 
     @Test
@@ -98,10 +115,9 @@ class SpiderTest {
     public void test_solve_applyCandidates_no_recurse() {
         when(board.updateBoard(candidate)).thenReturn(board);
 
-        spider.applyCandidates(mockCandidateList(), board);
+        var result = spider.applyCandidates(mockCandidateList(), board).toList();
 
-        verify(board, times(ZERO)).isCleared();
-        verify(board, times(ZERO)).findCandidates();
+        assertFalse(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
         assertEquals(0, spider.totalScenarios());
     }
@@ -125,8 +141,9 @@ class SpiderTest {
     public void test_updateColumns() {
         when(board.updateBoard(candidate)).thenReturn(board);
 
-        spider.applyCandidates(mockCandidateList(), board);
+        var result = spider.applyCandidates(mockCandidateList(), board).toList();
 
+        assertFalse(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
     }
 
@@ -134,8 +151,10 @@ class SpiderTest {
     public void test_updateColumns_null() {
         when(board.updateBoard(candidate)).thenReturn(null);
 
-        spider.applyCandidates(mockCandidateList(), board);
+        var result = spider.applyCandidates(mockCandidateList(), board).toList();
 
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
     }
 
@@ -173,12 +192,12 @@ class SpiderTest {
     }
 
     private Candidate mockCandidate() {
-        return Candidate.buildCandidate(0, COLUMN, buildCard(0, "Ad"));
+        return buildCandidate(0, COLUMN, buildCard(0, "Ad"));
     }
 
-    private Path<Card[]> mockPath() {
-        var path = new Path<Card[]>();
-        path.add(toArray(buildCard(0, "Ah")));
+    private Path<String> mockPath() {
+        var path = new Path<String>();
+        path.add(new Candidate(List.of(card("Ah")), COLUMN, 0, COLUMN, 5).notation());
         return path;
     }
 
@@ -186,7 +205,7 @@ class SpiderTest {
         private boolean first = true;
 
         public MockSpider(SpiderBoard board) {
-            super(board.columns(), board.path(), board.totalScore(), board.deck());
+            super(board.columns(), board.path(), board.totalScore(), board.deck(), false);
         }
 
         @Override

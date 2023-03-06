@@ -8,8 +8,10 @@ import org.solitaire.util.CardHelper;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.freecell.FreeCellHelper.buildBoard;
 import static org.solitaire.freecell.FreeCellHelperTest.cards;
 import static org.solitaire.util.CardHelperTest.ONE;
@@ -17,19 +19,31 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 
 class FreeCellTest {
     private FreeCell dfs;
-    private MockFreeCell hsd;
+    private FreeCellHSD hsd;
 
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
         dfs = new FreeCell(buildBoard(cards));
         dfs.singleSolution(true);
-        hsd = new MockFreeCell(buildBoard(cards));
+        FreeCellHSD.add(true);
+        hsd = new FreeCellHSD(buildBoard(cards));
     }
 
     @Test
-    public void test_solve_hsd() {
-        MockFreeCell.add(false);
+    public void test_solveByHSD() {
+        dfs.solveByHSD(dfs.stack().pop().peek());
+
+        assertEquals(ZERO, dfs.totalScenarios());
+        assertFalse(dfs.stack().isEmpty());
+        assertEquals("[6F:Ad, 1F:2d, 4f:4c, 3f:9d, 3f:8s, 35:8h]", dfs.board().path().toString());
+    }
+
+    @Test
+    public void test_solve_hsd_noclone() {
+        hsd.cloner(a -> null);
+        assertTrue(hsd.singleSolution());
+
         var result = hsd.solve();
 
         assertNotNull(result);
@@ -59,25 +73,22 @@ class FreeCellTest {
         assertEquals("[Missing card: 6c]", result.getMessage());
     }
 
-    static class MockFreeCell extends FreeCell {
+    static class FreeCellHSD extends FreeCell {
         private static boolean add = true;
 
-        MockFreeCell(Columns columns) {
+        FreeCellHSD(Columns columns) {
             super(columns);
-            solveByHSD(true);
+            singleSolution(true);
             solveBoard(this::solveByHSD);
         }
 
         @Override
         public boolean addBoards(Collection<FreeCellBoard> boards) {
-            if (add) {
-                return super.addBoards(boards);
-            }
-            return false;
+            return add && super.addBoards(boards);
         }
 
         public static void add(boolean add) {
-            MockFreeCell.add = add;
+            FreeCellHSD.add = add;
         }
     }
 }

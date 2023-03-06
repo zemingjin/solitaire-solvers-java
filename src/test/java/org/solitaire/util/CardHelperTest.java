@@ -27,6 +27,7 @@ import static org.solitaire.util.CardHelper.checkDuplicates;
 import static org.solitaire.util.CardHelper.checkMaxScore;
 import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.getSuit;
+import static org.solitaire.util.CardHelper.higherCardOfSameSuit;
 import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suit;
@@ -122,5 +123,11 @@ public class CardHelperTest {
         checkMaxScore(Pair.of(gameSolver, list));
 
         verify(exception).printStackTrace();
+    }
+
+    @Test
+    void test_higherCardOfSameSuit() {
+        assertEquals("2h", higherCardOfSameSuit(card("Ah")).raw());
+        assertEquals("Kh", higherCardOfSameSuit(card("Kh")).raw());
     }
 }

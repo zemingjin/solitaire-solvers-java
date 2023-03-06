@@ -15,9 +15,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.compare;
 import static java.lang.Math.max;
 import static java.util.Objects.isNull;
@@ -26,18 +28,26 @@ import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.Origin.DECKPILE;
+import static org.solitaire.model.Origin.FOUNDATION;
+import static org.solitaire.util.CardHelper.suitCode;
 
 @Slf4j
-public class SpiderBoard extends GameBoard<Card[]> {
+public class SpiderBoard extends GameBoard<String> {
+    private transient final Predicate<Integer> isNotEmpty = i -> ObjectUtils.isNotEmpty(columns().get(i));
+    private transient final Predicate<Integer> isLongEnoughForRun = i -> 13 <= columns().get(i).size();
+    private transient final Predicate<Integer> isThereARun = i -> isThereARun(columns().get(i));
+
     protected final Deck deck;
 
-    public SpiderBoard(Columns columns, Path<Card[]> path, int totalScore, Deck deck) {
+    public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
         this.deck = deck;
     }
 
     public SpiderBoard(SpiderBoard that) {
         this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore(), new Deck(that.deck()));
+        score(that.score());
     }
 
     public Deck deck() {
@@ -53,12 +63,6 @@ public class SpiderBoard extends GameBoard<Card[]> {
      * Find/Match/Sort Candidates
      *************************************************************************************************************/
     protected List<Candidate> findCandidates() {
-        if (candidates() != null) {
-            var result = candidates();
-
-            candidates(null);
-            return result;
-        }
         return Optional.of(findOpenCandidates()
                         .flatMap(this::matchCandidateToTargets))
                 .map(this::handleMultiples)
@@ -87,13 +91,11 @@ public class SpiderBoard extends GameBoard<Card[]> {
     }
 
     private boolean isNotRepeatingCandidate(Candidate candidate) {
-        return Optional.of(path)
-                .filter(ObjectUtils::isNotEmpty)
-                .map(Path::peek)
-                .map(it -> it[0])
-                .map(Card::toString)
-                .filter(it -> it.equals(candidate.peek().toString()))
-                .isEmpty();
+        var prev = Optional.of(candidate)
+                .map(Candidate::notation)
+                .map(it -> it.charAt(1) + it.substring(0, 1) + it.substring(2))
+                .orElseThrow();
+        return path.stream().noneMatch(it -> it.equals(prev));
     }
 
     /**
@@ -170,7 +172,7 @@ public class SpiderBoard extends GameBoard<Card[]> {
         var column = columns.get(candidate.from());
         var dist = column.lastIndexOf(candidate.peek());
 
-        return dist == 0 ? Integer.MAX_VALUE : dist - column.getOpenAt();
+        return dist == 0 ? MAX_VALUE : dist - column.getOpenAt();
     }
 
     private boolean isMatchingTargetSuit(Candidate candidate) {
@@ -241,20 +243,17 @@ public class SpiderBoard extends GameBoard<Card[]> {
     }
 
     protected SpiderBoard appendToTarget(Candidate candidate) {
-        var cards = candidate.cards();
-
-        path.add(cards.toArray(Card[]::new));
+        path.add(candidate.notation());
         appendToTargetColumn(candidate);
-        totalScore--;
+        if (candidate.origin() != DECKPILE) {
+            totalScore--;
+        }
         return this;
     }
 
     protected SpiderBoard checkForRun(Candidate candidate) {
         Optional.of(candidate.to())
-                .map(columns::get)
-                .filter(ObjectUtils::isNotEmpty)
-                .filter(it -> 13 <= it.size())
-                .filter(this::isThereARun)
+                .filter(isNotEmpty.and(isLongEnoughForRun).and(isThereARun))
                 .ifPresent(this::removeTheRun);
         return this;
     }
@@ -273,12 +272,14 @@ public class SpiderBoard extends GameBoard<Card[]> {
         return true;
     }
 
-    private void removeTheRun(Column column) {
+    private void removeTheRun(int i) {
+        var column = columns().get(i);
         assert nonNull(column) && 13 <= column.size();
 
         var run = column.subList(column.size() - 13, column.size());
+        var candidate = new Candidate(run, COLUMN, i, FOUNDATION, suitCode(run.get(0)));
 
-        path().add(run.toArray(Card[]::new));
+        path().add(candidate.notation());
         System.out.printf("Run: %s\n", run);
         totalScore += 100;
         run.clear();
@@ -286,24 +287,40 @@ public class SpiderBoard extends GameBoard<Card[]> {
 
     protected boolean drawDeck() {
         if (isNotEmpty(deck)) {
-            assert columns().size() <= deck.size();
+            assert columns().size() <= deck().size();
 
-            columns().forEach(column -> column.add(deck.remove(0)));
+            var cards = deck().subList(0, columns.size());
+            range(0, cards.size())
+                    .mapToObj(i -> candidate(i, cards.get(i)))
+                    .forEach(this::appendToTarget);
+            cards.clear();
             return true;
         }
         return false;
     }
 
+    protected Candidate candidate(int to, Card card) {
+        return new Candidate(List.of(card), DECKPILE, to, COLUMN, to);
+    }
+
+    /*****************************************************************************************************************
+     * Scoring board
+     ****************************************************************************************************************/
     @Override
     public int score() {
         if (super.score() == 0) {
-            super.score(calcBoardScore());
+            super.score(calcSequences());
         }
         return super.score();
     }
 
-    private int calcBoardScore() {
-        candidates(findCandidates());
-        return candidates().size();
+    protected int calcSequences() {
+        return columns.stream()
+                .map(this::getOrderedCardsAtColumn)
+                .mapToInt(List::size)
+                .filter(i -> i > 1)
+                .map(it -> it * it)
+                .sum();
     }
+
 }

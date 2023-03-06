@@ -51,20 +51,6 @@ class KlondikeBoardTest {
     }
 
     @Test
-    public void test_findCandidates_candidates() {
-        var score = board.score();
-
-        assertEquals(3.0, score);
-        var candidates = board.candidates();
-        var result = board.findCandidates();
-
-        assertSame(candidates, result);
-        assertNull(board.candidates());
-        assertEquals(3, result.size());
-        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=COLUMN, to=0]", result.get(0).toString());
-    }
-
-    @Test
     public void test_findCandidates() {
         var result = board.findCandidates();
 
