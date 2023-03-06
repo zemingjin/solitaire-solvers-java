@@ -33,6 +33,7 @@ import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
+@ExtendWith(MockitoExtension.class)
 public class CardHelperTest {
     public static final int ZERO = 0;
     public static final int ONE = 1;
