@@ -174,22 +174,31 @@ public class FreeCellBoard extends GameBoard<String> {
         return 0;
     }
 
-    private List<Candidate> cleanupCandidates(List<Candidate> candidates) {
-        for (int i = 0; i < candidates.size() - 1; i++) {
-            var a = candidates.get(i);
-            for (int j = i + 1; j < candidates.size(); j++) {
-                var b = candidates.get(j);
+    protected List<Candidate> cleanupCandidates(List<Candidate> candidates) {
+        range(0, candidates.size() - 1)
+                .forEach(i -> cleanupCandidates(candidates, i));
+        return candidates.stream().filter(Objects::nonNull).toList();
+    }
 
-                if (a.peek().equals(b.peek())) {
-                    if (a.isToFoundation()) {
-                        candidates.set(j, null);
-                    } else if (b.isToFoundation()) {
-                        candidates.set(i, null);
-                    }
-                }
+    private static void cleanupCandidates(List<Candidate> candidates, int i) {
+        var a = candidates.get(i);
+
+        if (nonNull(a)) {
+            range(i + 1, candidates.size())
+                    .forEach(j -> cleanupCandidates(candidates, i, a, j));
+        }
+    }
+
+    private static void cleanupCandidates(List<Candidate> candidates, int i, Candidate a, int j) {
+        var b = candidates.get(j);
+
+        if (nonNull(b) && a.peek().equals(b.peek())) {
+            if (a.isToFoundation()) {
+                candidates.set(j, null);
+            } else if (b.isToFoundation()) {
+                candidates.set(i, null);
             }
         }
-        return candidates.stream().filter(Objects::nonNull).toList();
     }
 
     protected Stream<Candidate> getFoundationCandidates() {

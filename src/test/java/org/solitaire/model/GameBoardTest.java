@@ -19,16 +19,16 @@ public class GameBoardTest {
 
     public final static String[] cards = IOHelper.loadFile(TEST_FILE);
 
-    private GameBoard<Card[]> board;
+    private GameBoard<String> board;
 
-    private static GameBoard<Card[]> mockState(GameBoard<Card[]> state) {
-        return new GameBoard<>(new Columns(state.columns), new Path<>(state.path), state.totalScore);
+    private static GameBoard<String> mockState(GameBoard<String> board) {
+        return new GameBoard<>(new Columns(board.columns), new Path<>(board.path), board.totalScore);
     }
 
     @BeforeEach
     public void setup() {
         CardHelper.useSuit = false;
-        board = mockState(Objects.requireNonNull(build(cards).stack().peek().peek()));
+        board = mockState(Objects.requireNonNull(build(cards).board()));
     }
 
     @Test

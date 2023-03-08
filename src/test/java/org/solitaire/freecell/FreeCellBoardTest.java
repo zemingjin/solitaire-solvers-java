@@ -167,6 +167,10 @@ public class FreeCellBoardTest {
 
         while (board.columns().get(0).size() > 1) board.columns().get(0).pop();
         assertEquals(1, board.findCandidateAtColumn(board.columns().get(0)).size());
+
+        var card = board.columns().get(6).peek();
+        board.foundations()[suitCode(card)] = card;
+        assertNull(board.findCandidateAtColumn(1));
     }
 
     @Test
@@ -185,6 +189,22 @@ public class FreeCellBoardTest {
         var candidates = board.findColumnToFreeCellCandidates(toColumns).toList();
 
         assertEquals(6, candidates.size());
+    }
+
+    @Test
+    void test_cleanupCandidates() {
+        var a = List.of(card("Ad"));
+        var b = List.of(card("Ts"));
+        var candidates = Arrays.asList(
+                new Candidate(a, FREECELL, 0, FOUNDATION, 0),
+                new Candidate(a, COLUMN, 0, COLUMN, 3),
+                new Candidate(b, FREECELL, 0, COLUMN, 3),
+                new Candidate(b, COLUMN, 0, FOUNDATION, 0));
+
+        var result = board.cleanupCandidates(candidates);
+        assertEquals(2, result.size());
+        assertEquals(FOUNDATION, result.get(0).target());
+        assertEquals(FOUNDATION, result.get(1).target());
     }
 
     @Test

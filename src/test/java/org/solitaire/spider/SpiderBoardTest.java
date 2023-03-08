@@ -14,11 +14,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Candidate.buildColumnCandidate;
 import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.SpiderHelper.LAST_DECK;
@@ -26,7 +26,6 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
-import static org.solitaire.util.CardHelper.toArray;
 
 class SpiderBoardTest {
     private SpiderBoard board;
@@ -52,29 +51,19 @@ class SpiderBoardTest {
 
     @Test
     void test_score() {
-        var result = board.score();
-        var candidates = board.candidates();
+        assertEquals(0, board.score());
 
-        assertEquals(4, result);
-        assertNotNull(candidates);
-
-        assertSame(candidates, board.findCandidates());
-        assertNull(board.candidates());
+        board.columns().get(9).add(board.columns().get(5).pop());
+        board.columns().get(9).add(card("Ah"));
+        board.score(0);
+        assertEquals(9, board.score());
     }
 
     @Test
-    public void test_equals() {
-        var that = new SpiderBoard(board);
+    void test_copy() {
+        var copy = new SpiderBoard(board);
 
-        assertTrue(reflectionEquals(that, board));
-    }
-
-    @Test
-    public void test_clone() {
-        var clone = new SpiderBoard(board);
-
-        assertNotSame(board, clone);
-        assertTrue(reflectionEquals(clone, board));
+        assertTrue(reflectionEquals(board, copy));
     }
 
     @Test
@@ -89,16 +78,17 @@ class SpiderBoardTest {
 
     @Test
     public void test_isMovable_repeatingCandidate() {
-        var candidate = Candidate.buildColumnCandidate(board.findCandidateAtColumn(5), 9);
+        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 8);
         var path = board.path();
 
         assertTrue(board.isMovable(candidate));
 
-        path.add(toArray(candidate.peek()));
+        var earlier = new Candidate(candidate.cards(), candidate.target(), candidate.to(), candidate.origin(), candidate.from());
+        path.add(earlier.notation());
         assertFalse(board.isMovable(candidate));
 
         path.clear();
-        path.add(toArray(card("Ad")));
+        path.add(buildColumnCandidate(board.findCandidateAtColumn(4), 9).notation());
         assertTrue(board.isMovable(candidate));
     }
 
@@ -108,7 +98,7 @@ class SpiderBoardTest {
         var column = board.columns().get(0);
 
         column.add(card);
-        var candidate = board.findCandidateAtColumn(0);
+        var candidate = new Candidate(List.of(card), COLUMN, 0, COLUMN, 1);
 
         assertTrue(board.isMovable(candidate));
 
@@ -198,7 +188,7 @@ class SpiderBoardTest {
     @Test
     public void test_updateTargetColumn() {
         board.columns().get(5).add(card("Ah"));
-        var candidate = Candidate.buildColumnCandidate(board.findCandidateAtColumn(5), 9);
+        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 9);
 
         assertEquals(6, board.columns().get(candidate.from()).size());
         assertEquals(5, board.columns().get(candidate.to()).size());
@@ -239,7 +229,7 @@ class SpiderBoardTest {
 
         assertNotNull(result);
         assertTrue(column.isEmpty());
-        assertEquals("[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", stringOfRaws(board.path().get(0)));
+        assertEquals("0F:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", board.path().get(0));
         assertEquals(600, board.totalScore());
 
         board.path().clear();
@@ -269,7 +259,7 @@ class SpiderBoardTest {
 
     @Test
     public void test_appendToTarget() {
-        var candidate = Candidate.buildColumnCandidate(board.findCandidateAtColumn(5), 9);
+        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 9);
         var column = board.columns().get(candidate.to());
 
         assertEquals(5, column.size());
@@ -285,13 +275,13 @@ class SpiderBoardTest {
 
         assertFalse(board.path().isEmpty());
         assertEquals(1, board.path().size());
-        assertEquals("33:2h", board.path().get(0)[0].toString());
+        assertEquals("59:2h", board.path().get(0));
         assertEquals(499, board.totalScore());
     }
 
     @Test
     public void test_removeFromSource() {
-        var candidate = Candidate.buildColumnCandidate(board.findCandidateAtColumn(5), 9);
+        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 9);
         var column = board.columns().get(candidate.from());
 
         assertEquals(5, column.size());

@@ -62,12 +62,6 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     protected List<Candidate> findCandidates() {
-        if (candidates() != null) {
-            var candidates = candidates();
-
-            candidates(null);
-            return candidates;
-        }
         var candidates = Optional.of(findFoundationCandidates())
                 .filter(ObjectUtils::isNotEmpty)
                 .orElseGet(this::findMovableCandidates);
@@ -364,7 +358,6 @@ class KlondikeBoard extends GameBoard<String> {
     }
 
     private int calcBoardScore() {
-        candidates(findCandidates());
-        return candidates().size();
+        return foundations().stream().mapToInt(Stack::size).sum();
     }
 }

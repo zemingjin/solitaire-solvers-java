@@ -16,7 +16,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.Comparator.comparingInt;
-import static java.util.Objects.isNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.IntStream.range;
 
 /**
@@ -32,12 +32,10 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
     private static final int DEP_LIMIT = 6;
     private static final Function<List<FreeCellBoard>, List<FreeCellBoard>> reduceBoards =
             boards -> range(boards.size() * 3 / 5, boards.size()).mapToObj(boards::get).toList();
-    protected final Function<List<FreeCellBoard>, FreeCellBoard> getBestBoard =
-            boards -> boards.stream().reduce(null, (a, b) -> isNull(a) || b.score() >= a.score() ? b : a);
 
     public FreeCell(Columns columns) {
         super(new FreeCellBoard(columns, new Path<>(), new Card[4], new Card[4]), FreeCellBoard::new);
-        solveBoard(solveByHSD() ? this::solveByHSD : this::solveByDFS);
+        solveBoard(singleSolution() ? this::solveByHSD : this::solveByDFS);
     }
 
     protected void solveByDFS(FreeCellBoard board) {
@@ -53,7 +51,10 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
     protected void solveByHSD(FreeCellBoard board) {
         Optional.of(hsdSearch(board))
                 .filter(ObjectUtils::isNotEmpty)
-                .map(getBestBoard)
+                .map(List::stream)
+                .map(it -> it.sorted(comparingInt(FreeCellBoard::score)))
+                .map(Stream::toList)
+                .map(this::getBestBoard)
                 .ifPresent(super::addBoard);
     }
 
@@ -61,12 +62,10 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
         var boards = List.of(board);
 
         for (int i = 1; i <= DEP_LIMIT; i++) {
-            var next = search(boards);
+            boards = search(boards);
 
-            if (next.isEmpty()) {
+            if (boards.isEmpty()) {
                 break;
-            } else {
-                boards = next;
             }
         }
         return boards;
@@ -91,7 +90,7 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
 
     protected Stream<FreeCellBoard> applyCandidates(List<Candidate> candidates, FreeCellBoard board) {
         return candidates.stream()
-                .map(it -> Optional.ofNullable(clone(board)).map(b -> b.updateBoard(it)).orElse(null))
+                .map(it -> ofNullable(clone(board)).map(b -> b.updateBoard(it)).orElse(null))
                 .filter(Objects::nonNull);
     }
 

@@ -10,20 +10,19 @@ import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("rawtypes")
 public class SolveExecutor<T extends Board<?>> implements GameSolver {
     private final Stack<BoardStack<T>> stack = new Stack<>();
-    protected final Consumer<T> addBoard = board -> addBoards(new BoardStack<>(board));
     private final List<List> solutions = new ArrayList<>();
     private int totalScenarios = 0;
     private int maxStack = 0;
     private Function<T, T> cloner;
     private Consumer<T> solveBoard;
     private boolean singleSolution = false;
-    private boolean solveByHSD;
 
     public SolveExecutor(T board) {
         addBoard(board);
@@ -34,12 +33,21 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
         cloner(cloner);
     }
 
+    public SolveExecutor(T board, Function<T, T> cloner, boolean singleSolution) {
+        this(board, cloner);
+        singleSolution(singleSolution);
+    }
+
     public Stack<BoardStack<T>> stack() {
         return this.stack;
     }
 
     public void solveBoard(Consumer<T> solveBoard) {
         this.solveBoard = solveBoard;
+    }
+
+    public boolean singleSolution() {
+        return singleSolution;
     }
 
     public void singleSolution(boolean singleSolution) {
@@ -138,11 +146,7 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
         this.cloner = cloner;
     }
 
-    protected boolean solveByHSD() {
-        return solveByHSD;
-    }
-
-    public void solveByHSD(boolean solveByHSD) {
-        this.solveByHSD = solveByHSD;
+    protected T getBestBoard(List<T> boards) {
+        return boards.stream().reduce(null, (a, b) -> isNull(a) || b.score() >= a.score() ? b : a);
     }
 }
