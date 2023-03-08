@@ -8,7 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
-import org.solitaire.util.CardHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,9 @@ import static org.solitaire.klondike.KlondikeHelper.build;
 import static org.solitaire.klondike.KlondikeHelperTest.CARDS;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
@@ -44,7 +45,8 @@ class KlondikeTest {
     @BeforeEach
     public void setup() {
         board = spy(board);
-        CardHelper.useSuit = false;
+        useSuit(false);
+        singleSolution(false);
         klondike = mockKlondike();
     }
 

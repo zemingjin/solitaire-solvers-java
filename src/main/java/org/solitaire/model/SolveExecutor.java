@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -16,13 +17,14 @@ import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("rawtypes")
 public class SolveExecutor<T extends Board<?>> implements GameSolver {
+    private static boolean singleSolution = false;
+
     private final Stack<BoardStack<T>> stack = new Stack<>();
     private final List<List> solutions = new ArrayList<>();
     private int totalScenarios = 0;
     private int maxStack = 0;
     private Function<T, T> cloner;
     private Consumer<T> solveBoard;
-    private boolean singleSolution = false;
 
     public SolveExecutor(T board) {
         addBoard(board);
@@ -33,9 +35,12 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
         cloner(cloner);
     }
 
-    public SolveExecutor(T board, Function<T, T> cloner, boolean singleSolution) {
-        this(board, cloner);
-        singleSolution(singleSolution);
+    public static boolean singleSolution() {
+        return singleSolution;
+    }
+
+    public static void singleSolution(boolean singleSolution) {
+        SolveExecutor.singleSolution = singleSolution;
     }
 
     public Stack<BoardStack<T>> stack() {
@@ -44,14 +49,6 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
 
     public void solveBoard(Consumer<T> solveBoard) {
         this.solveBoard = solveBoard;
-    }
-
-    public boolean singleSolution() {
-        return singleSolution;
-    }
-
-    public void singleSolution(boolean singleSolution) {
-        this.singleSolution = singleSolution;
     }
 
     @Override
@@ -73,13 +70,19 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
         return !singleSolution || solutions.size() != 1;
     }
 
-    private void processBoard(T board) {
+    public boolean checkBoard(T board) {
         if (board.isCleared()) {
             solutions.add(board.path());
             if (nonNull(board.path())) {
                 System.out.printf("%d: %s\n", board.path().size(), board.path());
             }
-        } else {
+            return false;
+        }
+        return true;
+    }
+
+    private void processBoard(T board) {
+        if (checkBoard(board)) {
             totalScenarios++;
             requireNonNull(solveBoard).accept(board);
         }
@@ -146,7 +149,7 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
         this.cloner = cloner;
     }
 
-    protected T getBestBoard(List<T> boards) {
-        return boards.stream().reduce(null, (a, b) -> isNull(a) || b.score() >= a.score() ? b : a);
+    protected T getBestBoard(Stream<T> boards) {
+        return boards.reduce(null, (a, b) -> isNull(a) || b.score() >= a.score() ? b : a);
     }
 }

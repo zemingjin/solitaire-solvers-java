@@ -4,7 +4,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
-import org.solitaire.util.CardHelper;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidHelper.cardAt;
 import static org.solitaire.pyramid.PyramidHelper.getScore;
@@ -22,6 +22,7 @@ import static org.solitaire.pyramid.PyramidHelper.row;
 import static org.solitaire.pyramid.PyramidTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.toArray;
+import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidHelperTest {
     private Pyramid pyramid;
@@ -32,7 +33,8 @@ class PyramidHelperTest {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
+        singleSolution(false);
         pyramid = build(cards);
         maxScore = pyramid.getMaxScore(pyramid.solve());
         list = (List<Card[]>) maxScore.getRight();

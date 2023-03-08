@@ -3,7 +3,6 @@ package org.solitaire.pyramid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
-import org.solitaire.util.CardHelper;
 
 import java.util.Objects;
 
@@ -24,13 +23,14 @@ import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.toArray;
+import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidBoardTest {
     private PyramidBoard board;
 
     @BeforeEach
     public void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
         board = build(cards).board();
     }
 

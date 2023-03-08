@@ -2,7 +2,6 @@ package org.solitaire.tripeaks;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.solitaire.util.CardHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -15,13 +14,14 @@ import static org.solitaire.tripeaks.TriPeaksHelper.build;
 import static org.solitaire.tripeaks.TriPeaksTest.cards;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.toArray;
+import static org.solitaire.util.CardHelper.useSuit;
 
 class TriPeaksBoardTest {
     private TriPeaksBoard board;
 
     @BeforeEach
     void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
         board = build(cards).board();
     }
 

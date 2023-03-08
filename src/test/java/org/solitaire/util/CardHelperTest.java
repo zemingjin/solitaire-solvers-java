@@ -32,7 +32,6 @@ import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.toArray;
-import static org.solitaire.util.CardHelper.useSuit;
 
 @ExtendWith(MockitoExtension.class)
 public class CardHelperTest {
@@ -48,7 +47,7 @@ public class CardHelperTest {
 
     @BeforeEach
     public void setup() {
-        CardHelper.useSuit = false;
+        CardHelper.useSuit(false);
         gameSolver = spy(gameSolver);
         exception = spy(exception);
     }
@@ -66,7 +65,7 @@ public class CardHelperTest {
         assertEquals("D", suit(1));
         assertEquals("H", suit(2));
         assertEquals("S", suit(3));
-        useSuit = true;
+        CardHelper.useSuit(true);
         assertEquals(CLUB, suit(0));
         assertEquals(DIAMOND, suit(1));
         assertEquals(HEART, suit(2));

@@ -21,7 +21,7 @@ import static org.solitaire.util.CardHelper.useSuit;
 class SpiderHelperTest {
     @BeforeEach
     public void setup() {
-        useSuit = false;
+        useSuit(false);
     }
 
     @Test

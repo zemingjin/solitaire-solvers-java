@@ -8,7 +8,6 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.Path;
 import org.solitaire.model.SolveExecutor;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,6 +17,7 @@ import java.util.stream.Stream;
 import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.IntStream.range;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 /**
  * G. Heineman’s Staged Deepening (HSD)
@@ -27,7 +27,6 @@ import static java.util.stream.IntStream.range;
  * that state.
  * 4. Repeat steps 2-3 and throw away the rest until a solution or some limit is reached.
  */
-@SuppressWarnings("rawtypes")
 public class FreeCell extends SolveExecutor<FreeCellBoard> {
     private static final int DEP_LIMIT = 6;
     private static final Function<List<FreeCellBoard>, List<FreeCellBoard>> reduceBoards =
@@ -49,34 +48,17 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
     }
 
     protected void solveByHSD(FreeCellBoard board) {
-        Optional.of(hsdSearch(board))
+        var boards = List.of(board);
+
+        for (int i = 1; i <= DEP_LIMIT && isNotEmpty(boards); i++) {
+            boards = boards.stream().flatMap(this::search).toList();
+        }
+        Optional.of(boards)
                 .filter(ObjectUtils::isNotEmpty)
                 .map(List::stream)
                 .map(it -> it.sorted(comparingInt(FreeCellBoard::score)))
-                .map(Stream::toList)
                 .map(this::getBestBoard)
                 .ifPresent(super::addBoard);
-    }
-
-    private List<FreeCellBoard> hsdSearch(FreeCellBoard board) {
-        var boards = List.of(board);
-
-        for (int i = 1; i <= DEP_LIMIT; i++) {
-            boards = search(boards);
-
-            if (boards.isEmpty()) {
-                break;
-            }
-        }
-        return boards;
-    }
-
-    /**
-     * @param boards the given boards
-     * @return the boards of next depth.
-     */
-    private List<FreeCellBoard> search(Collection<FreeCellBoard> boards) {
-        return boards.stream().flatMap(this::search).toList();
     }
 
     private Stream<FreeCellBoard> search(FreeCellBoard board) {
@@ -94,6 +76,7 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
                 .filter(Objects::nonNull);
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         throw new RuntimeException("Not applicable");

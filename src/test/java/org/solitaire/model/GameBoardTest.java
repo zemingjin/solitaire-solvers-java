@@ -2,7 +2,6 @@ package org.solitaire.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.solitaire.util.CardHelper;
 import org.solitaire.util.IOHelper;
 
 import java.util.Objects;
@@ -13,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.SpiderHelper.build;
+import static org.solitaire.util.CardHelper.useSuit;
 
 public class GameBoardTest {
     protected static final String TEST_FILE = "games/spider/spider-122922-expert.txt";
@@ -27,7 +27,7 @@ public class GameBoardTest {
 
     @BeforeEach
     public void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
         board = mockState(Objects.requireNonNull(build(cards).board()));
     }
 

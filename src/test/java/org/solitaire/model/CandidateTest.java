@@ -20,7 +20,7 @@ import static org.solitaire.util.CardHelper.useSuit;
 class CandidateTest {
     @BeforeEach
     void setup() {
-        useSuit = false;
+        useSuit(false);
     }
 
     @Test

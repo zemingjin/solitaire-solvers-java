@@ -10,10 +10,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.IOHelper.loadFile;
-import static org.solitaire.util.CardHelper.useSuit;
 
 public class TriPeaksTest {
     public static final String TEST_FILE = "games/tripeaks/tripeaks-120822-expert.txt";
@@ -24,9 +24,9 @@ public class TriPeaksTest {
 
     @BeforeEach
     public void setup() {
-        useSuit = false;
+        useSuit(false);
+        singleSolution(false);
         triPeaks = build(cards);
-        triPeaks.singleSolution(false);
     }
 
     @Test

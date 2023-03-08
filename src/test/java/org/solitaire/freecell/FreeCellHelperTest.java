@@ -3,6 +3,7 @@ package org.solitaire.freecell;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Column;
+import org.solitaire.util.CardHelper;
 import org.solitaire.util.IOHelper;
 
 import java.util.List;
@@ -13,7 +14,6 @@ import static org.solitaire.freecell.FreeCellHelper.LAST_BOARD;
 import static org.solitaire.freecell.FreeCellHelper.LAST_LONG;
 import static org.solitaire.freecell.FreeCellHelper.build;
 import static org.solitaire.freecell.FreeCellHelper.getColumn;
-import static org.solitaire.util.CardHelper.useSuit;
 
 class FreeCellHelperTest {
     private static final String TEST_FILE = "games/freecell/freecell-020623-easy.txt";
@@ -23,7 +23,7 @@ class FreeCellHelperTest {
 
     @BeforeEach
     void setup() {
-        useSuit = false;
+        CardHelper.useSuit(false);
         var freeCell = build(cards);
 
         assertNotNull(freeCell);

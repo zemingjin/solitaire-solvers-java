@@ -17,7 +17,7 @@ class KlondikeHelperTest {
 
     @BeforeEach
     public void setup() {
-        useSuit = false;
+        useSuit(false);
     }
 
     @Test

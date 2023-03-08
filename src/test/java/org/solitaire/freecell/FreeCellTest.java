@@ -3,7 +3,6 @@ package org.solitaire.freecell;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Columns;
-import org.solitaire.util.CardHelper;
 
 import java.util.Collection;
 
@@ -14,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.freecell.FreeCellHelper.buildBoard;
 import static org.solitaire.freecell.FreeCellHelperTest.cards;
+import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
@@ -23,10 +24,11 @@ class FreeCellTest {
 
     @BeforeEach
     public void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
+        singleSolution(false);
         dfs = new FreeCell(buildBoard(cards));
-        dfs.singleSolution(true);
         FreeCellHSD.add(true);
+        singleSolution(true);
         hsd = new FreeCellHSD(buildBoard(cards));
     }
 
@@ -42,7 +44,7 @@ class FreeCellTest {
     @Test
     public void test_solve_hsd_noclone() {
         hsd.cloner(a -> null);
-        assertTrue(hsd.singleSolution());
+        assertTrue(singleSolution());
 
         var result = hsd.solve();
 
@@ -53,6 +55,7 @@ class FreeCellTest {
 
     @Test
     public void test_solve_dfs() {
+        singleSolution(true);
         var result = dfs.solve();
 
         assertNotNull(result);
@@ -82,13 +85,13 @@ class FreeCellTest {
             solveBoard(this::solveByHSD);
         }
 
+        public static void add(boolean add) {
+            FreeCellHSD.add = add;
+        }
+
         @Override
         public boolean addBoards(Collection<FreeCellBoard> boards) {
             return add && super.addBoards(boards);
-        }
-
-        public static void add(boolean add) {
-            FreeCellHSD.add = add;
         }
     }
 }

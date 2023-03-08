@@ -13,7 +13,7 @@ public class GameBoard<R> implements Board<R> {
     protected final Columns columns;
     protected final Path<R> path;
     protected int totalScore;
-    private int score = 0;
+    private transient int score = 0;
 
     public GameBoard(Columns columns, Path<R> path) {
         this(columns, path, 0);
@@ -86,5 +86,9 @@ public class GameBoard<R> implements Board<R> {
 
     public int countEmptyColumns() {
         return (int) columns.stream().filter(ObjectUtils::isEmpty).count();
+    }
+
+    public Board<R> updateBoard(Candidate candidate) {
+        return this;
     }
 }

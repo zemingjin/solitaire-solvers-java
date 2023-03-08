@@ -7,7 +7,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Path;
-import org.solitaire.util.CardHelper;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,13 +24,15 @@ import static org.mockito.Mockito.when;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
+import static org.solitaire.spider.Spider.hsdDepth;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
+import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
-import static org.solitaire.util.CardHelperTest.SIX;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,11 +43,10 @@ class SpiderTest {
 
     @BeforeEach
     public void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
 
         board = spy(board);
-        spider = new MockSpider(build(cards).stack().peek().peek());
-        spider.singleSolution(true);
+        spider = MockSpider.build();
         spider.cloner(i -> board);
         spider.stack().clear();
         spider.addBoard(board);
@@ -56,17 +56,17 @@ class SpiderTest {
 
     @Test
     void test_solveByHSD() {
+        singleSolution(true);
+        hsdDepth(FOUR);
         spider = build(cards);
-        spider.singleSolution(true);
         spider.solveBoard(spider::solveByHSD);
 
-        assertEquals(SIX, spider.hsdDepth());
+        assertEquals(FOUR, hsdDepth());
 
-        spider.solveByHSD(spider.stack().peek().pop());
-        spider.solveByHSD(spider.stack().peek().pop());
+        range(0, 12).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
         var board = spider.board();
         assertNotNull(board);
-        assertEquals(16, board.path().size());
+        assertEquals(33, board.path().size());
     }
 
     @Test
@@ -204,8 +204,13 @@ class SpiderTest {
     static class MockSpider extends Spider {
         private boolean first = true;
 
-        public MockSpider(SpiderBoard board) {
-            super(board.columns(), board.path(), board.totalScore(), board.deck(), false);
+        public static MockSpider build() {
+            singleSolution(false);
+            return new MockSpider(SpiderHelper.build(cards).board());
+        }
+
+        private MockSpider(SpiderBoard board) {
+            super(board.columns(), board.path(), board.totalScore(), board.deck());
         }
 
         @Override
