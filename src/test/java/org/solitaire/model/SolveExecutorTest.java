@@ -26,9 +26,9 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 class SolveExecutorTest {
     private static final String ABC = "ABC";
 
-    @Mock Board<String> board;
+    @Mock Board<String, String> board;
 
-    private SolveExecutor<Board<String>> executor;
+    private SolveExecutor<Board<String, String>> executor;
 
     @BeforeEach
     void setup() {
@@ -45,7 +45,7 @@ class SolveExecutorTest {
 
     @Test
     void test_isContinuing() {
-        executor.singleSolution(true);
+        SolveExecutor.singleSolution(true);
 
         assertTrue(executor.isContinuing());
 
@@ -97,7 +97,7 @@ class SolveExecutorTest {
         assertFalse(executor.addBoards(List.of()));
     }
 
-    private void solveBoard(Board<String> board) {
+    private void solveBoard(Board<String, String> board) {
         assertNotNull(board);
     }
 

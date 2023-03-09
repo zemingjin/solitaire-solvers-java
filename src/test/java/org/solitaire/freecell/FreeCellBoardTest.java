@@ -252,7 +252,7 @@ public class FreeCellBoardTest {
         var card = board.columns().get(0).peek();
         var ex = assertThrows(RuntimeException.class,
                 () -> board.moveToTarget(new Candidate(List.of(card), COLUMN, 0, DECKPILE, -1)));
-        assertEquals("Invalid Target: Candidate[cards=[13:2d], origin=COLUMN, from=0, target=DECKPILE, to=-1]",
+        assertEquals("Invalid candidate target: Candidate[cards=[13:2d], origin=COLUMN, from=0, target=DECKPILE, to=-1]",
                 ex.getMessage());
     }
 

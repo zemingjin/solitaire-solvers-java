@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.stream.Stream;
+
+import static java.util.Comparator.comparingInt;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 @Slf4j
 @SuppressWarnings("rawtypes")
@@ -25,7 +29,7 @@ public class Klondike extends SolveExecutor<KlondikeBoard> {
                     List<Stack<Card>> foundations) {
         super(new KlondikeBoard(columns, new Path<>(), 0, deck, new Stack<>(), foundations, true),
                 KlondikeBoard::new);
-        solveBoard(this::solve);
+        solveBoard(singleSolution() ? this::solveByHSD : this::solveByDFS);
     }
 
     @Override
@@ -33,12 +37,36 @@ public class Klondike extends SolveExecutor<KlondikeBoard> {
         return super.isContinuing() && solutions().size() < SOLUTION_LIMIT;
     }
 
-    protected void solve(KlondikeBoard board) {
+    protected void solveByDFS(KlondikeBoard board) {
         Optional.of(board.findCandidates())
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
+                .map(Stream::toList)
                 .filter(it -> !it.isEmpty())
-                .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
+                .ifPresentOrElse(this::addBoards, () -> drawDeck(board));
+    }
+
+    protected void solveByHSD(KlondikeBoard board) {
+        var boards = List.of(board);
+
+        for (int i = 1; i <= hsdDepth() && isNotEmpty(boards); i++) {
+            boards = boards.stream().flatMap(this::search).toList();
+        }
+        Optional.of(boards)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(List::stream)
+                .map(it -> it.sorted(comparingInt(KlondikeBoard::score)))
+                .map(this::getBestBoard)
+                .ifPresentOrElse(super::addBoard, () -> drawDeck(board));
+    }
+
+    private Stream<KlondikeBoard> search(KlondikeBoard board) {
+        return Optional.of(board)
+                .map(KlondikeBoard::findCandidates)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .stream()
+                .flatMap(it -> it);
     }
 
     protected void drawDeck(KlondikeBoard board) {
@@ -46,11 +74,10 @@ public class Klondike extends SolveExecutor<KlondikeBoard> {
                 .ifPresent(super::addBoard);
     }
 
-    protected List<KlondikeBoard> applyCandidates(List<Candidate> candidates, KlondikeBoard board) {
+    protected Stream<KlondikeBoard> applyCandidates(List<Candidate> candidates, KlondikeBoard board) {
         return candidates.stream()
                 .map(it -> clone(board).updateBoard(it))
-                .filter(Objects::nonNull)
-                .toList();
+                .filter(Objects::nonNull);
     }
 
     @Override

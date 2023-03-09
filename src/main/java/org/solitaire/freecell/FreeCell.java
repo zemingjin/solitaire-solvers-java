@@ -28,7 +28,6 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
  * 4. Repeat steps 2-3 and throw away the rest until a solution or some limit is reached.
  */
 public class FreeCell extends SolveExecutor<FreeCellBoard> {
-    private static final int DEP_LIMIT = 6;
     private static final Function<List<FreeCellBoard>, List<FreeCellBoard>> reduceBoards =
             boards -> range(boards.size() * 3 / 5, boards.size()).mapToObj(boards::get).toList();
 
@@ -50,7 +49,7 @@ public class FreeCell extends SolveExecutor<FreeCellBoard> {
     protected void solveByHSD(FreeCellBoard board) {
         var boards = List.of(board);
 
-        for (int i = 1; i <= DEP_LIMIT && isNotEmpty(boards); i++) {
+        for (int i = 1; i <= hsdDepth() && isNotEmpty(boards); i++) {
             boards = boards.stream().flatMap(this::search).toList();
         }
         Optional.of(boards)

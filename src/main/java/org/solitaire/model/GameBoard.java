@@ -9,7 +9,7 @@ import java.util.Optional;
 import static java.util.Collections.emptyList;
 
 @Slf4j
-public class GameBoard<R> implements Board<R> {
+public class GameBoard<R> implements Board<R, Candidate> {
     protected final Columns columns;
     protected final Path<R> path;
     protected int totalScore;
@@ -41,7 +41,7 @@ public class GameBoard<R> implements Board<R> {
                 .ifPresent(it -> column.subList(colSize - it.size(), colSize).clear());
     }
 
-    protected void appendToTargetColumn(Candidate candidate) {
+    protected void addToTargetColumn(Candidate candidate) {
         var cards = candidate.cards();
 
         columns.get(candidate.to()).addAll(cards);
@@ -75,6 +75,11 @@ public class GameBoard<R> implements Board<R> {
         return score;
     }
 
+    @Override
+    public Board<R, Candidate> updateBoard(Candidate candidate) {
+        return null;
+    }
+
     public void score(int score) {
         this.score = score;
     }
@@ -86,9 +91,5 @@ public class GameBoard<R> implements Board<R> {
 
     public int countEmptyColumns() {
         return (int) columns.stream().filter(ObjectUtils::isEmpty).count();
-    }
-
-    public Board<R> updateBoard(Candidate candidate) {
-        return this;
     }
 }

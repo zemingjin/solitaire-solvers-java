@@ -20,7 +20,7 @@ class ColumnTest {
         column = new Column();
         column.add(buildCard(0, "Ad"));
         column.add(buildCard(1, "2c"));
-        column.setOpenAt(column.size() - 1);
+        column.openAt(column.size() - 1);
     }
 
     @Test
@@ -38,7 +38,7 @@ class ColumnTest {
     public void test_remove() {
         column.remove(1);
         assertEquals(1, column.size());
-        assertEquals(0, column.getOpenAt());
+        assertEquals(0, column.openAt());
     }
 
     @Test

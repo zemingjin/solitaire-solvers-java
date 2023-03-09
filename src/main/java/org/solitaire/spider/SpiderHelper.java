@@ -35,7 +35,7 @@ public class SpiderHelper {
             var column = getColumn(columns, columnAt);
 
             column.add(buildCard(i, cards[i]));
-            column.setOpenAt(column.size() - 1);
+            column.openAt(column.size() - 1);
         }
         return columns;
     }

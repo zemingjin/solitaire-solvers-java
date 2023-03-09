@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
+import org.solitaire.util.IOHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,8 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
 class KlondikeTest {
+    private static final String TEST_FILE = "games/klondike/event-dark-klondike-expert.txt";
+
     @Mock private KlondikeBoard board;
 
     private Klondike klondike;
@@ -110,13 +113,31 @@ class KlondikeTest {
     }
 
     @Test
-    public void test_solve() {
+    public void test_solveByDFS() {
+        singleSolution(false);
         klondike = build(CARDS);
 
         var result = klondike.solve();
 
         assertNotNull(result);
         assertEquals(SOLUTION_LIMIT, result.size());
+    }
+
+    @Test
+    void test_solveByHDS() {
+        singleSolution(true);
+        klondike = build(IOHelper.loadFile(TEST_FILE));
+
+        var board = klondike.board();
+        klondike.stack().pop();
+        for (int i = 0; i < 10; i++) {
+            klondike.solveByHSD(board);
+            board = klondike.board();
+        }
+        board = klondike.board();
+
+        assertNotNull(board);
+        assertEquals(20, board.path().size());
     }
 
     private Klondike mockKlondike() {
