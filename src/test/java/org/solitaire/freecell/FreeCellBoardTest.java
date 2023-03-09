@@ -41,7 +41,7 @@ public class FreeCellBoardTest {
 
     @BeforeEach
     void setup() {
-        CardHelper.useSuit = false;
+        CardHelper.useSuit(false);
         board = build(IOHelper.loadFile(TEST_FILE)).board();
     }
 

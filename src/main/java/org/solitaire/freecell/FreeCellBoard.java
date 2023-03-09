@@ -58,6 +58,27 @@ public class FreeCellBoard extends GameBoard<String> {
         this(new Columns(that.columns), new Path<>(that.path), cloneArray(that.freeCells), cloneArray(that.foundations));
     }
 
+    private static void cleanupCandidates(List<Candidate> candidates, int i) {
+        var a = candidates.get(i);
+
+        if (nonNull(a)) {
+            range(i + 1, candidates.size())
+                    .forEach(j -> cleanupCandidates(candidates, i, a, j));
+        }
+    }
+
+    private static void cleanupCandidates(List<Candidate> candidates, int i, Candidate a, int j) {
+        var b = candidates.get(j);
+
+        if (nonNull(b) && a.peek().equals(b.peek())) {
+            if (a.isToFoundation()) {
+                candidates.set(j, null);
+            } else if (b.isToFoundation()) {
+                candidates.set(i, null);
+            }
+        }
+    }
+
     /*****************************************************************************************************************
      * Find/Match Candidates
      ****************************************************************************************************************/
@@ -180,27 +201,6 @@ public class FreeCellBoard extends GameBoard<String> {
         return candidates.stream().filter(Objects::nonNull).toList();
     }
 
-    private static void cleanupCandidates(List<Candidate> candidates, int i) {
-        var a = candidates.get(i);
-
-        if (nonNull(a)) {
-            range(i + 1, candidates.size())
-                    .forEach(j -> cleanupCandidates(candidates, i, a, j));
-        }
-    }
-
-    private static void cleanupCandidates(List<Candidate> candidates, int i, Candidate a, int j) {
-        var b = candidates.get(j);
-
-        if (nonNull(b) && a.peek().equals(b.peek())) {
-            if (a.isToFoundation()) {
-                candidates.set(j, null);
-            } else if (b.isToFoundation()) {
-                candidates.set(i, null);
-            }
-        }
-    }
-
     protected Stream<Candidate> getFoundationCandidates() {
         return concat(getFreeCellToFoundation(), getColumnToFoundation());
     }
@@ -222,7 +222,8 @@ public class FreeCellBoard extends GameBoard<String> {
     /*****************************************************************************************************************
      * Apply candidate
      ****************************************************************************************************************/
-    protected FreeCellBoard updateBoard(Candidate candidate) {
+    @Override
+    public FreeCellBoard updateBoard(Candidate candidate) {
         return Optional.of(candidate)
                 .map(this::removeFromOrigin)
                 .map(this::moveToTarget)

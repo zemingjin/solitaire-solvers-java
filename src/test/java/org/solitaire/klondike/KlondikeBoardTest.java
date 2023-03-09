@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
-import org.solitaire.util.CardHelper;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -28,13 +27,14 @@ import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.suitCode;
+import static org.solitaire.util.CardHelper.useSuit;
 
 class KlondikeBoardTest {
     private KlondikeBoard board;
 
     @BeforeEach
     public void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
         board = build(CARDS).board();
     }
 

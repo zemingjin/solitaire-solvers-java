@@ -4,20 +4,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.solitaire.SolitaireApp.NOSUITS;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.SolitaireApp.PYRAMID;
+import static org.solitaire.SolitaireApp.SINGLE_SOLUTION;
 import static org.solitaire.SolitaireApp.TRIPEAKS;
+import static org.solitaire.SolitaireApp.USE_SUITS;
+import static org.solitaire.SolitaireApp.checkSingleSolution;
+import static org.solitaire.SolitaireApp.checkUseSuits;
 import static org.solitaire.io.IOHelperTest.TEST_FILE;
+import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.util.CardHelper.useSuit;
 
 class SolitaireAppTest {
-    private static final String[] ARGS = new String[]{TEST_FILE, NOSUITS, TRIPEAKS};
+    private static final String[] ARGS = new String[]{TEST_FILE, USE_SUITS, TRIPEAKS};
     private SolitaireApp app;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         app = new SolitaireApp();
+        useSuit(false);
     }
 
     @Test
@@ -53,5 +61,24 @@ class SolitaireAppTest {
         assertNotNull(ex);
         assertEquals("Missing solver type; '-t', '-p', '-k', '-f', or '-s'", ex.getMessage());
     }
+
+    @Test
+    void test_checkUseSuits() {
+        checkUseSuits(ARGS);
+        assertTrue(useSuit());
+
+        checkUseSuits(new String[]{TEST_FILE, TRIPEAKS});
+        assertFalse(useSuit());
+    }
+
+    @Test
+    void test_checkSingleSolution() {
+        checkSingleSolution(ARGS);
+        assertFalse(singleSolution());
+
+        checkSingleSolution(new String[]{TRIPEAKS, SINGLE_SOLUTION});
+        assertTrue(singleSolution());
+    }
+
 
 }

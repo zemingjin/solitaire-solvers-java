@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static java.util.stream.IntStream.range;
+import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.checkLongestPath;
 import static org.solitaire.util.CardHelper.checkMaxScore;
 import static org.solitaire.util.CardHelper.checkShortestPath;
@@ -29,7 +31,8 @@ public class SolitaireApp {
     public static final String PYRAMID = "-p";
     public static final String KLONDIKE = "-k";
     public static final String FREECELL = "-f";
-    public static final String NOSUITS = "-n";
+    public static final String USE_SUITS = "-suits";
+    public static final String SINGLE_SOLUTION = "-single";
     @SuppressWarnings("rawtypes")
     private static final Function<GameSolver, Pair<GameSolver, List<List>>> solveIt = it -> Pair.of(it, it.solve());
 
@@ -45,6 +48,18 @@ public class SolitaireApp {
         new SolitaireApp().run(args);
     }
 
+    protected static void checkUseSuits(String[] args) {
+        CardHelper.useSuit(checkParam(args, USE_SUITS));
+    }
+
+    protected static void checkSingleSolution(String[] args) {
+        singleSolution(checkParam(args, SINGLE_SOLUTION));
+    }
+
+    private static boolean checkParam(String[] args, String target) {
+        return range(1, args.length).anyMatch(i -> args[i].equalsIgnoreCase(target));
+    }
+
     @SuppressWarnings("rawtypes")
     public List<List> run(String[] args) {
         Function<String[], GameSolver> buildSolver = it -> getGameBuilder(args).apply(it);
@@ -53,6 +68,7 @@ public class SolitaireApp {
 
         stopWatch.start();
         checkUseSuits(args);
+        checkSingleSolution(args);
         var solver = Optional.of(getPath(args))
                 .map(IOHelper::loadFile)
                 .map(buildSolver)
@@ -85,10 +101,5 @@ public class SolitaireApp {
                 .filter(BUILDERS::containsKey)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing solver type; '-t', '-p', '-k', '-f', or '-s'"));
-    }
-
-    protected void checkUseSuits(String[] args) {
-        CardHelper.useSuit = Arrays.stream(args, 1, args.length)
-                .noneMatch(it -> it.equalsIgnoreCase(NOSUITS));
     }
 }

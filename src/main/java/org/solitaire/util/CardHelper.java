@@ -33,7 +33,15 @@ public class CardHelper {
         put("c", CLUB);
         put("h", HEART);
     }};
-    public static boolean useSuit = true;
+    private static boolean useSuit = true;
+
+    public static void useSuit(boolean useSuit) {
+        CardHelper.useSuit = useSuit;
+    }
+
+    public static boolean useSuit() {
+        return useSuit;
+    }
 
     public static int rank(Card card) {
         return Optional.ofNullable(card)

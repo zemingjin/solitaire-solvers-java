@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Column;
-import org.solitaire.util.CardHelper;
 
 import java.util.List;
 
@@ -14,11 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
-import static org.solitaire.model.Candidate.buildColumnCandidate;
 import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.SpiderHelper.LAST_DECK;
@@ -26,6 +22,9 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
+import static org.solitaire.util.CardHelper.useSuit;
+import static org.solitaire.util.CardHelperTest.TWO;
+import static org.solitaire.util.CardHelperTest.ZERO;
 
 class SpiderBoardTest {
     private SpiderBoard board;
@@ -45,22 +44,45 @@ class SpiderBoardTest {
 
     @BeforeEach
     public void setup() {
-        CardHelper.useSuit = false;
+        useSuit(false);
         board = build(cards).board();
     }
 
     @Test
     void test_score() {
-        assertEquals(0, board.score());
+        assertEquals(-75, board.score());
 
         board.columns().get(9).add(board.columns().get(5).pop());
         board.columns().get(9).add(card("Ah"));
         board.score(0);
-        assertEquals(9, board.score());
+        assertEquals(-66, board.score());
+    }
+
+    @Test
+    void test_countBlockers() {
+        assertEquals(TWO, board.countBlockers(0));
+        assertEquals(ZERO, board.countBlockers(1));
+
+        board.columns().get(2).add(card("Js"));
+        assertEquals(1, board.countBlockers(2));
+
+        board.columns().get(3).remove(3);
+        assertEquals(TWO, board.countBlockers(4));
+
+        var card = card("8s");
+        board.columns().get(4).add(card("8s"));
+        while (board.deck().contains(card)) board.deck().remove(card);
+        assertEquals(ZERO, board.countBlockers(4));
+
+        board.columns().get(3).clear();
+        assertEquals(ZERO, board.countBlockers(3));
     }
 
     @Test
     void test_copy() {
+        board.columns().get(9).add(board.columns().get(5).pop());
+        board.columns().get(9).add(card("Ah"));
+        board.score();
         var copy = new SpiderBoard(board);
 
         assertTrue(reflectionEquals(board, copy));
@@ -77,19 +99,14 @@ class SpiderBoardTest {
     }
 
     @Test
-    public void test_isMovable_repeatingCandidate() {
-        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 8);
-        var path = board.path();
+    void test_isMovable() {
+        var candidate = board.findCandidates().get(0);
 
         assertTrue(board.isMovable(candidate));
 
-        var earlier = new Candidate(candidate.cards(), candidate.target(), candidate.to(), candidate.origin(), candidate.from());
-        path.add(earlier.notation());
+        board.path().add(candidate.notation());
+
         assertFalse(board.isMovable(candidate));
-
-        path.clear();
-        path.add(buildColumnCandidate(board.findCandidateAtColumn(4), 9).notation());
-        assertTrue(board.isMovable(candidate));
     }
 
     @Test
@@ -105,98 +122,6 @@ class SpiderBoardTest {
         column.clear();
         column.add(card);
         assertFalse(board.isMovable(candidate));
-    }
-
-    @Test
-    public void test_compareCandidates() {
-        var a = buildCandidate(5, COLUMN, List.of(board.columns().get(5).peek()), 9);
-        var b = buildCandidate(5, COLUMN, List.of(board.columns().get(5).peek()), 4);
-
-        assertEquals(1, board.compareCandidates(null, b));
-        assertEquals(-1, board.compareCandidates(a, null));
-
-        // different target suits
-        assertEquals(-1, board.compareCandidates(a, b));
-
-        // same target suits, different chain lengths
-        board.columns().get(4).set(4, card("4h"));
-        board.columns().get(4).add(card("3h"));
-        assertEquals(1, board.compareCandidates(a, b));
-    }
-
-    @Test
-    public void test_compareDistanceToRevealCard() {
-        var a = buildCandidate(3, COLUMN, List.of(board.columns().get(3).peek()), 0);
-        var b = buildCandidate(3, COLUMN, List.of(board.columns().get(3).peek()), 8);
-
-        assertEquals(0, board.compareDistanceToRevealCard(a, b));
-        assertEquals(0, board.compareDistanceToRevealCard(b, a));
-
-        board.columns().set(0, mockRun().setOpenAt(0));
-        a = buildCandidate(0, COLUMN, List.of(board.columns().get(0).peek()), 2);
-        assertEquals(-1, board.compareDistanceToRevealCard(a, b));
-        assertEquals(1, board.compareDistanceToRevealCard(b, a));
-    }
-
-    @Test
-    public void test_getDistanceToFlipCard() {
-        board.columns().set(0, mockRun().setOpenAt(0));
-        var a = buildCandidate(0, COLUMN, List.of(board.columns().get(0).peek()), 2);
-
-        assertEquals(12, board.getDistanceToFlipCard(a));
-
-        board.columns().set(0, mockRun().setOpenAt(12));
-        assertEquals(0, board.getDistanceToFlipCard(a));
-    }
-
-    @Test
-    public void test_compareTargetSuits() {
-        // same target suits
-        var a = buildCandidate(3, COLUMN, List.of(board.columns().get(3).peek()), 0);
-        var b = buildCandidate(3, COLUMN, List.of(board.columns().get(3).peek()), 8);
-        assertEquals(0, board.compareTargetSuits(a, b));
-        assertEquals(0, board.compareTargetSuits(b, a));
-
-        b = buildCandidate(3, COLUMN, List.of(card("9h")), 8);
-        assertEquals(1, board.compareTargetSuits(a, b));
-        assertEquals(-1, board.compareTargetSuits(b, a));
-    }
-
-    @Test
-    public void test_compareCardChains() {
-        var a = buildCandidate(5, COLUMN, List.of(board.columns().get(5).peek()), 9);
-        var b = buildCandidate(3, COLUMN,
-                List.of(board.columns().get(3).peek(), card("8s")), 8);
-        board.columns().get(8).set(4, card("Ts"));
-
-        assertEquals(1, board.compareCardChains(a, b));
-    }
-
-    @Test
-    public void test_compareKings() {
-        var a = buildCandidate(0, COLUMN, card("Jd"));
-        var b = buildCandidate(0, COLUMN, card("Kd"));
-
-        assertEquals(1, board.compareKings(a, b));
-        assertEquals(-1, board.compareKings(b, a));
-        assertEquals(-1, board.compareKings(b, b));
-
-        b = buildCandidate(0, COLUMN, card("Qd"));
-        assertEquals(0, board.compareKings(a, b));
-    }
-
-    @Test
-    public void test_updateTargetColumn() {
-        board.columns().get(5).add(card("Ah"));
-        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 9);
-
-        assertEquals(6, board.columns().get(candidate.from()).size());
-        assertEquals(5, board.columns().get(candidate.to()).size());
-        var clone = board.updateBoard(candidate);
-
-        assertNotNull(clone);
-        assertEquals(4, clone.columns().get(candidate.from()).size());
-        assertEquals(7, clone.columns().get(candidate.to()).size());
     }
 
     @Test
@@ -259,7 +184,8 @@ class SpiderBoardTest {
 
     @Test
     public void test_appendToTarget() {
-        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 9);
+        var candidates = board.findCandidates();
+        var candidate = candidates.get(1);
         var column = board.columns().get(candidate.to());
 
         assertEquals(5, column.size());
@@ -281,7 +207,8 @@ class SpiderBoardTest {
 
     @Test
     public void test_removeFromSource() {
-        var candidate = buildColumnCandidate(board.findCandidateAtColumn(5), 9);
+        var candidates = board.findCandidates();
+        var candidate = candidates.get(1);
         var column = board.columns().get(candidate.from());
 
         assertEquals(5, column.size());
@@ -294,98 +221,32 @@ class SpiderBoardTest {
     }
 
     @Test
-    public void test_findCandidates() {
-        var targets = board.findCandidates();
-
-        assertNotNull(targets);
-        assertEquals(4, targets.size());
-        assertEquals(7, targets.get(0).to());
-        assertEquals(9, targets.get(1).to());
-    }
-
-    @Test
-    public void test_checkMultiples() {
-        var card = board.columns().get(3).peek();
-        var a = buildCandidate(3, COLUMN, List.of(card), 0);
-        var candidstes = List.of(a);
-
-        assertSame(a, board.selectCandidate(candidstes));
-
-        var b = buildCandidate(a.from(), a.origin(), a.cards(), 8);
-        var result = board.selectCandidate(List.of(a, b));
-        assertNotNull(result);
-        assertSame(a, result);
-
-        board.columns().get(b.to()).set(4, card("Ts"));
-        result = board.selectCandidate(List.of(a, b));
-        assertNotNull(result);
-        assertSame(b, result);
-
-        board.columns().get(a.to()).set(5, card("Ts"));
-        board.columns().get(a.to()).set(4, card("Js"));
-        result = board.selectCandidate(List.of(a, b));
-        assertNotNull(result);
-        assertSame(a, result);
-    }
-
-    @Test
-    public void test_findTargetsByCandidate() {
-        var candidate = board.findCandidateAtColumn(5);
-        var result = board.matchCandidateToTargets(candidate).toList();
-
-        assertNotNull(result);
-        assertEquals(4, result.get(0).to());
-        assertEquals("Candidate[cards=[33:2h], origin=COLUMN, from=5, target=COLUMN, to=4]", result.get(0).toString());
-
-        candidate = board.findCandidateAtColumn(1);
-        result = board.matchCandidateToTargets(candidate).toList();
-        assertNotNull(result);
-        assertEquals(7, result.get(0).to());
-        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=COLUMN, to=7]", result.get(0).toString());
-    }
-
-    @Test
-    public void test_findTargetColumn_same_column() {
-        var candidate = board.findCandidateAtColumn(5);
-
-        assertNull(board.findTargetColumn(candidate.from(), candidate));
-
-        var result = board.findTargetColumn(9, candidate);
-
-        assertNotNull(result);
-        assertEquals("Candidate[cards=[33:2h], origin=COLUMN, from=5, target=COLUMN, to=9]", result.toString());
-
-        candidate = buildCandidate(9, COLUMN, card("2h"));
-        assertNull(board.findTargetColumn(9, candidate));
-    }
-
-    @Test
-    public void test_findOpenCandidates() {
-        var candidates = board.findOpenCandidates().toList();
+    public void test_findCandidates_sameSuit() {
+        var candidates = board.findCandidates();
 
         assertNotNull(candidates);
+        assertEquals(2, candidates.size());
+        assertEquals(7, candidates.get(0).to());
+        assertEquals(9, candidates.get(1).to());
+
+        board.columns().get(7).clear();
+
+        candidates = board.findCandidates();
+
         assertEquals(10, candidates.size());
-        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=null, to=-1]", candidates.get(0).toString());
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=null, to=-1]", candidates.get(9).toString());
-
-        board.columns().get(0).clear();
-        candidates = board.findOpenCandidates().toList();
-
-        assertNotNull(candidates);
-        assertEquals(9, candidates.size());
-        assertEquals("Candidate[cards=[11:5h], origin=COLUMN, from=1, target=null, to=-1]", candidates.get(0).toString());
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=null, to=-1]", candidates.get(8).toString());
     }
 
     @Test
-    public void test_findCandidateAtColumn() {
-        var candidate = board.findCandidateAtColumn(0);
+    void test_findCandidates_findCandidatesOfDifferentColors() {
+        board.columns().get(1).pop();
+        board.columns().get(9).pop();
+        board.columns().get(2).add(card("Js"));
 
-        assertNotNull(candidate);
-        assertEquals("Candidate[cards=[5:Th], origin=COLUMN, from=0, target=null, to=-1]", candidate.toString());
+        var candidates = board.findCandidates();
 
-        candidate = board.findCandidateAtColumn(board.columns().size() - 1);
-        assertEquals("Candidate[cards=[53:3h], origin=COLUMN, from=9, target=null, to=-1]", candidate.toString());
+        assertNotNull(candidates);
+        assertEquals(8, candidates.size());
+        assertTrue(candidates.stream().allMatch(it -> it.cards().size() == 1));
     }
 
     @Test

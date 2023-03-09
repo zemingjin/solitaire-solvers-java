@@ -20,7 +20,7 @@ class BoardHelperTest {
 
     @BeforeEach
     void setup() {
-        useSuit = false;
+        useSuit(false);
         columns = build(IOHelper.loadFile(TEST_FILE)).board().columns();
     }
 

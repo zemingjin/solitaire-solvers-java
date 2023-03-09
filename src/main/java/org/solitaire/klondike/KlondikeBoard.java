@@ -252,7 +252,8 @@ class KlondikeBoard extends GameBoard<String> {
 
     /*************************************************************************************************************
      ************************************************************************************************************/
-    protected KlondikeBoard updateBoard(Candidate candidate) {
+    @Override
+    public KlondikeBoard updateBoard(Candidate candidate) {
         stateChanged(true);
 
         return removeFromSource(candidate)

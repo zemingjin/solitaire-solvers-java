@@ -11,40 +11,39 @@ import org.solitaire.model.SolveExecutor;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Comparator.comparingInt;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
-@SuppressWarnings("rawtypes")
 public class Spider extends SolveExecutor<SpiderBoard> {
-    private int hsdDepth = 6;
     protected static final int SOLUTION_LIMIT = 1000;
+    private static int hsdDepth = 6;
 
     public Spider(Columns columns, Path<String> path, int totalScore, Deck deck) {
-        this(columns, path, totalScore, deck, true);
+        super(new SpiderBoard(columns, path, totalScore, deck), SpiderBoard::new);
+        solveBoard(singleSolution() ? this::solveByHSD : this::solveByDSF);
     }
 
-    public Spider(Columns columns, Path<String> path, int totalScore, Deck deck, boolean singleSolution) {
-        super(new SpiderBoard(columns, path, totalScore, deck), SpiderBoard::new, singleSolution);
-        solveBoard(singleSolution() ? this::solveByHSD : this::solveByDSF);
+    protected void solveByDSF(SpiderBoard board) {
+        Optional.of(board.findCandidates())
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .map(Stream::toList)
+                .filter(ObjectUtils::isNotEmpty)
+                .ifPresentOrElse(this::addBoards, () -> drawDeck(board));
     }
 
     protected void solveByHSD(SpiderBoard board) {
         var boards = List.of(board);
 
-        for (int i = 1; i <= hsdDepth(); i++) {
-            boards = boards.stream().flatMap(this::search).collect(Collectors.toList());
-
-            if (boards.isEmpty()) {
-                break;
-            }
+        for (int i = 1; i <= hsdDepth() && isNotEmpty(boards); i++) {
+            boards = boards.stream().flatMap(this::search).toList();
         }
         Optional.of(boards)
                 .filter(ObjectUtils::isNotEmpty)
                 .map(List::stream)
                 .map(it -> it.sorted(comparingInt(SpiderBoard::score)))
-                .map(Stream::toList)
                 .map(this::getBestBoard)
                 .ifPresentOrElse(this::addBoard, () -> drawDeck(board));
     }
@@ -55,16 +54,8 @@ public class Spider extends SolveExecutor<SpiderBoard> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .stream()
-                .flatMap(it -> it);
-    }
-
-    protected void solveByDSF(SpiderBoard board) {
-        Optional.of(board.findCandidates())
-                .filter(ObjectUtils::isNotEmpty)
-                .map(it -> applyCandidates(it, board))
-                .map(Stream::toList)
-                .filter(ObjectUtils::isNotEmpty)
-                .ifPresentOrElse(this::addBoards, () -> drawDeck(board));
+                .flatMap(it -> it)
+                .filter(this::checkBoard);
     }
 
     @Override
@@ -84,16 +75,17 @@ public class Spider extends SolveExecutor<SpiderBoard> {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         return Pair.of(0, new Path<>());
     }
 
-    public int hsdDepth() {
+    public static int hsdDepth() {
         return hsdDepth;
     }
 
-    public void hsdDepth(int hsdDepth) {
-        this.hsdDepth = hsdDepth;
+    public static void hsdDepth(int hsdDepth) {
+        Spider.hsdDepth = hsdDepth;
     }
 }
