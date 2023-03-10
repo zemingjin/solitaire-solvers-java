@@ -30,9 +30,9 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
-import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
@@ -48,6 +48,7 @@ class SpiderTest {
 
         board = spy(board);
         spider = MockSpider.build();
+        spider.isPrint(false);
         spider.cloner(i -> board);
         spider.stack().clear();
         spider.addBoard(board);
@@ -80,7 +81,7 @@ class SpiderTest {
         assertNotNull(result);
         assertEquals(ONE, result.size());
         verify(board, times(TWO)).isSolved();
-        verify(board, times(FIVE)).path();
+        verify(board, times(THREE)).path();
         assertEquals(ZERO, spider.totalScenarios());
     }
 

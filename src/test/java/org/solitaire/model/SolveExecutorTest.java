@@ -17,7 +17,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;
@@ -34,6 +33,7 @@ class SolveExecutorTest {
     @BeforeEach
     void setup() {
         executor = new SolveExecutor<>(board);
+        executor.isPrint(false);
         executor.cloner(it -> board);
         executor.solveBoard(this::solveBoard);
     }
@@ -62,7 +62,7 @@ class SolveExecutorTest {
         var result = executor.solve();
 
         verify(board, times(TWO)).isSolved();
-        verify(board, times(FIVE)).path();
+        verify(board, times(THREE)).path();
         assertEquals("[[ABC]]", result.toString());
         assertEquals(ZERO, executor.totalScenarios());
         assertEquals(ONE, executor.maxStack());

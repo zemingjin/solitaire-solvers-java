@@ -35,6 +35,7 @@ class PyramidHelperTest {
         useSuit(false);
         singleSolution(false);
         pyramid = build(cards);
+        pyramid.isPrint(false);
         maxScore = pyramid.getMaxScore(pyramid.solve());
         list = (List<Card[]>) maxScore.getRight();
         pyramid = build(cards);

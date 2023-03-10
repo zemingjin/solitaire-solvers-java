@@ -2,6 +2,7 @@ package org.solitaire.pyramid;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.SolveExecutor;
 
@@ -24,19 +25,14 @@ public class Pyramid extends SolveExecutor<PyramidBoard> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .filter(ObjectUtils::isNotEmpty)
-                .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
+                .ifPresent(super::addBoards);
     }
 
-    protected List<PyramidBoard> applyCandidates(List<Card[]> candidates, PyramidBoard board) {
+    protected List<PyramidBoard> applyCandidates(List<Candidate> candidates, PyramidBoard board) {
         return candidates.stream()
                 .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    protected void drawDeck(PyramidBoard board) {
-        Optional.ofNullable(board.drawDeckCards())
-                .ifPresent(super::addBoard);
     }
 
     @SuppressWarnings("unchecked")
