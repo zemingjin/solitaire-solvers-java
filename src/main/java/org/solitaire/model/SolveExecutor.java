@@ -27,7 +27,7 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
     private final List<List> solutions = new ArrayList<>();
     private int totalScenarios = 0;
     private int maxStack = 0;
-    private boolean isPrint;
+    private boolean isPrint = true;
     private Function<T, T> cloner;
     private Consumer<T> solveBoard;
 
