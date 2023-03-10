@@ -27,6 +27,7 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
     private final List<List> solutions = new ArrayList<>();
     private int totalScenarios = 0;
     private int maxStack = 0;
+    private boolean isPrint;
     private Function<T, T> cloner;
     private Consumer<T> solveBoard;
 
@@ -47,6 +48,13 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
         SolveExecutor.singleSolution = singleSolution;
     }
 
+    public boolean isPrint() {
+        return isPrint;
+    }
+
+    public void isPrint(boolean isPrint) {
+        this.isPrint = isPrint;
+    }
 
     public static int hsdDepth() {
         return hsdDepth;
@@ -89,7 +97,7 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
     public boolean checkBoard(T board) {
         if (board.isSolved()) {
             solutions.add(board.path());
-            if (nonNull(board.path()) && isNotEmpty(board.path())) {
+            if (nonNull(board.path()) && isNotEmpty(board.path()) && isPrint()) {
                 System.out.printf("%d: %s\n", board.path().size(), board.path());
             }
             return false;
