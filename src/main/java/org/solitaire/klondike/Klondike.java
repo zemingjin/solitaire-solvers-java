@@ -20,7 +20,6 @@ import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 @Slf4j
-@SuppressWarnings("rawtypes")
 public class Klondike extends SolveExecutor<KlondikeBoard> {
     protected static final int SOLUTION_LIMIT = 1000;
 
@@ -42,8 +41,8 @@ public class Klondike extends SolveExecutor<KlondikeBoard> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .map(Stream::toList)
-                .filter(it -> !it.isEmpty())
-                .ifPresentOrElse(this::addBoards, () -> drawDeck(board));
+                .filter(ObjectUtils::isNotEmpty)
+                .ifPresent(this::addBoards);
     }
 
     protected void solveByHSD(KlondikeBoard board) {
@@ -57,7 +56,7 @@ public class Klondike extends SolveExecutor<KlondikeBoard> {
                 .map(List::stream)
                 .map(it -> it.sorted(comparingInt(KlondikeBoard::score)))
                 .map(this::getBestBoard)
-                .ifPresentOrElse(super::addBoard, () -> drawDeck(board));
+                .ifPresent(super::addBoard);
     }
 
     private Stream<KlondikeBoard> search(KlondikeBoard board) {
@@ -69,17 +68,13 @@ public class Klondike extends SolveExecutor<KlondikeBoard> {
                 .flatMap(it -> it);
     }
 
-    protected void drawDeck(KlondikeBoard board) {
-        Optional.ofNullable(board.drawDeckCards())
-                .ifPresent(super::addBoard);
-    }
-
     protected Stream<KlondikeBoard> applyCandidates(List<Candidate> candidates, KlondikeBoard board) {
         return candidates.stream()
                 .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull);
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         return null;

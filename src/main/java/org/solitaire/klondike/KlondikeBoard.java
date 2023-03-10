@@ -35,12 +35,20 @@ import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
 
-class KlondikeBoard extends GameBoard<String> {
-    private static final int drawNumber = 3;
+class KlondikeBoard extends GameBoard {
+    private static int drawNumber = 3;
     protected final Deck deck;
     protected final Stack<Card> deckPile;
     protected final List<Stack<Card>> foundations;
     protected boolean stateChanged;
+
+    public static int drawNumber() {
+        return drawNumber;
+    }
+
+    public static void drawNumber(int drawNumber) {
+        KlondikeBoard.drawNumber = drawNumber;
+    }
 
     KlondikeBoard(Columns columns,
                   Path<String> path,
@@ -78,7 +86,11 @@ class KlondikeBoard extends GameBoard<String> {
         var candidates = Optional.of(findFoundationCandidates())
                 .filter(ObjectUtils::isNotEmpty)
                 .orElseGet(this::findMovableCandidates);
-        return optimizeCandidates(candidates);
+        optimizeCandidates(candidates);
+        if (candidates.isEmpty()) {
+            candidates = drawDeck();
+        }
+        return candidates;
     }
 
     protected List<Candidate> findFoundationCandidates() {
@@ -218,10 +230,6 @@ class KlondikeBoard extends GameBoard<String> {
         return !card.isKing() || column.indexOf(card) > 0;
     }
 
-    protected boolean isDeckCardsAvailable() {
-        return !(deck.isEmpty() && deckPile.isEmpty());
-    }
-
     public boolean isSolved() {
         return foundations.stream().allMatch(it -> it.size() == 13);
     }
@@ -339,16 +347,15 @@ class KlondikeBoard extends GameBoard<String> {
         return false;
     }
 
-    protected KlondikeBoard drawDeckCards() {
+    protected List<Candidate> drawDeck() {
         if (checkRecycleDeck()) {
             var floor = max(0, deck().size() - drawNumber);
             var ceiling = Math.min(floor + drawNumber, deck().size());
             var cards = deck().subList(floor, ceiling);
 
-            updateBoard(new Candidate(new LinkedList<>(cards), DECKPILE, 0, DECKPILE, 0));
-            return this;
+            return List.of(new Candidate(new LinkedList<>(cards), DECKPILE, 0, DECKPILE, 0));
         }
-        return null;
+        return emptyList();
     }
 
     private boolean checkRecycleDeck() {
@@ -362,6 +369,10 @@ class KlondikeBoard extends GameBoard<String> {
                     stateChanged(false);
                 });
         return isNotEmpty(deck());
+    }
+
+    protected boolean stateChanged() {
+        return stateChanged;
     }
 
     protected void stateChanged(boolean stateChanged) {

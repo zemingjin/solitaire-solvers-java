@@ -37,7 +37,7 @@ import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
 
-public class FreeCellBoard extends GameBoard<String> {
+public class FreeCellBoard extends GameBoard {
     protected static final Function<FreeCellBoard, List<Candidate>> findCandidates = FreeCellBoard::findCandidates;
     private final Card[] freeCells;
     private final Card[] foundations;

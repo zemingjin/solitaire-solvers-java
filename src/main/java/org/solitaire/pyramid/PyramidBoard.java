@@ -169,9 +169,9 @@ public class PyramidBoard implements Board<Card[], Card[]> {
     }
 
     @Override
-    public PyramidBoard updateBoard(Card[] candidate) {
-        stream(candidate).forEach(this::removeCardFromBoard);
-        path.add(candidate);
+    public PyramidBoard updateBoard(Card[] candidates) {
+        stream(candidates).forEach(this::removeCardFromBoard);
+        path.add(candidates);
         return this;
     }
 

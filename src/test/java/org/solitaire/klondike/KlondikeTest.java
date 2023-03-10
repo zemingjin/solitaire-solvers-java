@@ -80,7 +80,6 @@ class KlondikeTest {
         when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(candidates);
         when(board.updateBoard(any())).thenReturn(null);
-        when(board.drawDeckCards()).thenReturn(null);
 
         var result = klondike.solve();
 
@@ -95,13 +94,11 @@ class KlondikeTest {
     public void test_solve_drawDeck() {
         when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(emptyList());
-        when(board.drawDeckCards()).thenReturn(null);
 
         klondike.solve();
 
         verify(board, times(TWO)).isSolved();
         verify(board, times(ONE)).findCandidates();
-        verify(board, times(ONE)).drawDeckCards();
         assertEquals(1, klondike.totalScenarios());
     }
 
@@ -137,7 +134,7 @@ class KlondikeTest {
         board = klondike.board();
 
         assertNotNull(board);
-        assertEquals(20, board.path().size());
+        assertEquals(60, board.path().size());
     }
 
     private Klondike mockKlondike() {

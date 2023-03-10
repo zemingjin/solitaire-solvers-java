@@ -36,7 +36,7 @@ import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.suitCode;
 
 @Slf4j
-public class SpiderBoard extends GameBoard<String> {
+public class SpiderBoard extends GameBoard {
     protected final Deck deck;
     private transient final IntPredicate isNotEmpty = i -> !columns().get(i).isEmpty();
     private transient final IntPredicate isLongEnoughForRun = i -> 13 <= columns().get(i).size();
