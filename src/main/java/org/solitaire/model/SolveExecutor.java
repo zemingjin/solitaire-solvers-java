@@ -1,10 +1,12 @@
 package org.solitaire.model;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Consumer;
@@ -14,6 +16,7 @@ import java.util.stream.Stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 @SuppressWarnings("rawtypes")
 public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
@@ -69,7 +72,10 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
             while (isContinuing() && !stack.isEmpty()) {
                 checkMaxStack();
 
-                Optional.ofNullable(stack.peek()).map(this::getBoard).ifPresent(this::processBoard);
+                Optional.ofNullable(stack.peek())
+                        .filter(ObjectUtils::isNotEmpty)
+                        .map(this::getBoard)
+                        .ifPresent(this::processBoard);
             }
             return solutions();
         }
@@ -81,9 +87,9 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
     }
 
     public boolean checkBoard(T board) {
-        if (board.isCleared()) {
+        if (board.isSolved()) {
             solutions.add(board.path());
-            if (nonNull(board.path())) {
+            if (nonNull(board.path()) && isNotEmpty(board.path())) {
                 System.out.printf("%d: %s\n", board.path().size(), board.path());
             }
             return false;
@@ -123,6 +129,8 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
     }
 
     public boolean addBoards(Collection<T> boards) {
+        boards = boards.stream().filter(Objects::nonNull).filter(this::checkBoard).toList();
+
         if (!boards.isEmpty()) {
             return stack().add(new BoardStack<>(boards));
         }

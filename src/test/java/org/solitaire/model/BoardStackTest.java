@@ -37,7 +37,7 @@ class BoardStackTest {
 
     record MockBoard(List<Card> path, int score) implements Board<Card, Card> {
         @Override
-        public boolean isCleared() {
+        public boolean isSolved() {
             return false;
         }
 

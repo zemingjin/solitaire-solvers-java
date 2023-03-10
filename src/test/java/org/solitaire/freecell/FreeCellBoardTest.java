@@ -60,11 +60,11 @@ public class FreeCellBoardTest {
 
     @Test
     void test_isCleared() {
-        assertFalse(board.isCleared());
+        assertFalse(board.isSolved());
 
         board.columns().forEach(List::clear);
 
-        assertTrue(board.isCleared());
+        assertTrue(board.isSolved());
     }
 
     @Test

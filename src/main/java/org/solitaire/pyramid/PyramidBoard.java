@@ -37,7 +37,6 @@ public class PyramidBoard implements Board<Card[], Card[]> {
     private final Path<Card[]> path;
     private int recycleCount;
     private transient int score = 0;
-    private transient List<Card[]> candidates;
 
     public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
         this.cards = cards;
@@ -79,28 +78,14 @@ public class PyramidBoard implements Board<Card[], Card[]> {
         this.recycleCount = recycleCount;
     }
 
-    public boolean isCleared() {
+    public boolean isSolved() {
         return CardHelper.isCleared(cards);
-    }
-
-    protected List<Card[]> candidates() {
-        return candidates;
-    }
-
-    protected void candidates(List<Card[]> candidates) {
-        this.candidates = candidates;
     }
 
     /***************************************************************************************************************
      * Find Candidates
      **************************************************************************************************************/
     protected List<Card[]> findCandidates() {
-        if (candidates() != null) {
-            var save = candidates();
-
-            candidates(null);
-            return save;
-        }
         var collect = new LinkedList<Card[]>();
         var openCards = findOpenCards();
 
@@ -209,10 +194,13 @@ public class PyramidBoard implements Board<Card[], Card[]> {
     @Override
     public int score() {
         if (score == 0) {
-            candidates(findCandidates());
-            score(candidates.size());
+            score(-calcBlockers());
         }
         return score;
+    }
+
+    private int calcBlockers() {
+        return (int) Stream.of(cards).filter(Objects::nonNull).count();
     }
 
     protected void score(int score) {

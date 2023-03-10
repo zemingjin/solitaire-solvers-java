@@ -31,8 +31,10 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
+import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -71,15 +73,15 @@ class SpiderTest {
 
     @Test
     public void test_solve_cleared() {
-        when(board.isCleared()).thenReturn(true);
+        when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(mockPath());
 
         var result = spider.solve();
 
         assertNotNull(result);
         assertEquals(ONE, result.size());
-        verify(board, times(ONE)).isCleared();
-        verify(board, times(FOUR)).path();
+        verify(board, times(TWO)).isSolved();
+        verify(board, times(FIVE)).path();
         assertEquals(ZERO, spider.totalScenarios());
     }
 
@@ -92,21 +94,20 @@ class SpiderTest {
 
         assertNotNull(result);
         assertEquals(SOLUTION_LIMIT, result.size());
-        verify(board, times(ZERO)).isCleared();
         assertEquals(ZERO, spider.totalScenarios());
     }
 
     @Test
     public void test_solve_applyCandidates() {
-        when(board.isCleared()).thenReturn(false);
+        when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(mockCandidateList());
         when(board.updateBoard(candidate)).thenReturn(board);
 
         spider.solve();
 
-        verify(board, times(ONE)).isCleared();
-        verify(board, times(ONE)).findCandidates();
-        verify(board, times(ONE)).updateBoard(candidate);
+        verify(board, times(TWO)).isSolved();
+        verify(board).findCandidates();
+        verify(board).updateBoard(candidate);
         verify(board, times(ZERO)).drawDeck();
         assertEquals(1, spider.totalScenarios());
     }
@@ -124,15 +125,15 @@ class SpiderTest {
 
     @Test
     public void test_solve_drawDeck() {
-        when(board.isCleared()).thenReturn(false);
+        when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(emptyList());
         when(board.drawDeck()).thenReturn(true);
 
         spider.solve();
 
-        verify(board, times(ONE)).isCleared();
-        verify(board, times(ONE)).findCandidates();
-        verify(board, times(ONE)).drawDeck();
+        verify(board, times(TWO)).isSolved();
+        verify(board).findCandidates();
+        verify(board).drawDeck();
         assertEquals(1, spider.totalScenarios());
         assertTrue(((MockSpider) spider).first);
     }

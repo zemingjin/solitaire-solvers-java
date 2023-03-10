@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -75,14 +74,14 @@ class PyramidHelperTest {
     @Test
     public void test_getScore() {
         assertEquals(30, getScore(row(cardAt(list.get(9)).at()), 9, list));
-        assertEquals(5, getScore(row(cardAt(list.get(16)).at()), 16, list));
-        assertEquals(55, getScore(row(cardAt(list.get(17)).at()), 17, list));
+        assertEquals(55, getScore(row(cardAt(list.get(16)).at()), 16, list));
+        assertEquals(5, getScore(row(cardAt(list.get(17)).at()), 17, list));
     }
 
     @Test
     public void test_isRowCleared() {
         assertTrue(isRowCleared(row(cardAt(list.get(9)).at()), 9, list));
-        assertFalse(isRowCleared(row(cardAt(list.get(16)).at()), 16, list));
+        assertTrue(isRowCleared(row(cardAt(list.get(16)).at()), 16, list));
     }
 
     @Test

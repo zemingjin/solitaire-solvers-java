@@ -57,8 +57,8 @@ public class SpiderBoard extends GameBoard<String> {
     }
 
     @Override
-    public boolean isCleared() {
-        return super.isCleared() && deck.isEmpty();
+    public boolean isSolved() {
+        return super.isSolved() && deck.isEmpty();
     }
 
     /**************************************************************************************************************

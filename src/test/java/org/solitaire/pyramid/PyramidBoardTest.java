@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
@@ -66,11 +65,8 @@ class PyramidBoardTest {
         assertNotNull(result);
         assertEquals(3, result.size());
         assertEquals("Kc", stringOfRaws(result.get(0)));
-        assertNull(board.candidates());
 
-        assertEquals(3.0, board.score());
-        assertSame(board.candidates(), board.findCandidates());
-        assertNull(board.candidates());
+        assertEquals(-28, board.score());
     }
 
     @Test

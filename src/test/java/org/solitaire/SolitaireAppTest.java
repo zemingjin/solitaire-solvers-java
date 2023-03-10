@@ -24,8 +24,8 @@ class SolitaireAppTest {
 
     @BeforeEach
     void setup() {
-        app = new SolitaireApp();
         useSuit(false);
+        app = new SolitaireApp();
     }
 
     @Test

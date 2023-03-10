@@ -90,12 +90,12 @@ class SpiderBoardTest {
 
     @Test
     public void test_isClear() {
-        assertFalse(board.isCleared());
+        assertFalse(board.isSolved());
 
         board.columns().forEach(List::clear);
         board.deck.clear();
 
-        assertTrue(board.isCleared());
+        assertTrue(board.isSolved());
     }
 
     @Test

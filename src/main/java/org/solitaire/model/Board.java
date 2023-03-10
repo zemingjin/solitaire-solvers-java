@@ -3,7 +3,7 @@ package org.solitaire.model;
 import java.util.List;
 
 public interface Board<R, U> {
-    boolean isCleared();
+    boolean isSolved();
 
     List<R> path();
 

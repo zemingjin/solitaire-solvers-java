@@ -48,7 +48,7 @@ public class GameBoard<R> implements Board<R, Candidate> {
     }
 
     @Override
-    public boolean isCleared() {
+    public boolean isSolved() {
         return columns.isCleared();
     }
 

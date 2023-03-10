@@ -17,8 +17,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.solitaire.util.CardHelperTest.FOUR;
+import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
@@ -55,13 +56,13 @@ class SolveExecutorTest {
 
     @Test
     void test_solve_cleared() {
-        when(board.isCleared()).thenReturn(true);
+        when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(List.of(ABC));
 
         var result = executor.solve();
 
-        verify(board).isCleared();
-        verify(board, times(FOUR)).path();
+        verify(board, times(TWO)).isSolved();
+        verify(board, times(FIVE)).path();
         assertEquals("[[ABC]]", result.toString());
         assertEquals(ZERO, executor.totalScenarios());
         assertEquals(ONE, executor.maxStack());
@@ -71,12 +72,12 @@ class SolveExecutorTest {
     @Test
     void test_solve_notCleared() {
         assertTrue(executor.stack().peek().add(board));
-        when(board.isCleared()).thenReturn(false);
+        when(board.isSolved()).thenReturn(false);
 
         var result = executor.solve();
 
         assertTrue(executor.stack().isEmpty());
-        verify(board, times(TWO)).isCleared();
+        verify(board, times(THREE)).isSolved();
         verify(board, never()).path();
         assertEquals("[]", result.toString());
         assertEquals(TWO, executor.totalScenarios());

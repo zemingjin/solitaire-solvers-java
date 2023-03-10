@@ -222,7 +222,7 @@ class KlondikeBoard extends GameBoard<String> {
         return !(deck.isEmpty() && deckPile.isEmpty());
     }
 
-    public boolean isCleared() {
+    public boolean isSolved() {
         return foundations.stream().allMatch(it -> it.size() == 13);
     }
 

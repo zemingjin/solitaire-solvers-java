@@ -456,11 +456,11 @@ class KlondikeBoardTest {
 
     @Test
     public void test_isCleared() {
-        assertFalse(board.isCleared());
+        assertFalse(board.isSolved());
 
         mockFullFoundations(board.foundations());
 
-        assertTrue(board.isCleared());
+        assertTrue(board.isSolved());
     }
 
     @Test

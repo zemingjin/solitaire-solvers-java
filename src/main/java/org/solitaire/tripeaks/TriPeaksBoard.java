@@ -42,7 +42,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
     }
 
     @Override
-    public boolean isCleared() {
+    public boolean isSolved() {
         return CardHelper.isCleared(cards, 0, LAST_BOARD);
     }
 
