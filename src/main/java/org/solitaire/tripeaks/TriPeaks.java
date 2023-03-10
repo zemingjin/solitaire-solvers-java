@@ -17,6 +17,7 @@ public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
     public TriPeaks(Card[] cards, Stack<Card> wastePile) {
         super(new TriPeaksBoard(cards, wastePile), TriPeaksBoard::new);
         solveBoard(this::solveByDFS);
+        isReducingBoards(false);
     }
 
     @SuppressWarnings("rawtypes")

@@ -13,7 +13,6 @@ public class Pyramid extends SolveExecutor<Card[], Candidate, PyramidBoard> {
 
     public Pyramid(PyramidBoard board) {
         super(board, PyramidBoard::new);
-        solveBoard(this::solveByDFS);
     }
 
     @SuppressWarnings("unchecked rawtypes")

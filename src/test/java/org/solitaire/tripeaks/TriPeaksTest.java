@@ -32,6 +32,23 @@ public class TriPeaksTest {
 
     @Test
     void test_solve() {
+        var result = triPeaks.solve();
+
+        assertEquals(3300, result.size());
+        assertEquals(15, triPeaks.maxDepth());
+    }
+
+    @Test
+    void test_solve_HDS() {
+        triPeaks.solveBoard(triPeaks::solveByHSD);
+        var result = triPeaks.solve();
+
+        assertEquals(0, result.size());
+        assertEquals(1, triPeaks.maxDepth());
+    }
+
+    @Test
+    void test_verify_exception() {
         triPeaks.board().cards()[0] = null;
 
         var result = assertThrows(RuntimeException.class, () -> triPeaks.solve());
