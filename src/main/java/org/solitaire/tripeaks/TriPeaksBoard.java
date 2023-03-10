@@ -55,7 +55,8 @@ public class TriPeaksBoard implements Board<Card, Card> {
     /************************************************************************************************************
      * Search
      ***********************************************************************************************************/
-    protected List<Card> findCandidates() {
+    @Override
+    public List<Card> findCandidates() {
         var candidates = Optional.of(wastePile.peek())
                 .map(this::findAdjacentCardsFromBoard)
                 .orElseGet(Collections::emptyList);

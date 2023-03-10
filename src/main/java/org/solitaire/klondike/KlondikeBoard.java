@@ -82,7 +82,11 @@ class KlondikeBoard extends GameBoard {
         return cards.size() - cards.lastIndexOf(target) - 1;
     }
 
-    protected List<Candidate> findCandidates() {
+    /***************************************************************************************************************
+     * Search
+     **************************************************************************************************************/
+    @Override
+    public List<Candidate> findCandidates() {
         var candidates = Optional.of(findFoundationCandidates())
                 .filter(ObjectUtils::isNotEmpty)
                 .orElseGet(this::findMovableCandidates);

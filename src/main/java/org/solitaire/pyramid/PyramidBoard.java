@@ -88,7 +88,8 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     /***************************************************************************************************************
      * Find Candidates
      **************************************************************************************************************/
-    protected List<Candidate> findCandidates() {
+    @Override
+    public List<Candidate> findCandidates() {
         var openCards = findOpenCards();
 
         var candidates = range(0, openCards.size())

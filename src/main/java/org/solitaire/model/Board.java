@@ -11,5 +11,7 @@ public interface Board<R, U> {
 
     int score();
 
+    List<U> findCandidates();
+
     Board<R, U> updateBoard(U candidate);
 }

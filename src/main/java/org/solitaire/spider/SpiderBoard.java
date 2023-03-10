@@ -65,7 +65,8 @@ public class SpiderBoard extends GameBoard {
     /**************************************************************************************************************
      * Find/Match/Sort Candidates
      *************************************************************************************************************/
-    protected List<Candidate> findCandidates() {
+    @Override
+    public List<Candidate> findCandidates() {
         var candidates = findCandidates(this::findCandidatesOfSameSuit);
 
         if (candidates.isEmpty()) {

@@ -57,6 +57,11 @@ public class GameBoard implements Board<String, Candidate> {
         return path;
     }
 
+    @Override
+    public List<Candidate> findCandidates() {
+        return emptyList();
+    }
+
     public Columns columns() {
         return columns;
     }

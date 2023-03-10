@@ -28,7 +28,7 @@ class SolveExecutorTest {
 
     @Mock Board<String, String> board;
 
-    private SolveExecutor<Board<String, String>> executor;
+    private SolveExecutor<String, String, Board<String, String>> executor;
 
     @BeforeEach
     void setup() {

@@ -51,6 +51,7 @@ class KlondikeTest {
         useSuit(false);
         singleSolution(false);
         klondike = mockKlondike();
+        klondike.isPrint(false);
     }
 
     @Test

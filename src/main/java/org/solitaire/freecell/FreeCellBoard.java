@@ -82,7 +82,8 @@ public class FreeCellBoard extends GameBoard {
     /*****************************************************************************************************************
      * Find/Match Candidates
      ****************************************************************************************************************/
-    protected List<Candidate> findCandidates() {
+    @Override
+    public List<Candidate> findCandidates() {
         return Optional.of(findToColumnCandidates())
                 .map(it -> concat(it.stream(), findColumnToFreeCellCandidates(it)))
                 .map(it -> concat(it, getFoundationCandidates()))

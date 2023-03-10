@@ -47,6 +47,11 @@ class BoardStackTest {
         }
 
         @Override
+        public List<Card> findCandidates() {
+            return emptyList();
+        }
+
+        @Override
         public Board<Card, Card> updateBoard(Card candidate) {
             return null;
         }
