@@ -48,6 +48,9 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         cloner(cloner);
     }
 
+    /**************************************************************************************************************
+     * Access
+     *************************************************************************************************************/
     public static boolean singleSolution() {
         return singleSolution;
     }
@@ -88,6 +91,9 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         this.isReducingBoards = isReducingBoards;
     }
 
+    /**************************************************************************************************************
+     * Execution routines
+     *************************************************************************************************************/
     @Override
     public List<List> solve() {
         var verify = board().verify();
@@ -146,6 +152,9 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                 .filter(Objects::nonNull);
     }
 
+    /**************************************************************************************************************
+     * Helper routines
+     *************************************************************************************************************/
     public boolean isContinuing() {
         return !singleSolution || solutions.size() != 1;
     }
