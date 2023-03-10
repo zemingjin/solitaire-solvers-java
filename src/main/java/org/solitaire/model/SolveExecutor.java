@@ -13,13 +13,19 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static java.util.Comparator.comparingInt;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 @SuppressWarnings("rawtypes")
-public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
+public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
+    private final Function<List<T>, List<T>> checkReducingBoards = boards ->
+            isReducingBoards()
+                    ? range(boards.size() * 3 / 5, boards.size()).mapToObj(boards::get).toList()
+                    : boards;
     private static boolean singleSolution = false;
     private static int hsdDepth = 6;
 
@@ -30,9 +36,11 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
     private boolean isPrint = true;
     private Function<T, T> cloner;
     private Consumer<T> solveBoard;
+    private boolean isReducingBoards = false;
 
     public SolveExecutor(T board) {
         addBoard(board);
+        solveBoard(singleSolution() ? this::solveByHSD : this::solveByDFS);
     }
 
     public SolveExecutor(T board, Function<T, T> cloner) {
@@ -40,6 +48,9 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
         cloner(cloner);
     }
 
+    /**************************************************************************************************************
+     * Access
+     *************************************************************************************************************/
     public static boolean singleSolution() {
         return singleSolution;
     }
@@ -72,6 +83,17 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
         this.solveBoard = solveBoard;
     }
 
+    public boolean isReducingBoards() {
+        return isReducingBoards;
+    }
+
+    public void isReducingBoards(boolean isReducingBoards) {
+        this.isReducingBoards = isReducingBoards;
+    }
+
+    /**************************************************************************************************************
+     * Execution routines
+     *************************************************************************************************************/
     @Override
     public List<List> solve() {
         var verify = board().verify();
@@ -90,6 +112,49 @@ public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
         throw new RuntimeException(verify.toString());
     }
 
+    public void solveByDFS(T board) {
+        Optional.of(board.findCandidates())
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .map(Stream::toList)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(checkReducingBoards)
+                .ifPresent(this::addBoards);
+    }
+
+    public void solveByHSD(T board) {
+        var boards = List.of(board);
+
+        for (int i = 1; i <= hsdDepth() && isNotEmpty(boards); i++) {
+            boards = boards.stream().flatMap(this::search).toList();
+        }
+        Optional.of(boards)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(List::stream)
+                .map(it -> it.sorted(comparingInt(T::score)))
+                .map(this::getBestBoard)
+                .ifPresent(this::addBoard);
+    }
+
+    private Stream<T> search(T board) {
+        return Optional.of(board)
+                .map(T::findCandidates)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .stream()
+                .flatMap(it -> it);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Stream<T> applyCandidates(List<U> candidates, T board) {
+        return (Stream<T>) candidates.stream()
+                .map(it -> clone(board).updateBoard(it))
+                .filter(Objects::nonNull);
+    }
+
+    /**************************************************************************************************************
+     * Helper routines
+     *************************************************************************************************************/
     public boolean isContinuing() {
         return !singleSolution || solutions.size() != 1;
     }
