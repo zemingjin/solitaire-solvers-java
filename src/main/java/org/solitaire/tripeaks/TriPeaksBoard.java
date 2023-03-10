@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.IntUnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.Math.min;
@@ -51,15 +52,21 @@ public class TriPeaksBoard implements Board<Card, Card> {
         return wastePile;
     }
 
-    @Override
-    public int score() {
-        return wastePile.size();
-    }
-
+    /************************************************************************************************************
+     * Search
+     ***********************************************************************************************************/
     protected List<Card> findCandidates() {
-        return Optional.of(wastePile.peek())
+        var candidates = Optional.of(wastePile.peek())
                 .map(this::findAdjacentCardsFromBoard)
                 .orElseGet(Collections::emptyList);
+        if (candidates.isEmpty()) {
+            var deckCard = getTopDeckCard();
+
+            if (nonNull(deckCard)) {
+                candidates.add(deckCard);
+            }
+        }
+        return candidates;
     }
 
     private List<Card> findAdjacentCardsFromBoard(Card target) {
@@ -69,10 +76,10 @@ public class TriPeaksBoard implements Board<Card, Card> {
                 .filter(Objects::nonNull)
                 .filter(this::isOpenCard)
                 .filter(target::isAdjacent)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    protected Card getTopDeckCard() {
+    private Card getTopDeckCard() {
         return rangeClosed(LAST_BOARD, LAST_DECK - 1)
                 .map(reverse)
                 .mapToObj(i -> cards[i])
@@ -81,6 +88,9 @@ public class TriPeaksBoard implements Board<Card, Card> {
                 .orElse(null);
     }
 
+    /************************************************************************************************************
+     * Update
+     ***********************************************************************************************************/
     @Override
     public TriPeaksBoard updateBoard(Card card) {
         if (nonNull(card)) {
@@ -143,4 +153,13 @@ public class TriPeaksBoard implements Board<Card, Card> {
     private Card[] allCards() {
         return Stream.concat(Stream.of(cards), wastePile.stream()).toArray(Card[]::new);
     }
+
+    /***************************************************************************************************************
+     * Score
+     **************************************************************************************************************/
+    @Override
+    public int score() {
+        return wastePile.size();
+    }
+
 }

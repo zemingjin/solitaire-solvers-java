@@ -27,6 +27,7 @@ public class TriPeaksTest {
         useSuit(false);
         singleSolution(false);
         triPeaks = build(cards);
+        triPeaks.isPrint(false);
     }
 
     @Test

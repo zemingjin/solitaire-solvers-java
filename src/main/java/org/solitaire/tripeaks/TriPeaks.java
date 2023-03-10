@@ -38,7 +38,7 @@ public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
                 .filter(ObjectUtils::isNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .filter(ObjectUtils::isNotEmpty)
-                .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
+                .ifPresent(super::addBoards);
     }
 
     private List<TriPeaksBoard> applyCandidates(List<Card> candidates, TriPeaksBoard board) {
@@ -46,12 +46,6 @@ public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
                 .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    private void drawDeck(TriPeaksBoard board) {
-        Optional.ofNullable(board.getTopDeckCard())
-                .map(board::updateBoard)
-                .ifPresent(super::addBoard);
     }
 
     @SuppressWarnings("unchecked")
