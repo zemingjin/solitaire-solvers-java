@@ -23,6 +23,7 @@ import java.util.function.IntPredicate;
 
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.max;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
@@ -65,9 +66,16 @@ public class SpiderBoard extends GameBoard<String> {
      * Find/Match/Sort Candidates
      *************************************************************************************************************/
     protected List<Candidate> findCandidates() {
-        return Optional.of(findCandidates(this::findCandidatesOfSameSuit))
-                .filter(ObjectUtils::isNotEmpty)
-                .orElseGet(() -> findCandidates(this::findCandidatesOfDifferentColors));
+        var candidates = findCandidates(this::findCandidatesOfSameSuit);
+
+        if (candidates.isEmpty()) {
+            candidates = findCandidates(this::findCandidatesOfDifferentColors);
+
+            if (candidates.isEmpty()) {
+                candidates = drawDeck();
+            }
+        }
+        return candidates;
     }
 
     private List<Candidate> findCandidates(Function<Integer, List<Candidate>> findCandidate) {
@@ -155,15 +163,26 @@ public class SpiderBoard extends GameBoard<String> {
     }
 
     protected SpiderBoard removeFromSource(Candidate candidate) {
-        removeFromColumn(candidate);
+        switch (candidate.origin()) {
+            case COLUMN -> removeFromColumn(candidate);
+            case DECKPILE -> removeFromDeck(candidate);
+        }
         return this;
+    }
+
+    private void removeFromDeck(Candidate candidate) {
+        candidate.cards().forEach(it -> deck().remove(it));
     }
 
     protected SpiderBoard appendToTarget(Candidate candidate) {
         path.add(candidate.notation());
-        addToTargetColumn(candidate);
-        if (candidate.origin() != DECKPILE) {
-            totalScore--;
+
+        switch (candidate.origin()) {
+            case DECKPILE -> range(0, columns().size()).forEach(i -> columns().get(i).add(candidate.cards().get(i)));
+            case COLUMN -> {
+                addToTargetColumn(candidate);
+                totalScore--;
+            }
         }
         return this;
     }
@@ -202,19 +221,13 @@ public class SpiderBoard extends GameBoard<String> {
         run.clear();
     }
 
-    protected boolean drawDeck() {
+    protected List<Candidate> drawDeck() {
         if (isNotEmpty(deck)) {
-            assert columns().size() <= deck().size();
-
             var cards = deck().subList(0, columns.size());
 
-            range(0, cards.size())
-                    .forEach(i -> columns().get(i).add(cards.get(i)));
-            path().add(new Candidate(new ArrayList<>(cards), DECKPILE, 0, COLUMN, 0).notation());
-            cards.clear();
-            return true;
+            return List.of(new Candidate(new ArrayList<>(cards), DECKPILE, 0, COLUMN, 0));
         }
-        return false;
+        return emptyList();
     }
 
     /*****************************************************************************************************************

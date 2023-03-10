@@ -30,7 +30,7 @@ public class Spider extends SolveExecutor<SpiderBoard> {
                 .map(it -> applyCandidates(it, board))
                 .map(Stream::toList)
                 .filter(ObjectUtils::isNotEmpty)
-                .ifPresentOrElse(this::addBoards, () -> drawDeck(board));
+                .ifPresent(this::addBoards);
     }
 
     protected void solveByHSD(SpiderBoard board) {
@@ -44,7 +44,7 @@ public class Spider extends SolveExecutor<SpiderBoard> {
                 .map(List::stream)
                 .map(it -> it.sorted(comparingInt(SpiderBoard::score)))
                 .map(this::getBestBoard)
-                .ifPresentOrElse(this::addBoard, () -> drawDeck(board));
+                .ifPresent(this::addBoard);
     }
 
     private Stream<SpiderBoard> search(SpiderBoard board) {
@@ -66,12 +66,6 @@ public class Spider extends SolveExecutor<SpiderBoard> {
         return candidates.stream()
                 .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull);
-    }
-
-    protected void drawDeck(SpiderBoard board) {
-        if (board.drawDeck()) {
-            addBoard(board);
-        }
     }
 
     @SuppressWarnings("rawtypes")

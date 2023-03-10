@@ -11,7 +11,6 @@ import org.solitaire.model.Path;
 import java.util.Collection;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -68,7 +67,7 @@ class SpiderTest {
         range(0, 12).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
         var board = spider.board();
         assertNotNull(board);
-        assertEquals(33, board.path().size());
+        assertEquals(48, board.path().size());
     }
 
     @Test
@@ -124,21 +123,6 @@ class SpiderTest {
     }
 
     @Test
-    public void test_solve_drawDeck() {
-        when(board.isSolved()).thenReturn(false);
-        when(board.findCandidates()).thenReturn(emptyList());
-        when(board.drawDeck()).thenReturn(true);
-
-        spider.solve();
-
-        verify(board, times(TWO)).isSolved();
-        verify(board).findCandidates();
-        verify(board).drawDeck();
-        assertEquals(1, spider.totalScenarios());
-        assertTrue(((MockSpider) spider).first);
-    }
-
-    @Test
     public void test_updateColumns() {
         when(board.updateBoard(candidate)).thenReturn(board);
 
@@ -157,25 +141,6 @@ class SpiderTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
-    }
-
-    @Test
-    public void test_drawDeck() {
-        when(board.drawDeck()).thenReturn(true);
-
-        spider.drawDeck(board);
-
-        verify(board, times(ONE)).drawDeck();
-        assertTrue(((MockSpider) spider).first);
-    }
-
-    @Test
-    public void test_drawDeck_fail() {
-        when(board.drawDeck()).thenReturn(false);
-
-        spider.drawDeck(board);
-
-        verify(board, times(ONE)).drawDeck();
     }
 
     @Test
