@@ -18,7 +18,6 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 public class Spider extends SolveExecutor<SpiderBoard> {
     protected static final int SOLUTION_LIMIT = 1000;
-    private static int hsdDepth = 6;
 
     public Spider(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(new SpiderBoard(columns, path, totalScore, deck), SpiderBoard::new);
@@ -79,13 +78,5 @@ public class Spider extends SolveExecutor<SpiderBoard> {
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         return Pair.of(0, new Path<>());
-    }
-
-    public static int hsdDepth() {
-        return hsdDepth;
-    }
-
-    public static void hsdDepth(int hsdDepth) {
-        Spider.hsdDepth = hsdDepth;
     }
 }

@@ -132,7 +132,7 @@ public class SpiderBoard extends GameBoard<String> {
     protected List<Card> getOrderedCardsAtColumn(Column column) {
         var collector = new LinkedList<Card>();
 
-        for (int i = column.size(), floor = max(column.getOpenAt(), 0); i-- > floor; ) {
+        for (int i = column.size(), floor = max(column.openAt(), 0); i-- > floor; ) {
             var card = column.get(i);
 
             if (collector.isEmpty() || card.isHigherOfSameColor(collector.get(0))) {
@@ -161,7 +161,7 @@ public class SpiderBoard extends GameBoard<String> {
 
     protected SpiderBoard appendToTarget(Candidate candidate) {
         path.add(candidate.notation());
-        appendToTargetColumn(candidate);
+        addToTargetColumn(candidate);
         if (candidate.origin() != DECKPILE) {
             totalScore--;
         }

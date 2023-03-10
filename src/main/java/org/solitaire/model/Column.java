@@ -13,7 +13,7 @@ public class Column extends ArrayList<Card> {
 
     public Column(Column column) {
         super(column);
-        setOpenAt(column.getOpenAt());
+        openAt(column.openAt());
     }
 
     @Override
@@ -53,16 +53,16 @@ public class Column extends ArrayList<Card> {
         throw new EmptyStackException();
     }
 
-    public int getOpenAt() {
+    public int openAt() {
         return openAt;
     }
 
-    public Column setOpenAt(int openAt) {
+    public Column openAt(int openAt) {
         this.openAt = openAt;
         return this;
     }
 
     private void checkOpenAt(int at) {
-        setOpenAt(openAt >= at ? at - 1 : openAt);
+        openAt(openAt >= at ? at - 1 : openAt);
     }
 }

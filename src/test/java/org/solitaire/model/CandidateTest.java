@@ -33,11 +33,10 @@ class CandidateTest {
         assertEquals("fF:Ks", new Candidate(cards, FREECELL, -1, FOUNDATION, -1).notation());
         assertEquals("f1:Ks", new Candidate(cards, FREECELL, -1, COLUMN, 1).notation());
         assertEquals("d1:Ks", new Candidate(cards, DECKPILE, -1, COLUMN, 1).notation());
+        assertEquals("dD:Ks", new Candidate(cards, DECKPILE, -1, DECKPILE, -1).notation());
         assertEquals("01:[Ks, Qs]",
                 new Candidate(List.of(card("Ks"), card("Qs")), COLUMN, 0, COLUMN, 1).notation());
 
-        assertThrows(RuntimeException.class,
-                () -> new Candidate(cards, DECKPILE, -1, DECKPILE, -1).notation());
         assertThrows(RuntimeException.class,
                 () -> new Candidate(cards, FOUNDATION, -1, COLUMN, 1).notation());
     }

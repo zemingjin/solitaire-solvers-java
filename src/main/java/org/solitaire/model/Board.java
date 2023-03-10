@@ -2,7 +2,7 @@ package org.solitaire.model;
 
 import java.util.List;
 
-public interface Board<R> {
+public interface Board<R, U> {
     boolean isCleared();
 
     List<R> path();
@@ -10,4 +10,6 @@ public interface Board<R> {
     List<String> verify();
 
     int score();
+
+    Board<R, U> updateBoard(U candidate);
 }

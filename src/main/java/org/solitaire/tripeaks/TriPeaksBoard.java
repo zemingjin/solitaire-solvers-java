@@ -24,7 +24,7 @@ import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
 
-public class TriPeaksBoard implements Board<Card> {
+public class TriPeaksBoard implements Board<Card, Card> {
     private static final int C = LAST_BOARD + LAST_DECK - 1;
     private final IntUnaryOperator reverse = i -> C - i;
     private final IntUnaryOperator reverseBoard = i -> LAST_BOARD - i - 1;
@@ -81,7 +81,8 @@ public class TriPeaksBoard implements Board<Card> {
                 .orElse(null);
     }
 
-    protected TriPeaksBoard updateBoard(Card card) {
+    @Override
+    public TriPeaksBoard updateBoard(Card card) {
         if (nonNull(card)) {
             cards[card.at()] = null;
             wastePile.push(card);

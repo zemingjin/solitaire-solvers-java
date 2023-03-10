@@ -54,7 +54,7 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
             case COLUMN -> Integer.toString(to);
             case FREECELL -> "f";
             case FOUNDATION -> "F";
-            default -> throw new RuntimeException("Invalid Target: " + this);
+            case DECKPILE -> "D";
         };
     }
 

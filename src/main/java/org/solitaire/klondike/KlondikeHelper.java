@@ -47,7 +47,7 @@ public class KlondikeHelper {
         var column = rangeClosed(colStart(col), colEnd)
                 .mapToObj(i -> buildCard(i, cards[i]))
                 .collect(Collectors.toCollection(Column::new));
-        column.setOpenAt(column.size() - 1);
+        column.openAt(column.size() - 1);
         return column;
     }
 

@@ -30,7 +30,7 @@ import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.toArray;
 
-public class PyramidBoard implements Board<Card[]> {
+public class PyramidBoard implements Board<Card[], Card[]> {
     private final Card[] cards;
     private final Stack<Card> deck;
     private final Stack<Card> flippedDeck;
@@ -183,7 +183,8 @@ public class PyramidBoard implements Board<Card[]> {
         return isNotEmpty(deck);
     }
 
-    protected PyramidBoard updateBoard(Card[] candidate) {
+    @Override
+    public PyramidBoard updateBoard(Card[] candidate) {
         stream(candidate).forEach(this::removeCardFromBoard);
         path.add(candidate);
         return this;

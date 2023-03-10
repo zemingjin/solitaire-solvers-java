@@ -204,13 +204,13 @@ class SpiderTest {
     static class MockSpider extends Spider {
         private boolean first = true;
 
+        private MockSpider(SpiderBoard board) {
+            super(board.columns(), board.path(), board.totalScore(), board.deck());
+        }
+
         public static MockSpider build() {
             singleSolution(false);
             return new MockSpider(SpiderHelper.build(cards).board());
-        }
-
-        private MockSpider(SpiderBoard board) {
-            super(board.columns(), board.path(), board.totalScore(), board.deck());
         }
 
         @Override

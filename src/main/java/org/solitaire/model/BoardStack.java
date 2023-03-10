@@ -6,7 +6,7 @@ import java.util.Stack;
 
 import static java.util.Comparator.comparingInt;
 
-public class BoardStack<T extends Board<?>> extends Stack<T> {
+public class BoardStack<T extends Board<?, ?>> extends Stack<T> {
     public BoardStack(T board) {
         this(List.of(board));
     }

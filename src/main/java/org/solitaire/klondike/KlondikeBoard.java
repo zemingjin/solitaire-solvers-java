@@ -8,9 +8,11 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
+import org.solitaire.util.CardHelper;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
@@ -19,15 +21,18 @@ import java.util.stream.Stream;
 
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
+import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
 import static org.solitaire.util.CardHelper.diffOfValues;
+import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
 
 class KlondikeBoard extends GameBoard<String> {
@@ -59,6 +64,14 @@ class KlondikeBoard extends GameBoard<String> {
                 cloneStack(that.deckPile()),
                 cloneStacks(that.foundations()),
                 that.stateChanged);
+    }
+
+    private static Card nextCard(Card card, int suitCode) {
+        return nonNull(card) ? CardHelper.nextCard(card) : card("A" + suit(suitCode));
+    }
+
+    private static int calcBlocker(List<Card> cards, Card target) {
+        return cards.size() - cards.lastIndexOf(target) - 1;
     }
 
     protected List<Candidate> findCandidates() {
@@ -188,7 +201,7 @@ class KlondikeBoard extends GameBoard<String> {
     protected List<Card> getOrderedCards(Column column) {
         var collector = new LinkedList<Card>();
 
-        for (int i = column.size() - 1; max(column.getOpenAt(), 0) <= i; i--) {
+        for (int i = column.size() - 1; i >= max(column.openAt(), 0); i--) {
             var card = column.get(i);
 
             if (collector.isEmpty() || card.isHigherWithDifferentColor(collector.get(0))) {
@@ -260,18 +273,47 @@ class KlondikeBoard extends GameBoard<String> {
                 .moveToTarget(candidate);
     }
 
+    protected KlondikeBoard removeFromSource(Candidate candidate) {
+        switch (candidate.origin()) {
+            case COLUMN -> removeFromColumn(candidate);
+            case DECKPILE -> removeFromDeck(candidate);
+            case FOUNDATION -> foundations.get(candidate.from()).pop();
+        }
+        return this;
+    }
+
+    private void removeFromDeck(Candidate candidate) {
+        if (candidate.target() == DECKPILE) {
+            candidate.cards().forEach(it -> deck.pop());
+        } else {
+            deckPile.pop();
+        }
+    }
+
     protected KlondikeBoard moveToTarget(Candidate candidate) {
         path.add(candidate.notation());
 
-        if (candidate.isToColumn()) {
-            appendToTargetColumn(candidate);
-            if (isScorable(candidate)) {
-                totalScore += 5;
-            }
-        } else if (candidate.isToFoundation()) {
-            moveToFoundation(candidate);
+        switch (candidate.target()) {
+            case COLUMN -> addToTargetColumn(candidate);
+            case FOUNDATION -> moveToFoundation(candidate);
+            case DECKPILE -> moveToDeskPile(candidate);
         }
         return this;
+    }
+
+    private void moveToDeskPile(Candidate candidate) {
+        range(0, candidate.cards().size())
+                .map(i -> candidate.cards().size() - i - 1)
+                .mapToObj(i -> candidate.cards().get(i))
+                .forEach(deckPile::add);
+    }
+
+    @Override
+    protected void addToTargetColumn(Candidate candidate) {
+        super.addToTargetColumn(candidate);
+        if (isScorable(candidate)) {
+            totalScore += 5;
+        }
     }
 
     protected boolean isScorable(Candidate candidate) {
@@ -297,20 +339,13 @@ class KlondikeBoard extends GameBoard<String> {
         return false;
     }
 
-    protected KlondikeBoard removeFromSource(Candidate candidate) {
-        switch (candidate.origin()) {
-            case COLUMN -> removeFromColumn(candidate);
-            case DECKPILE -> deckPile.pop();
-            case FOUNDATION -> foundations.get(candidate.from()).pop();
-        }
-        return this;
-    }
-
     protected KlondikeBoard drawDeckCards() {
         if (checkRecycleDeck()) {
-            range(0, drawNumber)
-                    .filter(i -> isNotEmpty(deck()))
-                    .forEach(i -> deckPile().push(deck().pop()));
+            var floor = max(0, deck().size() - drawNumber);
+            var ceiling = Math.min(floor + drawNumber, deck().size());
+            var cards = deck().subList(floor, ceiling);
+
+            updateBoard(new Candidate(new LinkedList<>(cards), DECKPILE, 0, DECKPILE, 0));
             return this;
         }
         return null;
@@ -328,7 +363,6 @@ class KlondikeBoard extends GameBoard<String> {
                 });
         return isNotEmpty(deck());
     }
-
 
     protected void stateChanged(boolean stateChanged) {
         this.stateChanged = stateChanged;
@@ -353,12 +387,36 @@ class KlondikeBoard extends GameBoard<String> {
     @Override
     public int score() {
         if (super.score() == 0) {
-            super.score(calcBoardScore());
+            super.score(-calcHsdHeuristic());
         }
         return super.score();
     }
 
-    private int calcBoardScore() {
-        return foundations().stream().mapToInt(Stack::size).sum();
+    // The smaller, the better
+    private int calcHsdHeuristic() {
+        return Optional.of(range(0, foundations.size()).map(this::calcHsdHeuristic).sum())
+                .orElse(0);
     }
+
+    private int calcHsdHeuristic(int at) {
+        var foundationCard = foundations.get(at).isEmpty() ? null : foundations.get(at).peek();
+
+        if (nonNull(foundationCard) && foundationCard.isKing()) {
+            return 0;
+        }
+        var card = nextCard(foundationCard, at);
+
+        if (deck.contains(card)) {
+            return calcBlocker(deck, card) / drawNumber;
+        } else if (deckPile.contains(card)) {
+            return calcBlocker(deckPile, card);
+        }
+        return columns.stream()
+                .filter(ObjectUtils::isNotEmpty)
+                .filter(it -> it.contains(card))
+                .map(it -> calcBlocker(it, card))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
+    }
+
 }

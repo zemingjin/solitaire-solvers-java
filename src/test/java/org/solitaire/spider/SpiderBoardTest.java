@@ -141,7 +141,7 @@ class SpiderBoardTest {
 
     @Test
     public void test_checkForRuns() {
-        var column = mockRun().setOpenAt(0);
+        var column = mockRun().openAt(0);
         board.columns().set(0, column);
         var candidate = buildCandidate(0, COLUMN, List.of(column.peek()), 0);
 
@@ -158,7 +158,7 @@ class SpiderBoardTest {
         assertEquals(600, board.totalScore());
 
         board.path().clear();
-        column = mockRun().setOpenAt(0);
+        column = mockRun().openAt(0);
         board.columns().set(0, column);
         column.remove(12);
         result = board.checkForRun(candidate);
@@ -251,7 +251,7 @@ class SpiderBoardTest {
 
     @Test
     public void test_getOrderedCardsAtColumn() {
-        var result = board.getOrderedCardsAtColumn(mockRun().setOpenAt(0));
+        var result = board.getOrderedCardsAtColumn(mockRun().openAt(0));
 
         assertNotNull(result);
         assertTrue(isNotEmpty(result));

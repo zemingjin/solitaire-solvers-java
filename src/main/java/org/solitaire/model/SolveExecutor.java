@@ -16,8 +16,9 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("rawtypes")
-public class SolveExecutor<T extends Board<?>> implements GameSolver {
+public class SolveExecutor<T extends Board<?, ?>> implements GameSolver {
     private static boolean singleSolution = false;
+    private static int hsdDepth = 6;
 
     private final Stack<BoardStack<T>> stack = new Stack<>();
     private final List<List> solutions = new ArrayList<>();
@@ -41,6 +42,15 @@ public class SolveExecutor<T extends Board<?>> implements GameSolver {
 
     public static void singleSolution(boolean singleSolution) {
         SolveExecutor.singleSolution = singleSolution;
+    }
+
+
+    public static int hsdDepth() {
+        return hsdDepth;
+    }
+
+    public static void hsdDepth(int hsdDepth) {
+        SolveExecutor.hsdDepth = hsdDepth;
     }
 
     public Stack<BoardStack<T>> stack() {

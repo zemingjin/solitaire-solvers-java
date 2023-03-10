@@ -31,9 +31,9 @@ class SpiderHelperTest {
         assertNotNull(state);
         assertEquals(LAST_COLUMN, state.columns().size());
         assertEquals(6, state.columns().get(0).size());
-        assertEquals(5, state.columns().get(0).getOpenAt());
+        assertEquals(5, state.columns().get(0).openAt());
         assertEquals(5, state.columns().get(4).size());
-        assertEquals(4, state.columns().get(4).getOpenAt());
+        assertEquals(4, state.columns().get(4).openAt());
         assertEquals("0:4h", state.columns().get(0).get(0).toString());
         assertEquals("5:Th", state.columns().get(0).peek().toString());
         assertEquals("18:As", state.columns().get(3).get(0).toString());
