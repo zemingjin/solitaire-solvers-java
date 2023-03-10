@@ -9,17 +9,17 @@ import java.util.Optional;
 import static java.util.Collections.emptyList;
 
 @Slf4j
-public class GameBoard<R> implements Board<R, Candidate> {
+public class GameBoard implements Board<String, Candidate> {
     protected final Columns columns;
-    protected final Path<R> path;
+    protected final Path<String> path;
     protected int totalScore;
     private transient int score = 0;
 
-    public GameBoard(Columns columns, Path<R> path) {
+    public GameBoard(Columns columns, Path<String> path) {
         this(columns, path, 0);
     }
 
-    public GameBoard(Columns columns, Path<R> path, int totalScore) {
+    public GameBoard(Columns columns, Path<String> path, int totalScore) {
         this.columns = columns;
         this.path = path;
         this.totalScore = totalScore;
@@ -48,13 +48,18 @@ public class GameBoard<R> implements Board<R, Candidate> {
     }
 
     @Override
-    public boolean isCleared() {
+    public boolean isSolved() {
         return columns.isCleared();
     }
 
     @Override
-    public Path<R> path() {
+    public Path<String> path() {
         return path;
+    }
+
+    @Override
+    public List<Candidate> findCandidates() {
+        return emptyList();
     }
 
     public Columns columns() {
@@ -76,7 +81,7 @@ public class GameBoard<R> implements Board<R, Candidate> {
     }
 
     @Override
-    public Board<R, Candidate> updateBoard(Candidate candidate) {
+    public Board<String, Candidate> updateBoard(Candidate candidate) {
         return null;
     }
 

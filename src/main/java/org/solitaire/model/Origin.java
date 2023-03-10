@@ -4,5 +4,7 @@ public enum Origin {
     DECKPILE,
     COLUMN,
     FOUNDATION,
-    FREECELL
+    FREECELL,
+    BOARD,
+    REMOVE,
 }

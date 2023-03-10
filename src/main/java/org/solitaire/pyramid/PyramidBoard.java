@@ -1,13 +1,14 @@
 package org.solitaire.pyramid;
 
 import org.solitaire.model.Board;
+import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,12 +16,15 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Origin.BOARD;
+import static org.solitaire.model.Origin.DECKPILE;
+import static org.solitaire.model.Origin.REMOVE;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD_INDEX;
 import static org.solitaire.pyramid.PyramidHelper.isBoardCard;
@@ -28,16 +32,14 @@ import static org.solitaire.pyramid.PyramidHelper.row;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
-import static org.solitaire.util.CardHelper.toArray;
 
-public class PyramidBoard implements Board<Card[], Card[]> {
+public class PyramidBoard implements Board<Card[], Candidate> {
     private final Card[] cards;
     private final Stack<Card> deck;
     private final Stack<Card> flippedDeck;
     private final Path<Card[]> path;
     private int recycleCount;
     private transient int score = 0;
-    private transient List<Card[]> candidates;
 
     public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
         this.cards = cards;
@@ -79,48 +81,41 @@ public class PyramidBoard implements Board<Card[], Card[]> {
         this.recycleCount = recycleCount;
     }
 
-    public boolean isCleared() {
+    public boolean isSolved() {
         return CardHelper.isCleared(cards);
-    }
-
-    protected List<Card[]> candidates() {
-        return candidates;
-    }
-
-    protected void candidates(List<Card[]> candidates) {
-        this.candidates = candidates;
     }
 
     /***************************************************************************************************************
      * Find Candidates
      **************************************************************************************************************/
-    protected List<Card[]> findCandidates() {
-        if (candidates() != null) {
-            var save = candidates();
-
-            candidates(null);
-            return save;
-        }
-        var collect = new LinkedList<Card[]>();
+    @Override
+    public List<Candidate> findCandidates() {
         var openCards = findOpenCards();
 
-        range(0, openCards.size())
-                .forEach(i -> findPairsOf13(collect, openCards, i));
-        return collect;
+        var candidates = range(0, openCards.size())
+                .mapToObj(i -> findPairsOf13(openCards, i))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        if (candidates.isEmpty()) {
+            return Optional.ofNullable(drawDeckCard()).map(List::of).orElseGet(Collections::emptyList);
+        }
+        return candidates;
     }
 
-    private void findPairsOf13(LinkedList<Card[]> collect, List<Card> openCards, int i) {
+
+    private List<Candidate> findPairsOf13(List<Card> openCards, int i) {
         var card = openCards.get(i);
 
         if (card.isKing()) {
-            collect.add(0, toArray(card));
-        } else {
-            range(i + 1, openCards.size())
-                    .mapToObj(openCards::get)
-                    .filter(it -> it.isNotKing() && (card.rank() + it.rank()) == 13)
-                    .map(it -> toArray(card, it))
-                    .forEach(collect::add);
+            return List.of(buildCandidate(List.of(card), BOARD, REMOVE));
         }
+        return range(i + 1, openCards.size())
+                .mapToObj(openCards::get)
+                .filter(it -> it.isNotKing() && (card.rank() + it.rank()) == 13)
+                .map(it -> List.of(card, it))
+                .map(it -> buildCandidate(it, BOARD, REMOVE))
+                .toList();
     }
 
     protected List<Card> findOpenCards() {
@@ -163,13 +158,9 @@ public class PyramidBoard implements Board<Card[], Card[]> {
         return row == 7 || (isNull(cards[coveredBy]) && isNull(cards[coveredBy + 1]));
     }
 
-    /***************************************************************************************************************
-     * Update State
-     **************************************************************************************************************/
-    public PyramidBoard drawDeckCards() {
+    public Candidate drawDeckCard() {
         if (checkDeck()) {
-            flippedDeck.push(deck.pop());
-            return this;
+            return buildCandidate(List.of(deck.peek()), DECKPILE, DECKPILE);
         }
         return null;
     }
@@ -183,10 +174,18 @@ public class PyramidBoard implements Board<Card[], Card[]> {
         return isNotEmpty(deck);
     }
 
+    /***************************************************************************************************************
+     * Update State
+     **************************************************************************************************************/
     @Override
-    public PyramidBoard updateBoard(Card[] candidate) {
-        stream(candidate).forEach(this::removeCardFromBoard);
-        path.add(candidate);
+    public PyramidBoard updateBoard(Candidate candidate) {
+        var cards = candidate.cards();
+        if (candidate.target() == DECKPILE) {
+            flippedDeck.push(cards.get(0));
+        } else {
+            path.add(cards.toArray(new Card[0]));
+        }
+        cards.forEach(this::removeCardFromBoard);
         return this;
     }
 
@@ -209,10 +208,13 @@ public class PyramidBoard implements Board<Card[], Card[]> {
     @Override
     public int score() {
         if (score == 0) {
-            candidates(findCandidates());
-            score(candidates.size());
+            score(-calcBlockers());
         }
         return score;
+    }
+
+    private int calcBlockers() {
+        return (int) Stream.of(cards).filter(Objects::nonNull).count();
     }
 
     protected void score(int score) {

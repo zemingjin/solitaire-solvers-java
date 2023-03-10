@@ -11,7 +11,6 @@ import org.solitaire.model.Path;
 import java.util.Collection;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,6 +32,8 @@ import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.THREE;
+import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +48,7 @@ class SpiderTest {
 
         board = spy(board);
         spider = MockSpider.build();
+        spider.isPrint(false);
         spider.cloner(i -> board);
         spider.stack().clear();
         spider.addBoard(board);
@@ -66,20 +68,20 @@ class SpiderTest {
         range(0, 12).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
         var board = spider.board();
         assertNotNull(board);
-        assertEquals(33, board.path().size());
+        assertEquals(48, board.path().size());
     }
 
     @Test
     public void test_solve_cleared() {
-        when(board.isCleared()).thenReturn(true);
+        when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(mockPath());
 
         var result = spider.solve();
 
         assertNotNull(result);
         assertEquals(ONE, result.size());
-        verify(board, times(ONE)).isCleared();
-        verify(board, times(FOUR)).path();
+        verify(board, times(TWO)).isSolved();
+        verify(board, times(THREE)).path();
         assertEquals(ZERO, spider.totalScenarios());
     }
 
@@ -92,21 +94,20 @@ class SpiderTest {
 
         assertNotNull(result);
         assertEquals(SOLUTION_LIMIT, result.size());
-        verify(board, times(ZERO)).isCleared();
         assertEquals(ZERO, spider.totalScenarios());
     }
 
     @Test
     public void test_solve_applyCandidates() {
-        when(board.isCleared()).thenReturn(false);
+        when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(mockCandidateList());
         when(board.updateBoard(candidate)).thenReturn(board);
 
         spider.solve();
 
-        verify(board, times(ONE)).isCleared();
-        verify(board, times(ONE)).findCandidates();
-        verify(board, times(ONE)).updateBoard(candidate);
+        verify(board, times(TWO)).isSolved();
+        verify(board).findCandidates();
+        verify(board).updateBoard(candidate);
         verify(board, times(ZERO)).drawDeck();
         assertEquals(1, spider.totalScenarios());
     }
@@ -120,21 +121,6 @@ class SpiderTest {
         assertFalse(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
         assertEquals(0, spider.totalScenarios());
-    }
-
-    @Test
-    public void test_solve_drawDeck() {
-        when(board.isCleared()).thenReturn(false);
-        when(board.findCandidates()).thenReturn(emptyList());
-        when(board.drawDeck()).thenReturn(true);
-
-        spider.solve();
-
-        verify(board, times(ONE)).isCleared();
-        verify(board, times(ONE)).findCandidates();
-        verify(board, times(ONE)).drawDeck();
-        assertEquals(1, spider.totalScenarios());
-        assertTrue(((MockSpider) spider).first);
     }
 
     @Test
@@ -156,25 +142,6 @@ class SpiderTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
-    }
-
-    @Test
-    public void test_drawDeck() {
-        when(board.drawDeck()).thenReturn(true);
-
-        spider.drawDeck(board);
-
-        verify(board, times(ONE)).drawDeck();
-        assertTrue(((MockSpider) spider).first);
-    }
-
-    @Test
-    public void test_drawDeck_fail() {
-        when(board.drawDeck()).thenReturn(false);
-
-        spider.drawDeck(board);
-
-        verify(board, times(ONE)).drawDeck();
     }
 
     @Test

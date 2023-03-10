@@ -21,6 +21,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidHelper.getClickScore;
+import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
@@ -35,6 +36,7 @@ public class PyramidTest {
 
     @BeforeEach
     public void setup() {
+        useSuit(false);
         board = spy(board);
         pyramid = build(cards);
         pyramid.cloner(it -> board);
@@ -45,7 +47,7 @@ public class PyramidTest {
     @Test
     public void test_solve() {
         when(board.path()).thenReturn(new Path<>());
-        when(board.isCleared()).thenReturn(true);
+        when(board.isSolved()).thenReturn(true);
 
         var result = pyramid.solve();
 

@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
-import static org.solitaire.spider.SpiderHelper.LAST_DECK;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
@@ -90,12 +89,12 @@ class SpiderBoardTest {
 
     @Test
     public void test_isClear() {
-        assertFalse(board.isCleared());
+        assertFalse(board.isSolved());
 
         board.columns().forEach(List::clear);
         board.deck.clear();
 
-        assertTrue(board.isCleared());
+        assertTrue(board.isSolved());
     }
 
     @Test
@@ -122,21 +121,6 @@ class SpiderBoardTest {
         column.clear();
         column.add(card);
         assertFalse(board.isMovable(candidate));
-    }
-
-    @Test
-    public void test_drawDeck() {
-        assertEquals(LAST_DECK, board.deck.size());
-
-        assertTrue(board.drawDeck());
-
-        assertEquals(LAST_DECK - board.columns().size(), board.deck.size());
-        assertEquals("5s", board.columns().get(0).peek().raw());
-        assertEquals("Qh", board.columns().get(9).peek().raw());
-
-        board.deck.clear();
-
-        assertFalse(board.drawDeck());
     }
 
     @Test
@@ -218,6 +202,20 @@ class SpiderBoardTest {
 
         assertEquals(4, column.size());
         assertNotEquals("33:2h", column.peek().toString());
+
+        assertEquals(50, board.deck().size());
+        board.removeFromSource(board.drawDeck().get(0));
+        assertEquals(40, board.deck().size());
+    }
+
+    @Test
+    void test_drawDeck() {
+        var candidates = board.drawDeck();
+        assertEquals(1, candidates.size());
+        assertEquals("d0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9s, Qh]", candidates.get(0).notation());
+
+        board.deck().clear();
+        assertTrue(board.drawDeck().isEmpty());
     }
 
     @Test

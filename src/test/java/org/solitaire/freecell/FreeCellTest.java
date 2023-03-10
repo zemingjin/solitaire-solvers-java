@@ -43,14 +43,13 @@ class FreeCellTest {
 
     @Test
     public void test_solve_hsd_noclone() {
-        hsd.cloner(a -> null);
         assertTrue(singleSolution());
 
         var result = hsd.solve();
 
         assertNotNull(result);
         assertEquals(ZERO, result.size());
-        assertEquals(ONE, hsd.totalScenarios());
+        assertEquals(9, hsd.totalScenarios());
     }
 
     @Test
@@ -60,7 +59,7 @@ class FreeCellTest {
 
         assertNotNull(result);
         assertEquals(ONE, result.size());
-        assertEquals(121, dfs.totalScenarios());
+        assertEquals(115, dfs.totalScenarios());
     }
 
     @Test

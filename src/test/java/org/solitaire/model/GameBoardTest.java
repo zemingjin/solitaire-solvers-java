@@ -19,10 +19,10 @@ public class GameBoardTest {
 
     public final static String[] cards = IOHelper.loadFile(TEST_FILE);
 
-    private GameBoard<String> board;
+    private GameBoard board;
 
-    private static GameBoard<String> mockState(GameBoard<String> board) {
-        return new GameBoard<>(new Columns(board.columns), new Path<>(board.path), board.totalScore);
+    private static GameBoard mockState(GameBoard board) {
+        return new GameBoard(new Columns(board.columns), new Path<>(board.path), board.totalScore);
     }
 
     @BeforeEach

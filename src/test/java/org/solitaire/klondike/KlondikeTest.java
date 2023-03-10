@@ -51,6 +51,7 @@ class KlondikeTest {
         useSuit(false);
         singleSolution(false);
         klondike = mockKlondike();
+        klondike.isPrint(false);
     }
 
     @Test
@@ -62,12 +63,12 @@ class KlondikeTest {
 
     @Test
     public void test_solve_cleared() {
-        when(board.isCleared()).thenReturn(true);
+        when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(new Path<>());
         var result = klondike.solve();
 
         assertNotNull(result);
-        assertEquals(ONE, result.size());
+        assertEquals(TWO, result.size());
         assertTrue(result.get(0).isEmpty());
         assertEquals(ZERO, klondike.totalScenarios());
     }
@@ -77,15 +78,14 @@ class KlondikeTest {
         var candidates = List.of(
                 buildCandidate(4, COLUMN, buildCard(0, "Ac")),
                 buildCandidate(3, COLUMN, buildCard(1, "3d")));
-        when(board.isCleared()).thenReturn(false);
+        when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(candidates);
         when(board.updateBoard(any())).thenReturn(null);
-        when(board.drawDeckCards()).thenReturn(null);
 
         var result = klondike.solve();
 
-        assertEquals("[]", result.toString());
-        verify(board, times(ONE)).isCleared();
+        assertEquals("[[]]", result.toString());
+        verify(board, times(TWO)).isSolved();
         verify(board, times(ONE)).findCandidates();
         verify(board, times(TWO)).updateBoard(any());
         assertEquals(1, klondike.totalScenarios());
@@ -93,15 +93,13 @@ class KlondikeTest {
 
     @Test
     public void test_solve_drawDeck() {
-        when(board.isCleared()).thenReturn(false);
+        when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(emptyList());
-        when(board.drawDeckCards()).thenReturn(null);
 
         klondike.solve();
 
-        verify(board, times(ONE)).isCleared();
+        verify(board, times(TWO)).isSolved();
         verify(board, times(ONE)).findCandidates();
-        verify(board, times(ONE)).drawDeckCards();
         assertEquals(1, klondike.totalScenarios());
     }
 
@@ -137,7 +135,7 @@ class KlondikeTest {
         board = klondike.board();
 
         assertNotNull(board);
-        assertEquals(20, board.path().size());
+        assertEquals(60, board.path().size());
     }
 
     private Klondike mockKlondike() {

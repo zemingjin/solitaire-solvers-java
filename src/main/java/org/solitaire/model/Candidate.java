@@ -24,6 +24,10 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
         return buildCandidate(from, origin, cards, -1);
     }
 
+    public static Candidate buildCandidate(List<Card> cards, Origin origin, Origin target) {
+        return new Candidate(cards, origin, cards.get(0).at(), target, 0);
+    }
+
     public static Candidate buildCandidate(int from, Origin origin, List<Card> cards, int to) {
         return new Candidate(cards, origin, from, null, to);
     }
@@ -45,6 +49,7 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
             case COLUMN -> Integer.toString(from);
             case FREECELL -> "f";
             case DECKPILE -> "d";
+            case BOARD -> "b";
             default -> throw new RuntimeException("Invalid Origin: " + this);
         };
     }
@@ -55,6 +60,8 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
             case FREECELL -> "f";
             case FOUNDATION -> "F";
             case DECKPILE -> "D";
+            case BOARD -> "b";
+            case REMOVE -> "r";
         };
     }
 

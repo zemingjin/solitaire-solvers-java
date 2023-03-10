@@ -1,28 +1,25 @@
 package org.solitaire.tripeaks;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.SolveExecutor;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Stack;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 
-@SuppressWarnings("rawtypes")
-public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
+public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
     private static final int BOARD_BONUS = 5000;
 
     public TriPeaks(Card[] cards, Stack<Card> wastePile) {
         super(new TriPeaksBoard(cards, wastePile), TriPeaksBoard::new);
-        solveBoard(this::solve);
+        solveBoard(this::solveByDFS);
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public List<List> solve() {
         var verify = board().verify();
@@ -33,28 +30,7 @@ public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
         throw new RuntimeException(verify.toString());
     }
 
-    private void solve(TriPeaksBoard board) {
-        Optional.of(board.findCandidates())
-                .filter(ObjectUtils::isNotEmpty)
-                .map(it -> applyCandidates(it, board))
-                .filter(ObjectUtils::isNotEmpty)
-                .ifPresentOrElse(super::addBoards, () -> drawDeck(board));
-    }
-
-    private List<TriPeaksBoard> applyCandidates(List<Card> candidates, TriPeaksBoard board) {
-        return candidates.stream()
-                .map(it -> clone(board).updateBoard(it))
-                .filter(Objects::nonNull)
-                .toList();
-    }
-
-    private void drawDeck(TriPeaksBoard board) {
-        Optional.ofNullable(board.getTopDeckCard())
-                .map(board::updateBoard)
-                .ifPresent(super::addBoard);
-    }
-
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes unchecked")
     @Override
     public Pair<Integer, List> getMaxScore(List<List> results) {
         requireNonNull(results);
@@ -65,6 +41,7 @@ public class TriPeaks extends SolveExecutor<TriPeaksBoard> {
                 .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
     }
 
+    @SuppressWarnings("rawtypes")
     protected Pair<Integer, List> getScore(List<Card> cards) {
         int score = 0;
         int sequenceCount = 0;

@@ -2,27 +2,26 @@ package org.solitaire.pyramid;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.solitaire.model.Card;
+import org.solitaire.model.Candidate;
 
+import java.util.List;
 import java.util.Objects;
 
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.model.Origin.BOARD;
+import static org.solitaire.model.Origin.REMOVE;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidTest.cards;
-import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
-import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidBoardTest {
@@ -65,58 +64,41 @@ class PyramidBoardTest {
 
         assertNotNull(result);
         assertEquals(3, result.size());
-        assertEquals("Kc", stringOfRaws(result.get(0)));
-        assertNull(board.candidates());
+        assertEquals("[9s, 4c]", stringOfRaws(result.get(0).cards()));
 
-        assertEquals(3.0, board.score());
-        assertSame(board.candidates(), board.findCandidates());
-        assertNull(board.candidates());
+        assertEquals(-28, board.score());
     }
 
     @Test
     public void test_updateState() {
-        board.drawDeckCards();
+        var candidate = board.findCandidates().get(0);
+        var card = candidate.cards().get(0);
 
-        var card = board.flippedDeck().peek();
-        var c = toArray(card);
-
-        board.updateBoard(c);
+        board.updateBoard(candidate);
 
         assertFalse(board.isOpen(card));
         assertTrue(board.flippedDeck().isEmpty());
-        assertTrue(board.path().contains(c));
+        assertEquals("[9s, 4c]", stringOfRaws(board.path().peek()));
         assertEquals(1, board.path().size());
+        assert board.path().peek() != null;
+        assertEquals("27:9s", Objects.requireNonNull(board.path().peek())[0].toString());
+
+        card = board.deck().peek();
+        var c = List.of(card, board.cards()[LAST_BOARD - 2]);
+        board.updateBoard(new Candidate(c, BOARD, 0, REMOVE, 0));
+
+        assertFalse(board.isOpen(card));
+        assertEquals(23, board.deck().size());
+        assertEquals("50:Kh", board.deck().peek().toString());
+        assertEquals(2, board.path().size());
         assert board.path().peek() != null;
         assertEquals("51:Kc", Objects.requireNonNull(board.path().peek())[0].toString());
 
-        card = board.deck().peek();
-        c = new Card[]{card, board.cards()[LAST_BOARD - 1]};
-        board.updateBoard(c);
-
-        assertFalse(board.isOpen(card));
-        assertEquals(22, board.deck().size());
-        assertEquals("49:6c", board.deck().peek().toString());
-        assertTrue(board.path().contains(c));
-        assertEquals(2, board.path().size());
-        assert board.path().peek() != null;
-        assertEquals("50:Kh", Objects.requireNonNull(board.path().peek())[0].toString());
-
-        board.drawDeckCards();
-        card = board.deck().peek();
-        board.updateBoard(toArray(card));
-
-        card = buildCard(LAST_BOARD, "Ad");
-        board.deck().push(card);
-        board.flippedDeck().add(card);
-        board.updateBoard(toArray(card));
-
-        assertNotEquals(board.deck().peek(), card);
-        assertEquals(board.flippedDeck().peek(), card);
     }
 
     @Test
     public void test_recycle() {
-        assertNotNull(board.drawDeckCards());
+        assertNotNull(board.updateBoard(board.drawDeckCard()));
         assertEquals(23, board.deck().size());
         assertEquals(1, board.flippedDeck().size());
 
@@ -124,11 +106,11 @@ class PyramidBoardTest {
             board.flippedDeck().push(board.deck().pop());
         }
         board.recycleCount(1);
-        assertNull(board.drawDeckCards());
+        assertNull(board.drawDeckCard());
         assertEquals(24, board.flippedDeck().size());
 
         board.recycleCount(2);
-        assertNotNull(board.drawDeckCards());
+        assertNotNull(board.updateBoard(board.drawDeckCard()));
         assertEquals(23, board.deck().size());
         assertEquals(1, board.flippedDeck().size());
         assertEquals("51:Kc", board.flippedDeck().peek().toString());
