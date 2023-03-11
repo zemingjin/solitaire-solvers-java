@@ -3,8 +3,8 @@ package org.solitaire.model;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,30 +17,30 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 @SuppressWarnings("rawtypes")
 public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
-    private final Function<List<T>, List<T>> checkReducingBoards = boards ->
-            isReducingBoards()
-                    ? range(boards.size() * 3 / 5, boards.size()).mapToObj(boards::get).toList()
-                    : boards;
+    //        private final Function<List<T>, List<T>> checkReducingBoards = boards ->
+//            isReducingBoards()
+//                    ? range(boards.size() * 3 / 5, boards.size()).mapToObj(boards::get).toList()
+//                    : boards;
     private static boolean singleSolution = false;
     private static int hsdDepth = 6;
+    private static boolean isPrint = true;
 
     private final Stack<BoardStack<T>> stack = new Stack<>();
-    private final List<List> solutions = new ArrayList<>();
+    private final List<Consumer<List<S>>> solutionConsumers = new LinkedList<>();
     private int totalScenarios = 0;
+    private int totalSolutions = 0;
     private int maxStack = 0;
-    private boolean isPrint = true;
     private Function<T, T> cloner;
-    private Consumer<T> solveBoard;
-    private boolean isReducingBoards = false;
+    private List<S> shortestPath;
+    private List<S> longestPath;
 
     public SolveExecutor(T board) {
         addBoard(board);
-        solveBoard(singleSolution() ? this::solveByHSD : this::solveByDFS);
+        addSolutionConsumer(this::defaultSolutionConsumer);
     }
 
     public SolveExecutor(T board, Function<T, T> cloner) {
@@ -49,7 +49,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     /**************************************************************************************************************
-     * Access
+     * Accessors
      *************************************************************************************************************/
     public static boolean singleSolution() {
         return singleSolution;
@@ -57,14 +57,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     public static void singleSolution(boolean singleSolution) {
         SolveExecutor.singleSolution = singleSolution;
-    }
-
-    public boolean isPrint() {
-        return isPrint;
-    }
-
-    public void isPrint(boolean isPrint) {
-        this.isPrint = isPrint;
     }
 
     public static int hsdDepth() {
@@ -75,27 +67,19 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         SolveExecutor.hsdDepth = hsdDepth;
     }
 
-    public Stack<BoardStack<T>> stack() {
-        return this.stack;
+    public static boolean isPrint() {
+        return isPrint;
     }
 
-    public void solveBoard(Consumer<T> solveBoard) {
-        this.solveBoard = solveBoard;
-    }
-
-    public boolean isReducingBoards() {
-        return isReducingBoards;
-    }
-
-    public void isReducingBoards(boolean isReducingBoards) {
-        this.isReducingBoards = isReducingBoards;
+    public static void isPrint(boolean isPrint) {
+        SolveExecutor.isPrint = isPrint;
     }
 
     /**************************************************************************************************************
      * Execution routines
      *************************************************************************************************************/
     @Override
-    public List<List> solve() {
+    public void solve() {
         var verify = board().verify();
 
         if (verify.isEmpty()) {
@@ -107,18 +91,17 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                         .map(this::getBoard)
                         .ifPresent(this::processBoard);
             }
-            return solutions();
+        } else {
+            throw new RuntimeException(verify.toString());
         }
-        throw new RuntimeException(verify.toString());
     }
 
     public void solveByDFS(T board) {
-        Optional.of(board.findCandidates())
-                .filter(ObjectUtils::isNotEmpty)
-                .map(it -> applyCandidates(it, board))
+        Optional.of(board)
+                .map(this::searchBoard)
                 .map(Stream::toList)
                 .filter(ObjectUtils::isNotEmpty)
-                .map(checkReducingBoards)
+//                .map(checkReducingBoards)
                 .ifPresent(this::addBoards);
     }
 
@@ -126,7 +109,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         var boards = List.of(board);
 
         for (int i = 1; i <= hsdDepth() && isNotEmpty(boards); i++) {
-            boards = boards.stream().flatMap(this::search).toList();
+            boards = boards.stream().flatMap(this::searchBoard).toList();
         }
         Optional.of(boards)
                 .filter(ObjectUtils::isNotEmpty)
@@ -136,7 +119,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                 .ifPresent(this::addBoard);
     }
 
-    private Stream<T> search(T board) {
+    private Stream<T> searchBoard(T board) {
         return Optional.of(board)
                 .map(T::findCandidates)
                 .filter(ObjectUtils::isNotEmpty)
@@ -148,6 +131,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     @SuppressWarnings("unchecked")
     public Stream<T> applyCandidates(List<U> candidates, T board) {
         return (Stream<T>) candidates.stream()
+                .peek(it -> totalScenarios++)
                 .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull);
     }
@@ -156,30 +140,36 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
      * Helper routines
      *************************************************************************************************************/
     public boolean isContinuing() {
-        return !singleSolution || solutions.size() != 1;
+        return !singleSolution() || totalSolutions() != 1;
     }
 
     public boolean checkBoard(T board) {
         if (board.isSolved()) {
-            solutions.add(board.path());
-            if (nonNull(board.path()) && isNotEmpty(board.path()) && isPrint()) {
-                System.out.printf("%d: %s\n", board.path().size(), board.path());
-            }
+            solutionConsumers.forEach(it -> it.accept(board.path()));
             return false;
         }
         return true;
     }
 
     private void processBoard(T board) {
-        if (checkBoard(board)) {
-            totalScenarios++;
-            requireNonNull(solveBoard).accept(board);
-        }
+        Optional.of(board)
+                .filter(this::checkBoard)
+                .ifPresent(it -> solveBoard().accept(it));
     }
 
-    @Override
-    public Pair<Integer, List> getMaxScore(List<List> results) {
-        throw new RuntimeException("Not implemented");
+    protected void defaultSolutionConsumer(List<S> path) {
+        totalSolutions(totalSolutions() + 1);
+        if (nonNull(path) && isNotEmpty(path)) {
+            if (isNull(shortestPath()) || shortestPath().size() > path.size()) {
+                shortestPath(path);
+            }
+            if (isNull(longestPath()) || longestPath().size() < path.size()) {
+                longestPath(path);
+            }
+            if (isPrint()) {
+                System.out.printf("%d: %s\n", path.size(), path);
+            }
+        }
     }
 
     @Override
@@ -190,6 +180,11 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     @Override
     public int maxDepth() {
         return maxStack;
+    }
+
+    @Override
+    public Pair<Integer, List> maxScore() {
+        throw new RuntimeException("Not supported!");
     }
 
     private T getBoard(BoardStack<T> boards) {
@@ -224,10 +219,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         return stack.peek().peek();
     }
 
-    public List<List> solutions() {
-        return this.solutions;
-    }
-
     public int maxStack() {
         return this.maxStack;
     }
@@ -243,4 +234,52 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     protected T getBestBoard(Stream<T> boards) {
         return boards.reduce(null, (a, b) -> isNull(a) || b.score() >= a.score() ? b : a);
     }
+
+    public Stack<BoardStack<T>> stack() {
+        return this.stack;
+    }
+
+    public Consumer<T> solveBoard() {
+        return singleSolution() ? this::solveByHSD : this::solveByDFS;
+    }
+
+    public List<Consumer<List<S>>> solutionConsumers() {
+        return solutionConsumers;
+    }
+
+    public void addSolutionConsumer(Consumer<List<S>> consumer) {
+        solutionConsumers().add(consumer);
+    }
+
+    public boolean removeSolutionConsumer(Consumer<List<S>> consumer) {
+        return solutionConsumers().remove(consumer);
+    }
+
+    @Override
+    public List<S> shortestPath() {
+        return shortestPath;
+    }
+
+    public void shortestPath(List<S> shortestPath) {
+        this.shortestPath = shortestPath;
+    }
+
+    @Override
+    public List<S> longestPath() {
+        return longestPath;
+    }
+
+    public void longestPath(List<S> longestPath) {
+        this.longestPath = longestPath;
+    }
+
+    @Override
+    public int totalSolutions() {
+        return totalSolutions;
+    }
+
+    public void totalSolutions(int totalSolutions) {
+        this.totalSolutions = totalSolutions;
+    }
+
 }

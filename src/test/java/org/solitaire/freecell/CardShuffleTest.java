@@ -20,7 +20,7 @@ class CardShuffleTest {
     }
 
     @Test
-    public void test_genBoard() {
+    void test_genBoard() {
         var card = cardShuffle.genBoard(1);
 
         assertNotNull(card);

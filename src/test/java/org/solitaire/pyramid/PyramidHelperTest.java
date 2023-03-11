@@ -1,6 +1,5 @@
 package org.solitaire.pyramid;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
@@ -25,35 +24,30 @@ import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidHelperTest {
     private Pyramid pyramid;
-    @SuppressWarnings("rawtypes")
-    private Pair<Integer, List> maxScore;
-    private List<Card[]> list;
 
     @BeforeEach
-    @SuppressWarnings("unchecked")
     void setup() {
         useSuit(false);
         singleSolution(false);
         pyramid = build(cards);
         pyramid.isPrint(false);
-        maxScore = pyramid.getMaxScore(pyramid.solve());
-        list = (List<Card[]>) maxScore.getRight();
-        pyramid = build(cards);
     }
 
     @Test
-    public void test_build() {
+    void test_build() {
         assertNotNull(pyramid);
         assertEquals(28, Objects.requireNonNull(pyramid.stack().peek().peek()).cards().length);
         assertEquals(24, Objects.requireNonNull(pyramid.stack().peek().peek()).deck().size());
 
+        pyramid.solve();
+        var maxScore = pyramid.maxScore();
         assertNotNull(maxScore);
         assertEquals(1290, maxScore.getLeft());
         assertEquals(28, maxScore.getRight().size());
     }
 
     @Test
-    public void test_cardAt() {
+    void test_cardAt() {
         var a = buildCard(1, "As");
         var b = buildCard(27, "Qs");
 
@@ -73,14 +67,20 @@ class PyramidHelperTest {
 
 
     @Test
-    public void test_getScore() {
+    void test_getScore() {
+        pyramid.solve();
+        var list = (List<Card[]>) pyramid.shortestPath();
+
         assertEquals(30, getScore(row(cardAt(list.get(9)).at()), 9, list));
         assertEquals(55, getScore(row(cardAt(list.get(16)).at()), 16, list));
         assertEquals(5, getScore(row(cardAt(list.get(17)).at()), 17, list));
     }
 
     @Test
-    public void test_isRowCleared() {
+    void test_isRowCleared() {
+        pyramid.solve();
+        var list = (List<Card[]>) pyramid.shortestPath();
+
         assertTrue(isRowCleared(row(cardAt(list.get(9)).at()), 9, list));
         assertTrue(isRowCleared(row(cardAt(list.get(16)).at()), 16, list));
     }

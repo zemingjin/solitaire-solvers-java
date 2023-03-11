@@ -3,43 +3,43 @@ package org.solitaire.tripeaks;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.SolveExecutor;
+import org.solitaire.util.MaxScore;
 
 import java.util.List;
 import java.util.Stack;
 
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 
 public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
     private static final int BOARD_BONUS = 5000;
 
+    private final MaxScore maxScore = new MaxScore(this::getScore);
+
     public TriPeaks(Card[] cards, Stack<Card> wastePile) {
         super(new TriPeaksBoard(cards, wastePile), TriPeaksBoard::new);
-        solveBoard(this::solveByDFS);
-        isReducingBoards(false);
+        addSolutionConsumer(this::solutionConsumer);
+    }
+
+    protected void solutionConsumer(List<Card> path) {
+        maxScore.score(path);
+    }
+
+    @Override
+    public void solve() {
+        var verify = board().verify();
+
+        if (verify.isEmpty()) {
+            super.solve();
+        } else {
+            throw new RuntimeException(verify.toString());
+        }
     }
 
     @SuppressWarnings("rawtypes")
     @Override
-    public List<List> solve() {
-        var verify = board().verify();
-
-        if (verify.isEmpty()) {
-            return super.solve();
-        }
-        throw new RuntimeException(verify.toString());
-    }
-
-    @SuppressWarnings("rawtypes unchecked")
-    @Override
-    public Pair<Integer, List> getMaxScore(List<List> results) {
-        requireNonNull(results);
-
-        return results.stream()
-                .map(it -> (List<Card>) it)
-                .map(this::getScore)
-                .reduce(Pair.of(0, null), (a, b) -> a.getLeft() >= b.getLeft() ? a : b);
+    public Pair<Integer, List> maxScore() {
+        return maxScore.maxScore();
     }
 
     @SuppressWarnings("rawtypes")

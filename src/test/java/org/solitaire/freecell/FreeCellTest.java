@@ -3,29 +3,32 @@ package org.solitaire.freecell;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Columns;
+import org.solitaire.util.IOHelper;
 
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.freecell.FreeCell.SOLUTION_LIMIT;
 import static org.solitaire.freecell.FreeCellHelper.buildBoard;
-import static org.solitaire.freecell.FreeCellHelperTest.cards;
+import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.useSuit;
-import static org.solitaire.util.CardHelperTest.ONE;
-import static org.solitaire.util.CardHelperTest.ZERO;
 
 class FreeCellTest {
+    private static final String TEST_FILE = "games/freecell/freecell-020623-easy.txt";
+    protected static final String[] cards = IOHelper.loadFile(TEST_FILE);
+
     private FreeCell dfs;
     private FreeCellHSD hsd;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         useSuit(false);
         singleSolution(false);
+        isPrint(false);
         dfs = new FreeCell(buildBoard(cards));
         FreeCellHSD.add(true);
         singleSolution(true);
@@ -33,38 +36,32 @@ class FreeCellTest {
     }
 
     @Test
-    public void test_solveByHSD() {
+    void test_solveByHSD() {
         dfs.solveByHSD(dfs.stack().pop().peek());
 
-        assertEquals(ZERO, dfs.totalScenarios());
+        assertEquals(181267, dfs.totalScenarios());
         assertFalse(dfs.stack().isEmpty());
         assertEquals("[6F:Ad, 1F:2d, 4f:4c, 3f:9d, 3f:8s, 35:8h]", dfs.board().path().toString());
     }
 
     @Test
-    public void test_solve_hsd_noclone() {
+    void test_solve_hsd_noclone() {
         assertTrue(singleSolution());
 
-        var result = hsd.solve();
+        hsd.solve();
 
-        assertNotNull(result);
-        assertEquals(ZERO, result.size());
-        assertEquals(9, hsd.totalScenarios());
+        assertEquals(217942, hsd.totalScenarios());
     }
 
     @Test
-    public void test_solve_dfs() {
-        singleSolution(true);
-        var result = dfs.solve();
+    void test_solve_dfs() {
+        singleSolution(false);
+        dfs.solve();
 
-        assertNotNull(result);
-        assertEquals(ONE, result.size());
-        assertEquals(115, dfs.totalScenarios());
-    }
-
-    @Test
-    public void test_getMaxScore() {
-        assertThrows(RuntimeException.class, () -> dfs.getMaxScore(null));
+        assertEquals(3162, dfs.totalScenarios());
+        assertEquals(SOLUTION_LIMIT, dfs.totalSolutions());
+        assertEquals(98, dfs.shortestPath().size());
+        assertEquals(99, dfs.longestPath().size());
     }
 
     @Test
@@ -81,11 +78,10 @@ class FreeCellTest {
         FreeCellHSD(Columns columns) {
             super(columns);
             singleSolution(true);
-            solveBoard(this::solveByHSD);
         }
 
-        public static void add(boolean add) {
-            FreeCellHSD.add = add;
+        static void add(boolean given) {
+            FreeCellHSD.add = given;
         }
 
         @Override

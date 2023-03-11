@@ -12,18 +12,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.util.CardHelper.useSuit;
 
-public class CardTest {
+class CardTest {
     private static Card buildCard(String value) {
         return CardHelper.buildCard(30, value);
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         useSuit(false);
     }
 
     @Test
-    public void test_isHigherOfSameColor() {
+    void test_isHigherOfSameColor() {
         var card = buildCard("2d");
 
         assertTrue(card.isHigherOfSameColor(buildCard("Ad")));
@@ -43,7 +43,7 @@ public class CardTest {
     }
 
     @Test
-    public void test_isAdjacent() {
+    void test_isAdjacent() {
         assertTrue(buildCard("3d").isAdjacent(buildCard("2c")));
         assertTrue(buildCard("6d").isAdjacent(buildCard("5c")));
         assertTrue(buildCard("2d").isAdjacent(buildCard("Ac")));
@@ -52,14 +52,14 @@ public class CardTest {
     }
 
     @Test
-    public void test_getters() {
+    void test_getters() {
         var card = buildCard("Ah");
         assertEquals(30, card.at());
         assertEquals("Ah", card.raw());
     }
 
     @Test
-    public void test_equals() {
+    void test_equals() {
         var a = buildCard("Ah");
         var b = CardHelper.buildCard(10, "Ah");
 
@@ -70,7 +70,7 @@ public class CardTest {
     }
 
     @Test
-    public void test_hashCode() {
+    void test_hashCode() {
         var a = buildCard("Ah");
         var b = buildCard("Ah");
 
@@ -91,7 +91,7 @@ public class CardTest {
     }
 
     @Test
-    public void test_isDifferentColor() {
+    void test_isDifferentColor() {
         var a = buildCard("3d");
         var b = buildCard("2h");
 
@@ -108,7 +108,7 @@ public class CardTest {
     }
 
     @Test
-    public void test_isHigherOrderWithDifferentColor() {
+    void test_isHigherOrderWithDifferentColor() {
         var a = buildCard("3d");
         var b = buildCard("2s");
 
@@ -123,7 +123,7 @@ public class CardTest {
     }
 
     @Test
-    public void test_isDifferentColor_exception() {
+    void test_isDifferentColor_exception() {
         var a = buildCard("3d");
         var b = buildCard("5f");
 
@@ -131,7 +131,7 @@ public class CardTest {
     }
 
     @Test
-    public void test_isLowerWithSameSuit() {
+    void test_isLowerWithSameSuit() {
         var a = buildCard("3d");
         var b = buildCard("4d");
 

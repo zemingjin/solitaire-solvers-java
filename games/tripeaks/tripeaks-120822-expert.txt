@@ -1,5 +1,5 @@
-      5c      Th     Kc
-    Qd  8h  5d  9s 2c  6s
-  Td  3s  8d  4d  Ts  2s  Qc  4c  Qs
-4h  2h  5h  Ad  Qh  6c  Ac  Tc  8c  3c
+5c Th Kc
+Qd 8h 5d 9s 2c 6s
+Td 3s 8d 4d Ts 2s Qc 4c Qs
+4h 2h 5h Ad Qh 6c Ac Tc 8c 3c
 Kd 6d 4s Jh 8s 7s Kh 9c 3d 6h 9h 7c Jd 2d 7h Js 9d As Ks 5s 7d Ah 3h Jc

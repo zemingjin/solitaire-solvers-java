@@ -20,12 +20,12 @@ import static org.solitaire.util.CardHelper.useSuit;
 
 class SpiderHelperTest {
     @BeforeEach
-    public void setup() {
+    void setup() {
         useSuit(false);
     }
 
     @Test
-    public void test_build() {
+    void test_build() {
         var state = build(cards).board();
 
         assertNotNull(state);
@@ -48,7 +48,7 @@ class SpiderHelperTest {
 
     @SuppressWarnings("all")
     @Test
-    public void test_calcColumn() {
+    void test_calcColumn() {
         assertEquals(0, calcColumn(0));
         assertEquals(3, calcColumn(LAST_LONG - 1));
         assertEquals(4, calcColumn(LAST_LONG));

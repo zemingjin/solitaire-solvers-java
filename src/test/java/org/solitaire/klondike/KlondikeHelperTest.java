@@ -16,12 +16,12 @@ class KlondikeHelperTest {
     protected static final String[] CARDS = IOHelper.loadFile(TEST_FILE);
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         useSuit(false);
     }
 
     @Test
-    public void test_build() {
+    void test_build() {
         var klondike = KlondikeHelper.build(CARDS).board();
 
         assertNotNull(klondike);
@@ -33,7 +33,7 @@ class KlondikeHelperTest {
     }
 
     @Test
-    public void test_clone() {
+    void test_clone() {
         var state = KlondikeHelper.build(CARDS).board();
         var clone = new KlondikeBoard(state);
 
@@ -41,7 +41,7 @@ class KlondikeHelperTest {
     }
 
     @Test
-    public void test_colStart() {
+    void test_colStart() {
         assertEquals(LAST_DECK, KlondikeHelper.colStart(0));
         assertEquals(LAST_DECK + 1, KlondikeHelper.colStart(1));
         assertEquals(LAST_DECK + 3, KlondikeHelper.colStart(2));

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.Spider.hsdDepth;
@@ -32,7 +33,6 @@ import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.FOUR;
 import static org.solitaire.util.CardHelperTest.ONE;
-import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
@@ -43,12 +43,12 @@ class SpiderTest {
     private Candidate candidate;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         useSuit(false);
+        isPrint(false);
 
         board = spy(board);
         spider = MockSpider.build();
-        spider.isPrint(false);
         spider.cloner(i -> board);
         spider.stack().clear();
         spider.addBoard(board);
@@ -61,7 +61,6 @@ class SpiderTest {
         singleSolution(true);
         hsdDepth(FOUR);
         spider = build(cards);
-        spider.solveBoard(spider::solveByHSD);
 
         assertEquals(FOUR, hsdDepth());
 
@@ -72,33 +71,32 @@ class SpiderTest {
     }
 
     @Test
-    public void test_solve_cleared() {
+    void test_solve_cleared() {
         when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(mockPath());
 
-        var result = spider.solve();
+        spider.solve();
 
-        assertNotNull(result);
-        assertEquals(ONE, result.size());
+        assertEquals(ONE, spider.totalSolutions());
         verify(board, times(TWO)).isSolved();
-        verify(board, times(THREE)).path();
+        verify(board, times(ONE)).path();
         assertEquals(ZERO, spider.totalScenarios());
     }
 
     @Test
-    public void test_solve_solution_limit() {
-        var mock = mockPath();
-        range(0, SOLUTION_LIMIT).forEach(i -> spider.solutions().add(mock));
+    void test_solve_solution_limit() {
+        assertTrue(spider.isContinuing());
+        spider.totalSolutions(SOLUTION_LIMIT);
+        assertFalse(spider.isContinuing());
 
-        var result = spider.solve();
+        spider.solve();
 
-        assertNotNull(result);
-        assertEquals(SOLUTION_LIMIT, result.size());
+        assertEquals(SOLUTION_LIMIT, spider.totalSolutions());
         assertEquals(ZERO, spider.totalScenarios());
     }
 
     @Test
-    public void test_solve_applyCandidates() {
+    void test_solve_applyCandidates() {
         when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(mockCandidateList());
         when(board.updateBoard(candidate)).thenReturn(board);
@@ -113,18 +111,18 @@ class SpiderTest {
     }
 
     @Test
-    public void test_solve_applyCandidates_no_recurse() {
+    void test_solve_applyCandidates_no_recurse() {
         when(board.updateBoard(candidate)).thenReturn(board);
 
         var result = spider.applyCandidates(mockCandidateList(), board).toList();
 
         assertFalse(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
-        assertEquals(0, spider.totalScenarios());
+        assertEquals(1, spider.totalScenarios());
     }
 
     @Test
-    public void test_updateColumns() {
+    void test_updateColumns() {
         when(board.updateBoard(candidate)).thenReturn(board);
 
         var result = spider.applyCandidates(mockCandidateList(), board).toList();
@@ -134,7 +132,7 @@ class SpiderTest {
     }
 
     @Test
-    public void test_updateColumns_null() {
+    void test_updateColumns_null() {
         when(board.updateBoard(candidate)).thenReturn(null);
 
         var result = spider.applyCandidates(mockCandidateList(), board).toList();
@@ -142,16 +140,6 @@ class SpiderTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
-    }
-
-    @Test
-    public void test_getMaxScore() {
-        var result = spider.getMaxScore(spider.solve());
-
-        assertNotNull(result);
-        assertEquals(0, result.getLeft());
-        assertNotNull(result.getRight());
-        assertTrue(result.getRight().isEmpty());
     }
 
     private List<Candidate> mockCandidateList() {
@@ -175,7 +163,7 @@ class SpiderTest {
             super(board.columns(), board.path(), board.totalScore(), board.deck());
         }
 
-        public static MockSpider build() {
+        static MockSpider build() {
             singleSolution(false);
             return new MockSpider(SpiderHelper.build(cards).board());
         }

@@ -15,6 +15,8 @@ import java.util.Stack;
 @Slf4j
 public class Klondike extends SolveExecutor<String, Candidate, KlondikeBoard> {
     protected static final int SOLUTION_LIMIT = 1000;
+    @SuppressWarnings("rawtypes")
+    private Pair<Integer, List> maxScore;
 
     public Klondike(Columns columns,
                     Deck deck,
@@ -25,12 +27,12 @@ public class Klondike extends SolveExecutor<String, Candidate, KlondikeBoard> {
 
     @Override
     public boolean isContinuing() {
-        return super.isContinuing() && solutions().size() < SOLUTION_LIMIT;
+        return super.isContinuing() && totalSolutions() < SOLUTION_LIMIT;
     }
 
     @SuppressWarnings("rawtypes")
-    @Override
-    public Pair<Integer, List> getMaxScore(List<List> results) {
-        return null;
+    public Pair<Integer, List> maxScore() {
+        throw new RuntimeException("Not ready yet.");
     }
+
 }

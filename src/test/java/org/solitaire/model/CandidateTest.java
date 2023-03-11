@@ -10,10 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Origin.BOARD;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.Origin.FREECELL;
+import static org.solitaire.model.Origin.REMOVE;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
 
@@ -34,6 +36,8 @@ class CandidateTest {
         assertEquals("f1:Ks", new Candidate(cards, FREECELL, -1, COLUMN, 1).notation());
         assertEquals("d1:Ks", new Candidate(cards, DECKPILE, -1, COLUMN, 1).notation());
         assertEquals("dD:Ks", new Candidate(cards, DECKPILE, -1, DECKPILE, -1).notation());
+        assertEquals("bb:Ks", new Candidate(cards, BOARD, 1, BOARD, 0).notation());
+        assertEquals("br:Ks", new Candidate(cards, BOARD, -1, REMOVE, -1).notation());
         assertEquals("01:[Ks, Qs]",
                 new Candidate(List.of(card("Ks"), card("Qs")), COLUMN, 0, COLUMN, 1).notation());
 
