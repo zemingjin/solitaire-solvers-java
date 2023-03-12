@@ -11,12 +11,12 @@ public class IOHelperTest {
     public static final String TEST_FILE = "games/tripeaks/tripeaks-easy.txt";
 
     @Test
-    public void test_loadFile() {
+    void test_loadFile() {
         assertEquals(52, loadFile(TEST_FILE).length);
     }
 
     @Test
-    public void test_loadFile_exception() {
+    void test_loadFile_exception() {
         var result = assertThrows(RuntimeException.class, () -> loadFile("abc"));
 
         assertNotNull(result);

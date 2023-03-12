@@ -42,14 +42,6 @@ class KlondikeBoard extends GameBoard {
     protected final List<Stack<Card>> foundations;
     protected boolean stateChanged;
 
-    public static int drawNumber() {
-        return drawNumber;
-    }
-
-    public static void drawNumber(int drawNumber) {
-        KlondikeBoard.drawNumber = drawNumber;
-    }
-
     KlondikeBoard(Columns columns,
                   Path<String> path,
                   int totalScore,
@@ -72,6 +64,14 @@ class KlondikeBoard extends GameBoard {
                 cloneStack(that.deckPile()),
                 cloneStacks(that.foundations()),
                 that.stateChanged);
+    }
+
+    public static int drawNumber() {
+        return drawNumber;
+    }
+
+    public static void drawNumber(int drawNumber) {
+        KlondikeBoard.drawNumber = drawNumber;
     }
 
     private static Card nextCard(Card card, int suitCode) {

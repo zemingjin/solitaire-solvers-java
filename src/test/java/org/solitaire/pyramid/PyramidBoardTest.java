@@ -28,7 +28,7 @@ class PyramidBoardTest {
     private PyramidBoard board;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         useSuit(false);
         board = build(cards).board();
     }
@@ -59,7 +59,7 @@ class PyramidBoardTest {
     }
 
     @Test
-    public void test_findCandidates() {
+    void test_findCandidates() {
         var result = board.findCandidates();
 
         assertNotNull(result);
@@ -70,7 +70,7 @@ class PyramidBoardTest {
     }
 
     @Test
-    public void test_updateState() {
+    void test_updateState() {
         var candidate = board.findCandidates().get(0);
         var card = candidate.cards().get(0);
 
@@ -97,7 +97,7 @@ class PyramidBoardTest {
     }
 
     @Test
-    public void test_recycle() {
+    void test_recycle() {
         assertNotNull(board.updateBoard(board.drawDeckCard()));
         assertEquals(23, board.deck().size());
         assertEquals(1, board.flippedDeck().size());
@@ -118,7 +118,7 @@ class PyramidBoardTest {
     }
 
     @Test
-    public void test_cloneBoard() {
+    void test_cloneBoard() {
         var cloned = new PyramidBoard(board);
 
         assertNotSame(board, cloned);
@@ -126,7 +126,7 @@ class PyramidBoardTest {
     }
 
     @Test
-    public void test_findCardsAddingTo13() {
+    void test_findCardsAddingTo13() {
         var cards = board.findCandidates();
 
         assertNotNull(cards);
@@ -134,7 +134,7 @@ class PyramidBoardTest {
     }
 
     @Test
-    public void test_findOpenCards() {
+    void test_findOpenCards() {
         var cards = board.findOpenCards();
 
         assertNotNull(cards);

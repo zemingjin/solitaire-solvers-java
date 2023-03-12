@@ -7,16 +7,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.function.Consumer;
 
+import static java.util.Objects.nonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;
@@ -32,10 +34,26 @@ class SolveExecutorTest {
 
     @BeforeEach
     void setup() {
+        isPrint(false);
         executor = new SolveExecutor<>(board);
-        executor.isPrint(false);
         executor.cloner(it -> board);
-        executor.solveBoard(this::solveBoard);
+    }
+
+    @Test
+    void test_defaultSolutionConsumer() {
+        executor.defaultSolutionConsumer(List.of("1"));
+        assertEquals(1, executor.shortestPath().size());
+        assertEquals(1, executor.longestPath().size());
+
+        executor.defaultSolutionConsumer(List.of("1", "2"));
+        assertEquals(1, executor.shortestPath().size());
+        assertEquals(2, executor.longestPath().size());
+        assertEquals("[1, 2]", executor.longestPath().toString());
+
+        executor.defaultSolutionConsumer(List.of("2", "3"));
+        assertEquals(1, executor.shortestPath().size());
+        assertEquals(2, executor.longestPath().size());
+        assertEquals("[1, 2]", executor.longestPath().toString());
     }
 
     @Test
@@ -50,7 +68,7 @@ class SolveExecutorTest {
 
         assertTrue(executor.isContinuing());
 
-        executor.solutions().add(List.of(ABC));
+        executor.totalSolutions(1);
         assertFalse(executor.isContinuing());
     }
 
@@ -59,11 +77,12 @@ class SolveExecutorTest {
         when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(List.of(ABC));
 
-        var result = executor.solve();
+        executor.solve();
 
         verify(board, times(TWO)).isSolved();
-        verify(board, times(THREE)).path();
-        assertEquals("[[ABC]]", result.toString());
+        verify(board, times(ONE)).path();
+        assertEquals("[ABC]", executor.shortestPath().toString());
+        assertEquals("[ABC]", executor.longestPath().toString());
         assertEquals(ZERO, executor.totalScenarios());
         assertEquals(ONE, executor.maxStack());
         assertTrue(executor.stack().isEmpty());
@@ -74,13 +93,12 @@ class SolveExecutorTest {
         assertTrue(executor.stack().peek().add(board));
         when(board.isSolved()).thenReturn(false);
 
-        var result = executor.solve();
+        executor.solve();
 
         assertTrue(executor.stack().isEmpty());
         verify(board, times(THREE)).isSolved();
         verify(board, never()).path();
-        assertEquals("[]", result.toString());
-        assertEquals(TWO, executor.totalScenarios());
+        assertEquals(ZERO, executor.totalScenarios());
         assertEquals(ONE, executor.maxStack());
     }
 
@@ -98,14 +116,19 @@ class SolveExecutorTest {
         assertFalse(executor.addBoards(List.of()));
     }
 
-    private void solveBoard(Board<String, String> board) {
-        assertNotNull(board);
+    @Test
+    void test_removeSolutionConsumer() {
+        Consumer<List<String>> consumer = this::mockSolutionConsumer;
+        executor.addSolutionConsumer(consumer);
+
+        assertEquals(2, executor.solutionConsumers().size());
+
+        assertTrue(executor.removeSolutionConsumer(consumer));
+        assertFalse(executor.removeSolutionConsumer(consumer));
+        assertEquals(1, executor.solutionConsumers().size());
     }
 
-    @Test
-    void test_getMaxScore() {
-        var result = assertThrows(RuntimeException.class, () -> executor.getMaxScore(null));
-
-        assertEquals("Not implemented", result.getMessage());
+    void mockSolutionConsumer(List<String> path) {
+        assertTrue(nonNull(path));
     }
 }

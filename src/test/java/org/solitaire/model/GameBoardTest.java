@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
@@ -17,7 +18,7 @@ import static org.solitaire.util.CardHelper.useSuit;
 public class GameBoardTest {
     protected static final String TEST_FILE = "games/spider/spider-122922-expert.txt";
 
-    public final static String[] cards = IOHelper.loadFile(TEST_FILE);
+    public static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
     private GameBoard board;
 
@@ -26,20 +27,30 @@ public class GameBoardTest {
     }
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         useSuit(false);
         board = mockState(Objects.requireNonNull(build(cards).board()));
     }
 
     @Test
-    public void test_equals() {
+    void test_findCandidates() {
+        assertTrue(board.findCandidates().isEmpty());
+    }
+
+    @Test
+    void test_updateBoard() {
+        assertNull(board.updateBoard(null));
+    }
+
+    @Test
+    void test_equals() {
         var other = mockState(board);
 
         assertTrue(reflectionEquals(other, board));
     }
 
     @Test
-    public void test_removeFromColumn_success() {
+    void test_removeFromColumn_success() {
         var candidate = buildCandidate(0, COLUMN, board.columns.get(0).peek());
 
         board.removeFromColumn(candidate);
@@ -47,7 +58,7 @@ public class GameBoardTest {
     }
 
     @Test
-    public void test_removeFromColumn_skip() {
+    void test_removeFromColumn_skip() {
         var candidate = buildCandidate(1, COLUMN, board.columns.get(0).peek());
 
         board.removeFromColumn(candidate);

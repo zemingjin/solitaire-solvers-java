@@ -16,7 +16,7 @@ class ColumnTest {
     private Column column;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         column = new Column();
         column.add(buildCard(0, "Ad"));
         column.add(buildCard(1, "2c"));
@@ -24,7 +24,7 @@ class ColumnTest {
     }
 
     @Test
-    public void test_clone() {
+    void test_clone() {
         var clone = new Column(column);
 
         assertNotSame(column, clone);
@@ -35,19 +35,19 @@ class ColumnTest {
     }
 
     @Test
-    public void test_remove() {
+    void test_remove() {
         column.remove(1);
         assertEquals(1, column.size());
         assertEquals(0, column.openAt());
     }
 
     @Test
-    public void test_peek_exception() {
+    void test_peek_exception() {
         assertNotNull(assertThrows(EmptyStackException.class, () -> new Column().peek()));
     }
 
     @Test
-    public void test_pop_exception() {
+    void test_pop_exception() {
         assertNotNull(assertThrows(EmptyStackException.class, () -> new Column().pop()));
     }
 }

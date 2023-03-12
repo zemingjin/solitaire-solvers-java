@@ -1,7 +1,7 @@
 package org.solitaire;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.freecell.FreeCellHelper;
 import org.solitaire.klondike.KlondikeHelper;
 import org.solitaire.model.GameBuilder;
@@ -14,16 +14,17 @@ import org.solitaire.util.IOHelper;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+import static java.lang.String.format;
 import static java.util.stream.IntStream.range;
 import static org.solitaire.model.SolveExecutor.singleSolution;
-import static org.solitaire.util.CardHelper.checkLongestPath;
-import static org.solitaire.util.CardHelper.checkMaxScore;
-import static org.solitaire.util.CardHelper.checkShortestPath;
+import static org.solitaire.util.CardHelper.string;
 
 public class SolitaireApp {
     public static final String TRIPEAKS = "-t";
@@ -33,8 +34,6 @@ public class SolitaireApp {
     public static final String FREECELL = "-f";
     public static final String USE_SUITS = "-suits";
     public static final String SINGLE_SOLUTION = "-single";
-    @SuppressWarnings("rawtypes")
-    private static final Function<GameSolver, Pair<GameSolver, List<List>>> solveIt = it -> Pair.of(it, it.solve());
 
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
         put(TRIPEAKS, TriPeaksHelper::build);
@@ -44,46 +43,74 @@ public class SolitaireApp {
         put(FREECELL, FreeCellHelper::build);
     }};
 
-    public static void main(String[] args) {
-        new SolitaireApp().run(args);
+    private static final SolitaireApp app = new SolitaireApp();
+
+    public static SolitaireApp app() {
+        return SolitaireApp.app;
     }
 
-    protected static void checkUseSuits(String[] args) {
+    private GameSolver solver;
+    private StopWatch stopWatch;
+    private final List<String> results = new LinkedList<>();
+
+    public StopWatch stopWatch() {
+        return stopWatch;
+    }
+
+    public void stopWatch(StopWatch stopWatch) {
+        this.stopWatch = stopWatch;
+    }
+
+    public List<String> results() {
+        return results;
+    }
+
+    public static void main(String[] args) {
+        app().run(args);
+    }
+
+    public static void checkUseSuits(String[] args) {
         CardHelper.useSuit(checkParam(args, USE_SUITS));
     }
 
-    protected static void checkSingleSolution(String[] args) {
+    public static void checkSingleSolution(String[] args) {
         singleSolution(checkParam(args, SINGLE_SOLUTION));
     }
 
     private static boolean checkParam(String[] args, String target) {
-        return range(1, args.length).anyMatch(i -> args[i].equalsIgnoreCase(target));
+        return range(1, args.length).anyMatch(i -> target.equalsIgnoreCase(args[i]));
     }
 
-    @SuppressWarnings("rawtypes")
-    public List<List> run(String[] args) {
+    public GameSolver solver() {
+        return solver;
+    }
+
+    public void solver(GameSolver solver) {
+        this.solver = solver;
+    }
+
+    public void run(String[] args) {
         Function<String[], GameSolver> buildSolver = it -> getGameBuilder(args).apply(it);
 
-        var stopWatch = new StopWatch();
+        stopWatch(new StopWatch());
 
-        stopWatch.start();
+        stopWatch().start();
         checkUseSuits(args);
         checkSingleSolution(args);
-        var solver = Optional.of(getPath(args))
+        solver(Optional.of(getPath(args))
                 .map(IOHelper::loadFile)
                 .map(buildSolver)
-                .orElseThrow();
-        var results = Optional.of(solver)
-                .map(solveIt)
-                .orElseThrow();
-        stopWatch.stop();
+                .orElseThrow());
+        solver().solve();
+
+        stopWatch().stop();
 
         System.out.printf("Found %,d solutions in %,d scenarios - total time: %s with maximum depth of %d.\n",
-                results.getRight().size(), solver.totalScenarios(), stopWatch.formatTime(), solver.maxDepth());
-        checkShortestPath(results.getRight());
-        checkLongestPath(results.getRight());
-        checkMaxScore(results);
-        return results.getRight();
+                solver().totalSolutions(), solver().totalScenarios(), stopWatch.formatTime(), solver().maxDepth());
+        checkPath(solver::shortestPath, "Shortest");
+        checkPath(solver::longestPath, "Longest");
+        checkMaxScore(solver());
+        results.forEach(System.out::println);
     }
 
     private String getPath(String[] args) {
@@ -96,10 +123,24 @@ public class SolitaireApp {
                 .orElseThrow();
     }
 
-    protected String getSolverType(String[] args) {
+    public String getSolverType(String[] args) {
         return Arrays.stream(args, 1, args.length)
                 .filter(BUILDERS::containsKey)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing solver type; '-t', '-p', '-k', '-f', or '-s'"));
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void checkPath(Supplier<List> supplier, String type) {
+        Optional.of(supplier)
+                .map(Supplier::get)
+                .filter(ObjectUtils::isNotEmpty)
+                .ifPresent(it -> results.add(format("%s Path(%d): %s\n", type, it.size(), string(it))));
+    }
+
+    public void checkMaxScore(GameSolver solver) {
+        Optional.of(solver)
+                .map(GameSolver::maxScore)
+                .ifPresent(it -> results.add(format("Max Score(%,d): %s\n", it.getLeft(), string(it.getRight()))));
     }
 }

@@ -18,7 +18,6 @@ import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
@@ -30,6 +29,7 @@ import static org.solitaire.klondike.KlondikeHelper.build;
 import static org.solitaire.klondike.KlondikeHelperTest.CARDS;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.useSuit;
@@ -46,35 +46,33 @@ class KlondikeTest {
     private Klondike klondike;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         board = spy(board);
         useSuit(false);
         singleSolution(false);
+        isPrint(false);
         klondike = mockKlondike();
-        klondike.isPrint(false);
     }
 
     @Test
     void test_isContinuing() {
         assertTrue(klondike.isContinuing());
-        range(0, SOLUTION_LIMIT).forEach(i -> klondike.solutions().add(List.of()));
+        klondike.totalSolutions(SOLUTION_LIMIT);
         assertFalse(klondike.isContinuing());
     }
 
     @Test
-    public void test_solve_cleared() {
+    void test_solve_cleared() {
         when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(new Path<>());
-        var result = klondike.solve();
 
-        assertNotNull(result);
-        assertEquals(TWO, result.size());
-        assertTrue(result.get(0).isEmpty());
+        klondike.solve();
+
         assertEquals(ZERO, klondike.totalScenarios());
     }
 
     @Test
-    public void test_solve_uncleared() {
+    void test_solve_uncleared() {
         var candidates = List.of(
                 buildCandidate(4, COLUMN, buildCard(0, "Ac")),
                 buildCandidate(3, COLUMN, buildCard(1, "3d")));
@@ -82,17 +80,16 @@ class KlondikeTest {
         when(board.findCandidates()).thenReturn(candidates);
         when(board.updateBoard(any())).thenReturn(null);
 
-        var result = klondike.solve();
+        klondike.solve();
 
-        assertEquals("[[]]", result.toString());
         verify(board, times(TWO)).isSolved();
         verify(board, times(ONE)).findCandidates();
         verify(board, times(TWO)).updateBoard(any());
-        assertEquals(1, klondike.totalScenarios());
+        assertEquals(2, klondike.totalScenarios());
     }
 
     @Test
-    public void test_solve_drawDeck() {
+    void test_solve_drawDeck() {
         when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(emptyList());
 
@@ -100,25 +97,17 @@ class KlondikeTest {
 
         verify(board, times(TWO)).isSolved();
         verify(board, times(ONE)).findCandidates();
-        assertEquals(1, klondike.totalScenarios());
+        assertEquals(0, klondike.totalScenarios());
     }
 
     @Test
-    public void test_getMaxScore() {
-        var result = klondike.getMaxScore(null);
-
-        assertNull(result);
-    }
-
-    @Test
-    public void test_solveByDFS() {
+    void test_solveByDFS() {
         singleSolution(false);
         klondike = build(CARDS);
 
-        var result = klondike.solve();
+        klondike.solve();
 
-        assertNotNull(result);
-        assertEquals(SOLUTION_LIMIT, result.size());
+        assertEquals(SOLUTION_LIMIT, klondike.totalSolutions());
     }
 
     @Test

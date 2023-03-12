@@ -16,7 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
@@ -38,7 +37,7 @@ import static org.solitaire.util.CardHelper.suitCode;
 @Slf4j
 public class SpiderBoard extends GameBoard {
     protected final Deck deck;
-    private transient final IntPredicate isNotEmpty = i -> !columns().get(i).isEmpty();
+    protected transient final IntPredicate isNotEmpty = i -> !columns().get(i).isEmpty();
     private transient final IntPredicate isLongEnoughForRun = i -> 13 <= columns().get(i).size();
     private transient final IntPredicate isThereARun = i -> isThereARun(columns().get(i));
     private transient final BiPredicate<Card, Card> higherOfSameColor = Card::isHigherOfSameColor;
@@ -263,21 +262,18 @@ public class SpiderBoard extends GameBoard {
         var card = cards.get(0);
 
         if (card.isNotKing()) {
-            var least = new AtomicInteger(MAX_VALUE);
             var next = card(VALUES.charAt(card.rank()) + card.suit());
-
-            range(0, columns().size())
+            var value = range(0, columns().size())
                     .filter(i -> i != col)
                     .mapToObj(columns()::get)
                     .filter(ObjectUtils::isNotEmpty)
                     .filter(it -> it.contains(next))
                     .mapToInt(it -> it.size() - it.lastIndexOf(next) - 1)
-                    .filter(i -> i < least.get())
-                    .forEach(least::set);
-            if (least.get() == MAX_VALUE) {
-                least.set(deck.indexOf(next) / columns().size());
+                    .reduce(MAX_VALUE, Math::min);
+            if (value == MAX_VALUE) {
+                return deck.indexOf(next) / columns().size();
             }
-            return least.get();
+            return value;
         }
         return 0;
     }
