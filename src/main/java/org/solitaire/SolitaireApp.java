@@ -14,14 +14,12 @@ import org.solitaire.util.IOHelper;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static java.lang.String.format;
 import static java.util.stream.IntStream.range;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.string;
@@ -51,7 +49,6 @@ public class SolitaireApp {
 
     private GameSolver solver;
     private StopWatch stopWatch;
-    private final List<String> results = new LinkedList<>();
 
     public StopWatch stopWatch() {
         return stopWatch;
@@ -59,10 +56,6 @@ public class SolitaireApp {
 
     public void stopWatch(StopWatch stopWatch) {
         this.stopWatch = stopWatch;
-    }
-
-    public List<String> results() {
-        return results;
     }
 
     public static void main(String[] args) {
@@ -110,7 +103,6 @@ public class SolitaireApp {
         checkPath(solver::shortestPath, "Shortest");
         checkPath(solver::longestPath, "Longest");
         checkMaxScore(solver());
-        results.forEach(System.out::println);
     }
 
     private String getPath(String[] args) {
@@ -135,12 +127,12 @@ public class SolitaireApp {
         Optional.of(supplier)
                 .map(Supplier::get)
                 .filter(ObjectUtils::isNotEmpty)
-                .ifPresent(it -> results.add(format("%s Path(%d): %s\n", type, it.size(), string(it))));
+                .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), string(it)));
     }
 
     public void checkMaxScore(GameSolver solver) {
         Optional.of(solver)
                 .map(GameSolver::maxScore)
-                .ifPresent(it -> results.add(format("Max Score(%,d): %s\n", it.getLeft(), string(it.getRight()))));
+                .ifPresent(it -> System.out.printf("Max Score(%,d): %s\n", it.getLeft(), string(it.getRight())));
     }
 }
