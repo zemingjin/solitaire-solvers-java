@@ -38,13 +38,13 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     private List<S> shortestPath;
     private List<S> longestPath;
 
-    public SolveExecutor(T board) {
-        addBoard(board);
+    public SolveExecutor(T initialBoard) {
+        addBoard(initialBoard);
         addSolutionConsumer(this::defaultSolutionConsumer);
     }
 
-    public SolveExecutor(T board, Function<T, T> cloner) {
-        this(board);
+    public SolveExecutor(T initialBoard, Function<T, T> cloner) {
+        this(initialBoard);
         cloner(cloner);
     }
 

@@ -11,6 +11,7 @@ public class Spider extends SolveExecutor<String, Candidate, SpiderBoard> {
 
     public Spider(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(new SpiderBoard(columns, path, totalScore, deck), SpiderBoard::new);
+        hsdDepth(5);
     }
 
     @Override

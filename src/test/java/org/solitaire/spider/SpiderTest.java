@@ -31,8 +31,9 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
-import static org.solitaire.util.CardHelperTest.FOUR;
+import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.SIX;
 import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
@@ -59,15 +60,15 @@ class SpiderTest {
     @Test
     void test_solveByHSD() {
         singleSolution(true);
-        hsdDepth(FOUR);
+        hsdDepth(SIX);
         spider = build(cards);
 
-        assertEquals(FOUR, hsdDepth());
+        assertEquals(FIVE, hsdDepth());
 
-        range(0, 12).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
+        range(0, 5).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
         var board = spider.board();
         assertNotNull(board);
-        assertEquals(48, board.path().size());
+        assertEquals(25, board.path().size());
     }
 
     @Test

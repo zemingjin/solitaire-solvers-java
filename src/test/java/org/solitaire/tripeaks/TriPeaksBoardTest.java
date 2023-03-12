@@ -126,7 +126,7 @@ class TriPeaksBoardTest {
 
     @Test
     void test_isOpenCard_allBoardCards() {
-        assertTrue(Arrays.stream(board.cards(), ZERO, INI_COVERED).noneMatch(it -> board.isOpenCard(it)));
+        assertTrue(Arrays.stream(board.cards(), ZERO, INI_COVERED).noneMatch(board::isOpenCard));
         assertTrue(Arrays.stream(board.cards(), INI_COVERED, LAST_BOARD).allMatch(board::isOpenCard));
     }
 
