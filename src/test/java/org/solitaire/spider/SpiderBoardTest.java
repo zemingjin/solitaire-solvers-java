@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
 
+import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -70,7 +71,7 @@ class SpiderBoardTest {
 
     @Test
     void test_findCandidatesOfSameSuit() {
-        var candidates = board.findCandidatesOfSameSuit();
+        var candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
 
         assertEquals(2, candidates.size());
         assertEquals("17:5h", candidates.get(0).notation());
@@ -81,7 +82,7 @@ class SpiderBoardTest {
         var candidates = board.findCandidates();
 
         assertNotNull(candidates);
-        assertEquals(7, candidates.size());
+        assertEquals(6, candidates.size());
         assertEquals(7, candidates.get(0).to());
         assertEquals(9, candidates.get(1).to());
 
@@ -97,7 +98,7 @@ class SpiderBoardTest {
         mockColumn(0, 5, 0);
         mockColumn(1, 12, 6);
 
-        var candidates = board.findCandidatesOfSameSuit();
+        var candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
         assertEquals(3, candidates.size());
         assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
     }
@@ -107,7 +108,7 @@ class SpiderBoardTest {
         mockColumn(0, 8, 0);
         mockColumn(1, 12, 6);
 
-        var candidates = board.findCandidatesOfSameSuit();
+        var candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
         assertEquals(3, candidates.size());
         assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
 
@@ -115,7 +116,7 @@ class SpiderBoardTest {
         board.columns().get(0).openAt(-1);
         mockColumn(0, 9, 8);
 
-        candidates = board.findCandidatesOfSameSuit();
+        candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
         assertEquals(2, candidates.size());
         assertEquals("59:2h", candidates.get(0).notation());
 
@@ -240,6 +241,28 @@ class SpiderBoardTest {
     }
 
     @Test
+    void test_appendToTarget_deck() {
+        var floor = board.deck().size() - 10;
+
+        var candidate = board.drawDeck().get(0);
+
+        assertEquals(0, board.path().size());
+        var result = board.appendToTarget(candidate);
+        assertEquals(1, result.path().size());
+        assertEquals("d0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
+        assertTrue(range(0, board.columns().size())
+                .allMatch(i -> candidate.cards().get(i).equals(board.columns().get(i).peek())));
+    }
+
+    @Test
+    void test_isNoEmptyColumn() {
+        assertTrue(board.isNoEmptyColumn());
+
+        board.columns().get(0).clear();
+        assertFalse(board.isNoEmptyColumn());
+    }
+
+    @Test
     void test_removeFromSource() {
         var candidates = board.findCandidates();
         var candidate = candidates.get(1);
@@ -277,8 +300,7 @@ class SpiderBoardTest {
         var candidates = board.findCandidates();
 
         assertNotNull(candidates);
-        assertEquals(9, candidates.size());
-        assertTrue(candidates.stream().anyMatch(it -> it.cards().size() == 10));
+        assertEquals(8, candidates.size());
         assertEquals(8, candidates.stream().filter(it -> it.cards().size() == 1).count());
     }
 

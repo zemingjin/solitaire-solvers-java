@@ -42,8 +42,10 @@ class SolitaireAppTest {
 
     @Test
     void test_main() {
+        assertFalse(isPrint());
+        isPrint(true);
         main(ARGS);
-        assertEquals(584, outputStream.toByteArray().length);
+        assertEquals(921, outputStream.toByteArray().length);
 
         assertThrows(RuntimeException.class, () -> main(new String[]{}));
     }
@@ -80,7 +82,7 @@ class SolitaireAppTest {
     void test_run_freecell() {
         ARGS[0] = "games/freecell/freecell-020623-easy.txt";
         ARGS[1] = FREECELL;
-        ARGS[2] = SINGLE_SOLUTION;
+        ARGS[2] = null;
 
         assertThrows(RuntimeException.class, () -> app.run(ARGS));
     }

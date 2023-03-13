@@ -33,7 +33,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     private final List<Consumer<List<S>>> solutionConsumers = new LinkedList<>();
     private int totalScenarios = 0;
     private int totalSolutions = 0;
-    private int maxStack = 0;
+    private Integer maxDepth = 0;
     private Function<T, T> cloner;
     private List<S> shortestPath;
     private List<S> longestPath;
@@ -84,7 +84,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
         if (verify.isEmpty()) {
             while (isContinuing() && !stack.isEmpty()) {
-                checkMaxStack();
+                checkMaxDepth();
 
                 Optional.ofNullable(stack.peek())
                         .filter(ObjectUtils::isNotEmpty)
@@ -120,6 +120,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     private Stream<T> searchBoard(T board) {
+        totalScenarios++;
         return Optional.of(board)
                 .map(T::findCandidates)
                 .filter(ObjectUtils::isNotEmpty)
@@ -131,7 +132,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     @SuppressWarnings("unchecked")
     public Stream<T> applyCandidates(List<U> candidates, T board) {
         return (Stream<T>) candidates.stream()
-                .peek(it -> totalScenarios++)
                 .map(it -> clone(board).updateBoard(it))
                 .filter(Objects::nonNull);
     }
@@ -178,8 +178,12 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     @Override
-    public int maxDepth() {
-        return maxStack;
+    public Integer maxDepth() {
+        return maxDepth;
+    }
+
+    protected void maxDepth(Integer maxDepth) {
+        this.maxDepth = maxDepth;
     }
 
     @Override
@@ -196,31 +200,25 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         return board;
     }
 
-    public boolean addBoards(Collection<T> boards) {
-        boards = boards.stream().filter(Objects::nonNull).filter(this::checkBoard).toList();
-
-        if (!boards.isEmpty()) {
-            return stack().add(new BoardStack<>(boards));
-        }
-        return false;
+    public void addBoards(Collection<T> boards) {
+        Optional.of(boards)
+                .filter(ObjectUtils::isNotEmpty)
+                .ifPresent(it -> stack().add(new BoardStack<>(it)));
     }
 
-    public boolean addBoard(T board) {
-        return addBoards(new BoardStack<>(board));
+    public void addBoard(T board) {
+        Optional.ofNullable(board)
+                .ifPresent(it -> addBoards(List.of(it)));
     }
 
-    private void checkMaxStack() {
-        if (stack.size() > maxStack()) {
-            maxStack = stack.size();
+    protected void checkMaxDepth() {
+        if (stack.size() > maxDepth()) {
+            maxDepth(stack.size());
         }
     }
 
     public T board() {
         return stack.peek().peek();
-    }
-
-    public int maxStack() {
-        return this.maxStack;
     }
 
     public T clone(T board) {

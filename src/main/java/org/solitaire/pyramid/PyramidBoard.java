@@ -57,34 +57,6 @@ public class PyramidBoard implements Board<Card[], Candidate> {
                 that.recycleCount);
     }
 
-    public Card[] cards() {
-        return cards;
-    }
-
-    public Stack<Card> deck() {
-        return deck;
-    }
-
-    public Stack<Card> flippedDeck() {
-        return flippedDeck;
-    }
-
-    public Path<Card[]> path() {
-        return path;
-    }
-
-    public int recycleCount() {
-        return recycleCount;
-    }
-
-    public void recycleCount(int recycleCount) {
-        this.recycleCount = recycleCount;
-    }
-
-    public boolean isSolved() {
-        return CardHelper.isCleared(cards);
-    }
-
     /***************************************************************************************************************
      * Find Candidates
      **************************************************************************************************************/
@@ -205,6 +177,9 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         return false;
     }
 
+    /***************************************************************************************************************
+     * Scoring
+     **************************************************************************************************************/
     @Override
     public int score() {
         if (score == 0) {
@@ -221,12 +196,44 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         this.score = score;
     }
 
-    protected Card[] allCards() {
-        return Stream.concat(Stream.of(cards), deck.stream()).toArray(Card[]::new);
-    }
-
+    /***************************************************************************************************************
+     * Helpers/Accessors
+     **************************************************************************************************************/
     @Override
     public List<String> verify() {
         return verifyBoard(allCards());
     }
+
+    protected Card[] allCards() {
+        return Stream.concat(Stream.of(cards), deck.stream()).toArray(Card[]::new);
+    }
+
+    public Card[] cards() {
+        return cards;
+    }
+
+    public Stack<Card> deck() {
+        return deck;
+    }
+
+    public Stack<Card> flippedDeck() {
+        return flippedDeck;
+    }
+
+    public Path<Card[]> path() {
+        return path;
+    }
+
+    public int recycleCount() {
+        return recycleCount;
+    }
+
+    public void recycleCount(int recycleCount) {
+        this.recycleCount = recycleCount;
+    }
+
+    public boolean isSolved() {
+        return CardHelper.isCleared(cards);
+    }
+
 }

@@ -82,10 +82,10 @@ class KlondikeTest {
 
         klondike.solve();
 
-        verify(board, times(TWO)).isSolved();
-        verify(board, times(ONE)).findCandidates();
+        verify(board).isSolved();
+        verify(board).findCandidates();
         verify(board, times(TWO)).updateBoard(any());
-        assertEquals(2, klondike.totalScenarios());
+        assertEquals(ONE, klondike.totalScenarios());
     }
 
     @Test
@@ -95,9 +95,9 @@ class KlondikeTest {
 
         klondike.solve();
 
-        verify(board, times(TWO)).isSolved();
-        verify(board, times(ONE)).findCandidates();
-        assertEquals(0, klondike.totalScenarios());
+        verify(board).isSolved();
+        verify(board).findCandidates();
+        assertEquals(ONE, klondike.totalScenarios());
     }
 
     @Test

@@ -102,7 +102,9 @@ public class SolitaireApp {
                 solver().totalSolutions(), solver().totalScenarios(), stopWatch.formatTime(), solver().maxDepth());
         checkPath(solver::shortestPath, "Shortest");
         checkPath(solver::longestPath, "Longest");
-        checkMaxScore(solver());
+        if (solver().totalSolutions() > 0) {
+            checkMaxScore(solver());
+        }
     }
 
     private String getPath(String[] args) {

@@ -39,7 +39,7 @@ class FreeCellTest {
     void test_solveByHSD() {
         dfs.solveByHSD(dfs.stack().pop().peek());
 
-        assertEquals(181267, dfs.totalScenarios());
+        assertEquals(29797, dfs.totalScenarios());
         assertFalse(dfs.stack().isEmpty());
         assertEquals("[6F:Ad, 1F:2d, 4f:4c, 3f:9d, 3f:8s, 35:8h]", dfs.board().path().toString());
     }
@@ -50,7 +50,7 @@ class FreeCellTest {
 
         hsd.solve();
 
-        assertEquals(217942, hsd.totalScenarios());
+        assertEquals(38723, hsd.totalScenarios());
     }
 
     @Test
@@ -58,7 +58,7 @@ class FreeCellTest {
         singleSolution(false);
         dfs.solve();
 
-        assertEquals(3162, dfs.totalScenarios());
+        assertEquals(1910, dfs.totalScenarios());
         assertEquals(SOLUTION_LIMIT, dfs.totalSolutions());
         assertEquals(98, dfs.shortestPath().size());
         assertEquals(99, dfs.longestPath().size());
@@ -85,8 +85,10 @@ class FreeCellTest {
         }
 
         @Override
-        public boolean addBoards(Collection<FreeCellBoard> boards) {
-            return add && super.addBoards(boards);
+        public void addBoards(Collection<FreeCellBoard> boards) {
+            if (add) {
+                super.addBoards(boards);
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ import static java.util.Objects.nonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -79,12 +80,12 @@ class SolveExecutorTest {
 
         executor.solve();
 
-        verify(board, times(TWO)).isSolved();
+        verify(board, times(ONE)).isSolved();
         verify(board, times(ONE)).path();
         assertEquals("[ABC]", executor.shortestPath().toString());
         assertEquals("[ABC]", executor.longestPath().toString());
         assertEquals(ZERO, executor.totalScenarios());
-        assertEquals(ONE, executor.maxStack());
+        assertEquals(ONE, executor.maxDepth());
         assertTrue(executor.stack().isEmpty());
     }
 
@@ -96,24 +97,25 @@ class SolveExecutorTest {
         executor.solve();
 
         assertTrue(executor.stack().isEmpty());
-        verify(board, times(THREE)).isSolved();
+        verify(board, times(TWO)).isSolved();
         verify(board, never()).path();
-        assertEquals(ZERO, executor.totalScenarios());
-        assertEquals(ONE, executor.maxStack());
+        assertEquals(TWO, executor.totalScenarios());
+        assertEquals(ONE, executor.maxDepth());
     }
 
     @Test
     void test_addBoard() {
-        assertTrue(executor.addBoard(board));
+        assertEquals(ONE, executor.stack().size());
+        executor.addBoard(board);
         assertEquals(TWO, executor.stack().size());
+        executor.addBoard(null);
     }
 
     @Test
     void test_addBoards() {
-        assertTrue(executor.addBoards(List.of(board, board)));
+        executor.addBoards(List.of(board, board));
         assertEquals(TWO, executor.stack().size());
         assertEquals(TWO, executor.stack().peek().size());
-        assertFalse(executor.addBoards(List.of()));
     }
 
     @Test
@@ -126,6 +128,24 @@ class SolveExecutorTest {
         assertTrue(executor.removeSolutionConsumer(consumer));
         assertFalse(executor.removeSolutionConsumer(consumer));
         assertEquals(1, executor.solutionConsumers().size());
+    }
+
+    @Test
+    void test_checkMaxDepth() {
+        assertEquals(ZERO, executor.maxDepth());
+        executor.checkMaxDepth();
+
+        assertEquals(ONE, executor.maxDepth());
+        Integer maxDepth = executor.maxDepth();
+
+        executor.checkMaxDepth();
+        assertSame(maxDepth, executor.maxDepth());
+
+        executor.maxDepth(3);
+        assertTrue(executor.stack().add(new BoardStack<>(board)));
+        executor.checkMaxDepth();
+
+        assertEquals(THREE, executor.maxDepth());
     }
 
     void mockSolutionConsumer(List<String> path) {

@@ -8,7 +8,7 @@ import java.util.List;
 public interface GameSolver {
     void solve();
 
-    int maxDepth();
+    Integer maxDepth();
 
     Pair<Integer, List> maxScore();
 

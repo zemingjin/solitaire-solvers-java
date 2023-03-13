@@ -2,6 +2,8 @@ package org.solitaire.spider;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.function.TriFunction;
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
@@ -11,7 +13,6 @@ import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +26,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
@@ -65,37 +67,30 @@ public class SpiderBoard extends GameBoard {
      *************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        return Stream.of(findCandidatesOfSameSuit(),
-                        findCandidatesOfDifferentColors(),
-                        drawDeck())
-                .flatMap(List::stream)
-                .toList();
-    }
-
-    protected List<Candidate> findCandidatesOfSameSuit() {
-        return range(0, columns().size())
-                .mapToObj(this::findCandidatesOfSameSuit)
-                .flatMap(List::stream)
-                .filter(this::isMovable)
-                .toList();
-    }
-
-    private List<Candidate> findCandidatesOfSameSuit(Integer i) {
-        return Optional.of(columns().get(i))
+        return Optional.of(concat(findCandidates(this::findCandidateOfSameSuit),
+                        findCandidates(this::findCandidateOfDifferentColors)))
+                .map(Stream::toList)
                 .filter(ObjectUtils::isNotEmpty)
-                .map(this::getOrderedCardsAtColumn)
-                .map(it -> findCandidatesOfSameSuit(i, it))
-                .orElseGet(Collections::emptyList);
+                .orElseGet(this::drawDeck);
     }
 
-    private List<Candidate> findCandidatesOfSameSuit(Integer i, List<Card> cards) {
+    protected Stream<Candidate> findCandidates(TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
-                .mapToObj(j -> findCandidateOfSameSuit(i, j, cards))
-                .filter(Objects::nonNull)
-                .toList();
+                .filter(isNotEmpty)
+                .mapToObj(i -> Pair.of(i, columns().get(i)))
+                .map(it -> Pair.of(it.getLeft(), getOrderedCardsAtColumn(it.getRight())))
+                .flatMap(it -> findCandidates(it, finder))
+                .filter(this::isMovable);
     }
 
-    private Candidate findCandidateOfSameSuit(Integer i, Integer j, List<Card> cards) {
+    private Stream<Candidate> findCandidates(Pair<Integer, List<Card>> pair,
+                                               TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
+        return range(0, columns().size())
+                .mapToObj(j -> finder.apply(pair.getLeft(), j, pair.getRight()))
+                .filter(Objects::nonNull);
+    }
+
+    protected Candidate findCandidateOfSameSuit(Integer i, Integer j, List<Card> cards) {
         var column = columns().get(j);
 
         if (column.isEmpty() || column.peek().isHigherOfSameColor(cards.get(0))) {
@@ -112,35 +107,14 @@ public class SpiderBoard extends GameBoard {
         return null;
     }
 
-    private List<Candidate> findCandidatesOfDifferentColors() {
-        return range(0, columns().size())
-                .mapToObj(this::findCandidatesOfDifferentColors)
-                .flatMap(List::stream)
-                .filter(this::isMovable)
-                .toList();
-    }
+    private Candidate findCandidateOfDifferentColors(Integer i, Integer j, List<Card> cards) {
+        if (cards.size() == 1) {
+            var column = columns().get(j);
+            var card = cards.get(0);
 
-    private List<Candidate> findCandidatesOfDifferentColors(Integer i) {
-        return Optional.of(columns().get(i))
-                .filter(ObjectUtils::isNotEmpty)
-                .map(this::getOrderedCardsAtColumn)
-                .filter(it -> it.size() == 1)
-                .map(it -> findCandidatesOfDifferentColors(i, it.get(0)))
-                .orElseGet(Collections::emptyList);
-    }
-
-    private List<Candidate> findCandidatesOfDifferentColors(Integer i, Card card) {
-        return range(0, columns().size())
-                .mapToObj(j -> findCandidateOfDifferentColors(i, j, card))
-                .filter(Objects::nonNull)
-                .toList();
-    }
-
-    private Candidate findCandidateOfDifferentColors(Integer i, Integer j, Card card) {
-        var column = columns().get(j);
-
-        if (column.isEmpty() || column.peek().isHigherWithDifferentColor(card)) {
-            return new Candidate(List.of(card), COLUMN, i, COLUMN, j);
+            if (column.isEmpty() || column.peek().isHigherWithDifferentColor(card)) {
+                return new Candidate(List.of(card), COLUMN, i, COLUMN, j);
+            }
         }
         return null;
     }
@@ -158,7 +132,7 @@ public class SpiderBoard extends GameBoard {
     }
 
     private boolean isLongerTargetSequence(Candidate candidate) {
-        var column =  columns().get(candidate.to());
+        var column = columns().get(candidate.to());
 
         if (column.isNotEmpty()) {
             var target = column.peek();
@@ -274,7 +248,7 @@ public class SpiderBoard extends GameBoard {
         return emptyList();
     }
 
-    private boolean isNoEmptyColumn() {
+    protected boolean isNoEmptyColumn() {
         return columns().stream().allMatch(Column::isNotEmpty);
     }
 
