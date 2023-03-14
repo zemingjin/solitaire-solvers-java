@@ -5,56 +5,73 @@ import org.solitaire.model.Column;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.function.IntPredicate;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static java.util.stream.IntStream.range;
+import static java.util.stream.Stream.concat;
+import static org.solitaire.util.BoardErrors.Extra;
+import static org.solitaire.util.BoardErrors.Missing;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
 
 public class BoardHelper {
+    public static List<String> verifyBoard(List<Column> columns, List<Card> deck) {
+        return verifyBoard(concat(toStream(columns), deck.stream()).toArray(Card[]::new));
+    }
+
     public static List<String> verifyBoard(List<Column> columns) {
-        return verifyBoard(toArray(columns));
+        return verifyBoard(toStream(columns).toArray(Card[]::new));
     }
 
     public static List<String> verifyBoard(Card[] cards) {
-        var maps = new Card[4][14];
-        var results = checkDuplidates(cards, maps);
+        var maps = mapCards(cards);
+        var numberOfEachCards = numberOfEachCard(maps);
 
-        results.addAll(checkMissing(maps));
-        return results;
+        return Stream.concat(check(maps, it -> it > numberOfEachCards, Extra),
+                check(maps, it -> it < numberOfEachCards, Missing)).toList();
     }
 
-    protected static List<String> checkDuplidates(Card[] cards, Card[][] maps) {
-        return Stream.of(cards)
-                .map(it -> checkDuplicates(it, maps))
+    private static int numberOfEachCard(int[][] maps) {
+        var numberOfSuits = (int) Stream.of(maps).filter(it -> it[0] > 0).count();
+
+        return switch (numberOfSuits) {
+            case 4 -> 1;
+            case 2 -> 4;
+            case 1 -> 8;
+            default -> throw new RuntimeException("Invalid number of suit: " + numberOfSuits);
+        };
+    }
+
+    private static int[][] mapCards(Card[] cards) {
+        var maps = new int[4][14];
+
+        Stream.of(cards)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .forEach(it -> {
+                    var at = suitCode(it);
+                    maps[at][0]++;
+                    maps[at][it.rank()]++;
+                });
+        return maps;
     }
 
-    private static String checkDuplicates(Card card, Card[][] maps) {
-        if (isNull(card)) {
-            return null;
-        } else if (isNull(maps[suitCode(card)][card.rank()])) {
-            maps[suitCode(card)][card.rank()] = card;
-            return null;
-        }
-        return format("Duplicated card: %s", card.raw());
+    protected static Stream<String> check(int[][] maps, IntPredicate test, BoardErrors type) {
+        return range(0, maps.length)
+                .filter(i -> maps[i][0] > 0)
+                .mapToObj(i -> checkCard(test, type, maps, i))
+                .flatMap(it -> it);
     }
 
-    protected static List<String> checkMissing(Card[][] cards) {
-        return range(0, cards.length)
-                .mapToObj(i -> range(1, cards[i].length)
-                        .filter(j -> isNull(cards[i][j]))
-                        .mapToObj(j -> format("Missing card: %s%s", VALUES.charAt(j - 1), suit(i).toLowerCase())))
-                .flatMap(it -> it)
-                .collect(Collectors.toList());
+    private static Stream<String> checkCard(IntPredicate test, BoardErrors type, int[][] maps, int i) {
+        return range(1, maps[i].length)
+                .filter(j -> test.test(maps[i][j]))
+                .mapToObj(j -> format("%s card: %s%s", type, VALUES.charAt(j - 1), suit(i).toLowerCase()));
     }
 
-    private static Card[] toArray(List<Column> columns) {
-        return columns.stream().flatMap(Column::stream).map(Card.class::cast).toArray(Card[]::new);
+    private static Stream<Card> toStream(List<Column> columns) {
+        return columns.stream().flatMap(List::stream);
     }
 }

@@ -58,9 +58,10 @@ class SpiderTest {
 
     @Test
     void test_solveByHSD() {
-        singleSolution(true);
+        singleSolution(false);
         hsdDepth(FIVE);
         spider = build(cards);
+        assertTrue(singleSolution());
 
         assertEquals(SIX, hsdDepth());
 

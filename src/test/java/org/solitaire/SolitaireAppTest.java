@@ -2,6 +2,7 @@ package org.solitaire;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.solitaire.freecell.FreeCell;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -25,6 +26,7 @@ import static org.solitaire.io.IOHelperTest.TEST_FILE;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.useSuit;
+import static org.solitaire.util.CardHelperTest.ZERO;
 
 class SolitaireAppTest {
     private final String[] ARGS = new String[]{TEST_FILE, TRIPEAKS, SINGLE_SOLUTION};
@@ -84,7 +86,19 @@ class SolitaireAppTest {
         ARGS[1] = FREECELL;
         ARGS[2] = null;
 
-        assertThrows(RuntimeException.class, () -> app.run(ARGS));
+        var result = assertThrows(RuntimeException.class, () -> app.run(ARGS));
+        assertEquals("Maximum score is not supported!", result.getMessage());
+        assertEquals(FreeCell.SOLUTION_LIMIT, app.solver().totalSolutions());
+    }
+
+    @Test
+    void test_run_freecell_nosolutions() {
+        ARGS[0] = "games/freecell/freecell-022723-hard.txt";
+        ARGS[1] = FREECELL;
+        ARGS[2] = SINGLE_SOLUTION;
+
+        app.run(ARGS);
+        assertEquals(ZERO, app.solver().totalSolutions());
     }
 
     @Test

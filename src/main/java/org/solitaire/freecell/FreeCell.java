@@ -15,7 +15,7 @@ import org.solitaire.model.SolveExecutor;
  * 4. Repeat steps 2-3 and throw away the rest until a solution or some limit is reached.
  */
 public class FreeCell extends SolveExecutor<String, Candidate, FreeCellBoard> {
-    protected static final int SOLUTION_LIMIT = 1000;
+    public static final int SOLUTION_LIMIT = 1000;
 
     public FreeCell(Columns columns) {
         super(new FreeCellBoard(columns, new Path<>(), new Card[4], new Card[4]), FreeCellBoard::new);

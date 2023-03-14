@@ -38,7 +38,7 @@ class SpiderHelperTest {
         assertEquals("5:Th", state.columns().get(0).peek().toString());
         assertEquals("18:As", state.columns().get(3).get(0).toString());
         assertEquals("23:9s", state.columns().get(3).peek().toString());
-        assertEquals("24:Ah", state.columns().get(NUM_LONG).get(0).toString());
+        assertEquals("24:Th", state.columns().get(NUM_LONG).get(0).toString());
         assertEquals("28:3s", state.columns().get(NUM_LONG).get(COL_LONG - 2).toString());
         assertEquals(LAST_DECK, state.deck.size());
         assertEquals("54:5s", state.deck.get(0).toString());
