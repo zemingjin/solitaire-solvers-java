@@ -31,9 +31,9 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
-import static org.solitaire.util.CardHelperTest.FOUR;
+import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.ONE;
-import static org.solitaire.util.CardHelperTest.TWO;
+import static org.solitaire.util.CardHelperTest.SIX;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,15 +59,15 @@ class SpiderTest {
     @Test
     void test_solveByHSD() {
         singleSolution(true);
-        hsdDepth(FOUR);
+        hsdDepth(FIVE);
         spider = build(cards);
 
-        assertEquals(FOUR, hsdDepth());
+        assertEquals(SIX, hsdDepth());
 
-        range(0, 12).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
+        range(0, 5).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
         var board = spider.board();
         assertNotNull(board);
-        assertEquals(48, board.path().size());
+        assertEquals(30, board.path().size());
     }
 
     @Test
@@ -78,7 +78,7 @@ class SpiderTest {
         spider.solve();
 
         assertEquals(ONE, spider.totalSolutions());
-        verify(board, times(TWO)).isSolved();
+        verify(board, times(ONE)).isSolved();
         verify(board, times(ONE)).path();
         assertEquals(ZERO, spider.totalScenarios());
     }
@@ -99,11 +99,11 @@ class SpiderTest {
     void test_solve_applyCandidates() {
         when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(mockCandidateList());
-        when(board.updateBoard(candidate)).thenReturn(board);
+        when(board.updateBoard(candidate)).thenReturn(null);
 
         spider.solve();
 
-        verify(board, times(TWO)).isSolved();
+        verify(board, times(ONE)).isSolved();
         verify(board).findCandidates();
         verify(board).updateBoard(candidate);
         verify(board, times(ZERO)).drawDeck();
@@ -117,8 +117,8 @@ class SpiderTest {
         var result = spider.applyCandidates(mockCandidateList(), board).toList();
 
         assertFalse(result.isEmpty());
-        verify(board, times(ONE)).updateBoard(candidate);
-        assertEquals(1, spider.totalScenarios());
+        verify(board).updateBoard(candidate);
+        assertEquals(ZERO, spider.totalScenarios());
     }
 
     @Test
@@ -169,13 +169,12 @@ class SpiderTest {
         }
 
         @Override
-        public boolean addBoards(Collection<SpiderBoard> boards) {
+        public void addBoards(Collection<SpiderBoard> boards) {
             if (first) {
                 first = false;
-                return super.addBoards(boards);
+                super.addBoards(boards);
             }
             first = true;
-            return false;
         }
     }
 }

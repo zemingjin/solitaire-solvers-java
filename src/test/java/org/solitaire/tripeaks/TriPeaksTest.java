@@ -33,7 +33,7 @@ class TriPeaksTest {
 
         assertEquals(3300, triPeaks.totalSolutions());
         assertEquals(15, triPeaks.maxDepth());
-        assertEquals(853574, triPeaks.totalScenarios());
+        assertEquals(850275, triPeaks.totalScenarios());
         assertEquals(45, triPeaks.shortestPath().size());
         assertEquals(50, triPeaks.longestPath().size());
         assertEquals(16900, triPeaks.maxScore().getLeft());

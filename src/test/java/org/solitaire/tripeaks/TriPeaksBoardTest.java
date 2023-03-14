@@ -3,6 +3,8 @@ package org.solitaire.tripeaks;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -18,6 +20,7 @@ import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
+import static org.solitaire.util.CardHelperTest.ZERO;
 import static org.solitaire.util.IOHelper.loadFile;
 
 class TriPeaksBoardTest {
@@ -119,6 +122,12 @@ class TriPeaksBoardTest {
 
         assertNotNull(ex);
         assertEquals("Invalid card: " + card, ex.getMessage());
+    }
+
+    @Test
+    void test_isOpenCard_allBoardCards() {
+        assertTrue(Arrays.stream(board.cards(), ZERO, INI_COVERED).noneMatch(board::isOpenCard));
+        assertTrue(Arrays.stream(board.cards(), INI_COVERED, LAST_BOARD).allMatch(board::isOpenCard));
     }
 
     @Test

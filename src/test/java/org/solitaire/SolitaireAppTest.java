@@ -3,6 +3,8 @@ package org.solitaire;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,18 +30,22 @@ class SolitaireAppTest {
     private final String[] ARGS = new String[]{TEST_FILE, TRIPEAKS, SINGLE_SOLUTION};
 
     private final SolitaireApp app = app();
+    private ByteArrayOutputStream outputStream;
 
     @BeforeEach
     void setup() {
+        outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
         useSuit(false);
         isPrint(false);
-        app.results().clear();
     }
 
     @Test
     void test_main() {
+        assertFalse(isPrint());
+        isPrint(true);
         main(ARGS);
-        assertEquals(3, app().results().size());
+        assertEquals(921, outputStream.toByteArray().length);
 
         assertThrows(RuntimeException.class, () -> main(new String[]{}));
     }
@@ -58,7 +64,6 @@ class SolitaireAppTest {
         assertTrue(useSuit());
         assertNotNull(app.solver());
         assertEquals(7983, app.solver().totalSolutions());
-        assertEquals(3, app.results().size());
     }
 
     @Test
@@ -71,17 +76,15 @@ class SolitaireAppTest {
 
         assertNotNull(app.solver());
         assertEquals(512, app.solver().totalSolutions());
-        assertEquals(3, app.results().size());
     }
 
     @Test
     void test_run_freecell() {
         ARGS[0] = "games/freecell/freecell-020623-easy.txt";
         ARGS[1] = FREECELL;
-        ARGS[2] = SINGLE_SOLUTION;
+        ARGS[2] = null;
 
         assertThrows(RuntimeException.class, () -> app.run(ARGS));
-        assertTrue(app.results().isEmpty());
     }
 
     @Test

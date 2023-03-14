@@ -2,6 +2,8 @@ package org.solitaire.spider;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.function.TriFunction;
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
@@ -11,14 +13,12 @@ import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.function.IntPredicate;
+import java.util.stream.Stream;
 
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.max;
@@ -26,12 +26,15 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
+import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
+import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suitCode;
 
 @Slf4j
@@ -40,8 +43,6 @@ public class SpiderBoard extends GameBoard {
     protected transient final IntPredicate isNotEmpty = i -> !columns().get(i).isEmpty();
     private transient final IntPredicate isLongEnoughForRun = i -> 13 <= columns().get(i).size();
     private transient final IntPredicate isThereARun = i -> isThereARun(columns().get(i));
-    private transient final BiPredicate<Card, Card> higherOfSameColor = Card::isHigherOfSameColor;
-    private transient final BiPredicate<Card, Card> higherOfDifferentColor = Card::isHigherWithDifferentColor;
 
     public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
@@ -66,70 +67,85 @@ public class SpiderBoard extends GameBoard {
      *************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        var candidates = findCandidates(this::findCandidatesOfSameSuit);
-
-        if (candidates.isEmpty()) {
-            candidates = findCandidates(this::findCandidatesOfDifferentColors);
-
-            if (candidates.isEmpty()) {
-                candidates = drawDeck();
-            }
-        }
-        return candidates;
+        return Optional.of(concat(findCandidates(this::findCandidateOfSameSuit),
+                        findCandidates(this::findCandidateOfDifferentColors)))
+                .map(Stream::toList)
+                .filter(ObjectUtils::isNotEmpty)
+                .orElseGet(this::drawDeck);
     }
 
-    private List<Candidate> findCandidates(Function<Integer, List<Candidate>> findCandidate) {
+    protected Stream<Candidate> findCandidates(TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
                 .filter(isNotEmpty)
-                .boxed()
-                .map(findCandidate)
-                .flatMap(List::stream)
-                .toList();
+                .mapToObj(i -> Pair.of(i, columns().get(i)))
+                .map(it -> Pair.of(it.getLeft(), getOrderedCardsAtColumn(it.getRight())))
+                .flatMap(it -> findCandidates(it, finder))
+                .filter(this::isMovable);
     }
 
-    private List<Candidate> findCandidatesOfSameSuit(Integer i) {
-        return Optional.of(columns().get(i))
-                .filter(ObjectUtils::isNotEmpty)
-                .map(this::getOrderedCardsAtColumn)
-                .map(it -> findCandidates(i, it, higherOfSameColor))
-                .orElseGet(Collections::emptyList);
-    }
-
-    private List<Candidate> findCandidates(int i, List<Card> cards, BiPredicate<Card, Card> tester) {
+    private Stream<Candidate> findCandidates(Pair<Integer, List<Card>> pair,
+                                               TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
-                .mapToObj(j -> getTargetCandidate(cards, i, j, tester))
-                .filter(Objects::nonNull)
-                .toList();
+                .mapToObj(j -> finder.apply(pair.getLeft(), j, pair.getRight()))
+                .filter(Objects::nonNull);
     }
 
-    private Candidate getTargetCandidate(List<Card> cards, int i, int j, BiPredicate<Card, Card> tester) {
-        var card = cards.get(0);
+    protected Candidate findCandidateOfSameSuit(Integer i, Integer j, List<Card> cards) {
+        var column = columns().get(j);
 
-        return Optional.of(columns().get(j))
-                .filter(it -> it.isEmpty() || tester.test(it.peek(), card))
-                .map(it -> new Candidate(cards, COLUMN, i, COLUMN, j))
-                .filter(this::isMovable)
-                .orElse(null);
+        if (column.isEmpty() || column.peek().isHigherOfSameColor(cards.get(0))) {
+            return new Candidate(cards, COLUMN, i, COLUMN, j);
+        }
+        var card = column.peek();
+        if (card.isSameSuit(cards.get(0))) {
+            for (int k = 0; k < cards.size(); k++) {
+                if (card.isHigherOfSameColor(cards.get(k))) {
+                    return new Candidate(cards.subList(k, cards.size()), COLUMN, i, COLUMN, j);
+                }
+            }
+        }
+        return null;
     }
 
-    private List<Candidate> findCandidatesOfDifferentColors(Integer i) {
-        return Optional.of(columns().get(i))
-                .filter(ObjectUtils::isNotEmpty)
-                .map(this::getOrderedCardsAtColumn)
-                .filter(it -> it.size() == 1)
-                .map(it -> findCandidates(i, it, higherOfDifferentColor))
-                .orElseGet(Collections::emptyList);
+    private Candidate findCandidateOfDifferentColors(Integer i, Integer j, List<Card> cards) {
+        if (cards.size() == 1) {
+            var column = columns().get(j);
+            var card = cards.get(0);
+
+            if (column.isEmpty() || column.peek().isHigherWithDifferentColor(card)) {
+                return new Candidate(List.of(card), COLUMN, i, COLUMN, j);
+            }
+        }
+        return null;
     }
 
     protected boolean isMovable(Candidate candidate) {
         return Optional.of(candidate)
                 .filter(this::isNotRepeatingCandidate)
+                .filter(this::isLongerTargetSequence)
                 .map(it -> !(it.isKing() && isAtTop(it)))
                 .orElse(false);
     }
 
     private boolean isAtTop(Candidate candidate) {
         return columns.get(candidate.from()).indexOf(candidate.peek()) == 0;
+    }
+
+    private boolean isLongerTargetSequence(Candidate candidate) {
+        var column = columns().get(candidate.to());
+
+        if (column.isNotEmpty()) {
+            var target = column.peek();
+
+            if (target.isSameSuit(candidate.peek())) {
+                return targetSize(candidate) > getOrderedCardsAtColumn(columns().get(candidate.from())).size();
+            }
+        }
+        return true;
+    }
+
+    private int targetSize(Candidate candidate) {
+        return getOrderedCardsAtColumn(columns.get(candidate.to())).size() + candidate.cards().size();
     }
 
     private boolean isNotRepeatingCandidate(Candidate candidate) {
@@ -216,18 +232,24 @@ public class SpiderBoard extends GameBoard {
         var candidate = new Candidate(run, COLUMN, i, FOUNDATION, suitCode(run.get(0)));
 
         path().add(candidate.notation());
-        System.out.printf("Run: %s\n", run);
+        if (isPrint()) {
+            System.out.printf("Run: %s\n", stringOfRaws(run));
+        }
         totalScore += 100;
         run.clear();
     }
 
     protected List<Candidate> drawDeck() {
-        if (isNotEmpty(deck)) {
+        if (isNoEmptyColumn() && isNotEmpty(deck)) {
             var cards = deck().subList(0, columns.size());
 
             return List.of(new Candidate(new ArrayList<>(cards), DECKPILE, 0, COLUMN, 0));
         }
         return emptyList();
+    }
+
+    protected boolean isNoEmptyColumn() {
+        return columns().stream().allMatch(Column::isNotEmpty);
     }
 
     /*****************************************************************************************************************
@@ -237,7 +259,7 @@ public class SpiderBoard extends GameBoard {
     public int score() {
         if (super.score() == 0) {
             // The smaller, the better.
-            var boardCards = columns().stream().mapToInt(Column::size).sum();
+            var boardCards = columns().stream().mapToInt(Column::size).sum() * 2;
             var blockerCount = countBlockers();
             // The larger, the better.
             var sequences = calcSequences();

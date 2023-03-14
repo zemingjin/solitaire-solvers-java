@@ -66,22 +66,6 @@ class KlondikeBoard extends GameBoard {
                 that.stateChanged);
     }
 
-    public static int drawNumber() {
-        return drawNumber;
-    }
-
-    public static void drawNumber(int drawNumber) {
-        KlondikeBoard.drawNumber = drawNumber;
-    }
-
-    private static Card nextCard(Card card, int suitCode) {
-        return nonNull(card) ? CardHelper.nextCard(card) : card("A" + suit(suitCode));
-    }
-
-    private static int calcBlocker(List<Card> cards, Card target) {
-        return cards.size() - cards.lastIndexOf(target) - 1;
-    }
-
     /***************************************************************************************************************
      * Search
      **************************************************************************************************************/
@@ -275,7 +259,32 @@ class KlondikeBoard extends GameBoard {
                 .allMatch(it -> diffOfValues(card, it.isEmpty() ? null : it.peek()) <= 2);
     }
 
+    protected List<Candidate> drawDeck() {
+        if (checkRecycleDeck()) {
+            var floor = max(0, deck().size() - drawNumber);
+            var ceiling = Math.min(floor + drawNumber, deck().size());
+            var cards = deck().subList(floor, ceiling);
+
+            return List.of(new Candidate(new LinkedList<>(cards), DECKPILE, 0, DECKPILE, 0));
+        }
+        return emptyList();
+    }
+
+    private boolean checkRecycleDeck() {
+        Optional.of(deck())
+                .filter(Deck::isEmpty)
+                .filter(it -> stateChanged)
+                .ifPresent(it -> {
+                    while (isNotEmpty(deckPile())) {
+                        it.push(deckPile().pop());
+                    }
+                    stateChanged(false);
+                });
+        return isNotEmpty(deck());
+    }
+
     /*************************************************************************************************************
+     * Update board
      ************************************************************************************************************/
     @Override
     public KlondikeBoard updateBoard(Candidate candidate) {
@@ -351,53 +360,9 @@ class KlondikeBoard extends GameBoard {
         return false;
     }
 
-    protected List<Candidate> drawDeck() {
-        if (checkRecycleDeck()) {
-            var floor = max(0, deck().size() - drawNumber);
-            var ceiling = Math.min(floor + drawNumber, deck().size());
-            var cards = deck().subList(floor, ceiling);
-
-            return List.of(new Candidate(new LinkedList<>(cards), DECKPILE, 0, DECKPILE, 0));
-        }
-        return emptyList();
-    }
-
-    private boolean checkRecycleDeck() {
-        Optional.of(deck())
-                .filter(Deck::isEmpty)
-                .filter(it -> stateChanged)
-                .ifPresent(it -> {
-                    while (isNotEmpty(deckPile())) {
-                        it.push(deckPile().pop());
-                    }
-                    stateChanged(false);
-                });
-        return isNotEmpty(deck());
-    }
-
-    protected boolean stateChanged() {
-        return stateChanged;
-    }
-
-    protected void stateChanged(boolean stateChanged) {
-        this.stateChanged = stateChanged;
-    }
-
-    public Deck deck() {
-        return deck;
-    }
-
-    public Columns columns() {
-        return columns;
-    }
-
-    public Stack<Card> deckPile() {
-        return deckPile;
-    }
-
-    public List<Stack<Card>> foundations() {
-        return foundations;
-    }
+    /*************************************************************************************************************
+     * Score board
+     ************************************************************************************************************/
 
     @Override
     public int score() {
@@ -434,4 +399,47 @@ class KlondikeBoard extends GameBoard {
                 .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
     }
 
+    private static Card nextCard(Card card, int suitCode) {
+        return nonNull(card) ? CardHelper.nextCard(card) : card("A" + suit(suitCode));
+    }
+
+    private static int calcBlocker(List<Card> cards, Card target) {
+        return cards.size() - cards.lastIndexOf(target) - 1;
+    }
+
+    /*************************************************************************************************************
+     * Accessors
+     ************************************************************************************************************/
+
+    public static int drawNumber() {
+        return drawNumber;
+    }
+
+    public static void drawNumber(int drawNumber) {
+        KlondikeBoard.drawNumber = drawNumber;
+    }
+
+    protected boolean stateChanged() {
+        return stateChanged;
+    }
+
+    protected void stateChanged(boolean stateChanged) {
+        this.stateChanged = stateChanged;
+    }
+
+    public Deck deck() {
+        return deck;
+    }
+
+    public Columns columns() {
+        return columns;
+    }
+
+    public Stack<Card> deckPile() {
+        return deckPile;
+    }
+
+    public List<Stack<Card>> foundations() {
+        return foundations;
+    }
 }

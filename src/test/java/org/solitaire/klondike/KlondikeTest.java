@@ -14,10 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
@@ -82,10 +82,10 @@ class KlondikeTest {
 
         klondike.solve();
 
-        verify(board, times(TWO)).isSolved();
-        verify(board, times(ONE)).findCandidates();
+        verify(board).isSolved();
+        verify(board).findCandidates();
         verify(board, times(TWO)).updateBoard(any());
-        assertEquals(2, klondike.totalScenarios());
+        assertEquals(ONE, klondike.totalScenarios());
     }
 
     @Test
@@ -95,9 +95,9 @@ class KlondikeTest {
 
         klondike.solve();
 
-        verify(board, times(TWO)).isSolved();
-        verify(board, times(ONE)).findCandidates();
-        assertEquals(0, klondike.totalScenarios());
+        verify(board).isSolved();
+        verify(board).findCandidates();
+        assertEquals(ONE, klondike.totalScenarios());
     }
 
     @Test
@@ -125,6 +125,11 @@ class KlondikeTest {
 
         assertNotNull(board);
         assertEquals(60, board.path().size());
+    }
+
+    @Test
+    void test_maxScore_exception() {
+        assertThrows(RuntimeException.class, () -> klondike.maxScore());
     }
 
     private Klondike mockKlondike() {
