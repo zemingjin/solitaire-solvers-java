@@ -16,6 +16,11 @@ public class Column extends ArrayList<Card> {
         openAt(column.openAt());
     }
 
+    public Column(List<Card> cards) {
+        this();
+        addAll(cards);
+    }
+
     @Override
     public boolean equals(Object obj) {
         return super.equals(obj) && openAt == ((Column) obj).openAt;

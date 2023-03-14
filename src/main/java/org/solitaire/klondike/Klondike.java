@@ -12,6 +12,9 @@ import org.solitaire.model.SolveExecutor;
 import java.util.List;
 import java.util.Stack;
 
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.solitaire.util.BoardHelper.verifyBoard;
+
 @Slf4j
 public class Klondike extends SolveExecutor<String, Candidate, KlondikeBoard> {
     protected static final int SOLUTION_LIMIT = 1000;
@@ -23,6 +26,9 @@ public class Klondike extends SolveExecutor<String, Candidate, KlondikeBoard> {
                     List<Stack<Card>> foundations) {
         super(new KlondikeBoard(columns, new Path<>(), 0, deck, new Stack<>(), foundations, true),
                 KlondikeBoard::new);
+        if (isNotEmpty(columns)) {
+            verifyBoard(columns, deck);
+        }
     }
 
     @Override

@@ -35,7 +35,7 @@ class BoardHelperTest {
         result = verifyBoard(columns);
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("Duplicated card: Ad", result.get(0));
+        assertEquals("Duplicate card: Ad", result.get(0));
     }
 
     @Test

@@ -8,7 +8,6 @@ import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
-import org.solitaire.util.BoardHelper;
 import org.solitaire.util.CardHelper;
 
 import javax.annotation.Nonnull;
@@ -32,6 +31,7 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Candidate.buildFoundationCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.FREECELL;
+import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.suit;
@@ -344,6 +344,6 @@ public class FreeCellBoard extends GameBoard {
 
     @Override
     public List<String> verify() {
-        return BoardHelper.verifyBoard(columns());
+        return verifyBoard(columns());
     }
 }

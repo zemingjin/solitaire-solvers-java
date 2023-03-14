@@ -5,56 +5,77 @@ import org.solitaire.model.Column;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static java.util.stream.IntStream.range;
+import static org.solitaire.util.BoardErrors.Duplicate;
+import static org.solitaire.util.BoardErrors.Missing;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
 
 public class BoardHelper {
+    public static List<String> verifyBoard(List<Column> columns, List<Card> deck) {
+        var combined = columns.stream().flatMap(List::stream).collect(Collectors.toList());
+
+        combined.addAll(deck);
+        return verifyBoard(combined.toArray(Card[]::new));
+    }
+
     public static List<String> verifyBoard(List<Column> columns) {
         return verifyBoard(toArray(columns));
-    }
-
-    public static List<String> verifyBoard(Card[] cards) {
-        var maps = new Card[4][14];
-        var results = checkDuplidates(cards, maps);
-
-        results.addAll(checkMissing(maps));
-        return results;
-    }
-
-    protected static List<String> checkDuplidates(Card[] cards, Card[][] maps) {
-        return Stream.of(cards)
-                .map(it -> checkDuplicates(it, maps))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
-    private static String checkDuplicates(Card card, Card[][] maps) {
-        if (isNull(card)) {
-            return null;
-        } else if (isNull(maps[suitCode(card)][card.rank()])) {
-            maps[suitCode(card)][card.rank()] = card;
-            return null;
-        }
-        return format("Duplicated card: %s", card.raw());
-    }
-
-    protected static List<String> checkMissing(Card[][] cards) {
-        return range(0, cards.length)
-                .mapToObj(i -> range(1, cards[i].length)
-                        .filter(j -> isNull(cards[i][j]))
-                        .mapToObj(j -> format("Missing card: %s%s", VALUES.charAt(j - 1), suit(i).toLowerCase())))
-                .flatMap(it -> it)
-                .collect(Collectors.toList());
     }
 
     private static Card[] toArray(List<Column> columns) {
         return columns.stream().flatMap(Column::stream).map(Card.class::cast).toArray(Card[]::new);
     }
+
+    public static List<String> verifyBoard(Card[] cards) {
+        var maps = mapCards(cards);
+        var numberOfEachCards = numberOfEachCard(maps);
+
+        return Stream.concat(check(maps, it -> it > numberOfEachCards, Duplicate),
+                check(maps, it -> it < numberOfEachCards, Missing)).toList();
+    }
+
+    private static int numberOfEachCard(int[][] maps) {
+        var numberOfSuits = (int) Stream.of(maps).filter(it -> it[0] > 0).count();
+
+        return switch (numberOfSuits) {
+            case 4 -> 1;
+            case 2 -> 2;
+            case 1 -> 6;
+            default -> throw new RuntimeException("Invalid number of suit: " + numberOfSuits);
+        };
+    }
+
+    private static int[][] mapCards(Card[] cards) {
+        var maps = new int[4][14];
+
+        Stream.of(cards)
+                .filter(Objects::nonNull)
+                .forEach(it -> {
+                    var at = suitCode(it);
+                    maps[at][0]++;
+                    maps[at][it.rank()]++;
+                });
+        return maps;
+    }
+
+    protected static Stream<String> check(int[][] maps, IntPredicate test, BoardErrors type) {
+        return range(0, maps.length)
+                .filter(i -> maps[i][0] > 0)
+                .mapToObj(i -> checkCard(test, type, maps, i))
+                .flatMap(it -> it);
+    }
+
+    private static Stream<String> checkCard(IntPredicate test, BoardErrors type, int[][] maps, int i) {
+        return range(1, maps[i].length)
+                .filter(j -> test.test(maps[i][j]))
+                .mapToObj(j -> format("%s card: %s%s", type, VALUES.charAt(j - 1), suit(i).toLowerCase()));
+    }
+
 }
