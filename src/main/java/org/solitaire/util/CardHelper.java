@@ -117,6 +117,12 @@ public class CardHelper {
         return buildCard(0, value);
     }
 
+    public static Card nextCard(Card card, int suitCode) {
+        return nonNull(card)
+                ? card(nextValue(card.value()) + card.suit())
+                : card("A" + suit(suitCode).toLowerCase());
+    }
+
     public static Card nextCard(Card card) {
         return card(nextValue(card.value()) + card.suit());
     }

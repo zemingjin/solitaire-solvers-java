@@ -59,7 +59,8 @@ class KlondikeBoardTest {
 
         assertNotNull(result);
         assertEquals(3, result.size());
-        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=COLUMN, to=0]", result.get(0).toString());
+        assertEquals("Candidate[cards=[26:9s], origin=COLUMN, from=1, target=COLUMN, to=0]",
+                result.get(0).toString());
     }
 
     @Test
@@ -178,7 +179,7 @@ class KlondikeBoardTest {
     @Test
     void test_findFoundationCandidates() {
         drawDeckCards();
-        var results = board.findFoundationCandidates();
+        var results = board.findFoundationCandidates().toList();
 
         assertNotNull(results);
         assertTrue(results.isEmpty());
@@ -188,7 +189,7 @@ class KlondikeBoardTest {
         board.columns().get(0).clear();
         board.columns().get(6).add(card);
 
-        results = board.findFoundationCandidates();
+        results = board.findFoundationCandidates().toList();
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -264,7 +265,7 @@ class KlondikeBoardTest {
 
     @Test
     void test_findTargets() {
-        var targets = board.findMovableCandidates();
+        var targets = board.findMovableCandidates().toList();
 
         assertNotNull(targets);
         assertEquals(3, targets.size());
