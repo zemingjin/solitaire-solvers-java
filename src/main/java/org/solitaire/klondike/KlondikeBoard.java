@@ -1,6 +1,7 @@
 package org.solitaire.klondike;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
@@ -15,6 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +45,10 @@ import static org.solitaire.util.CardHelper.suitCode;
  */
 class KlondikeBoard extends GameBoard {
     private static int drawNumber = 3;
+
+    protected transient final IntPredicate isNotImmediateFoundationable =
+            i -> !peek(i).isHigherOfSameColor(foundationCard(peek(i)));
+
     protected final Deck deck;
     protected final Stack<Card> deckPile;
     protected final List<Stack<Card>> foundations;
@@ -77,12 +83,45 @@ class KlondikeBoard extends GameBoard {
      **************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        var candidates = concat(findFoundationCandidates(), findMovableCandidates()).collect(Collectors.toList());
+        var candidates = Stream.concat(
+                        findFoundationCandidates(),
+                        findMovableCandidates()).collect(Collectors.toList());
 
+        if (candidates.isEmpty() || !stateChanged) {
+            candidates.addAll(findFoundationToColumnCandidates().toList());
+        }
         if (candidates.isEmpty()) {
             return drawDeck();
         }
         return optimizeCandidates(candidates);
+    }
+
+    protected Stream<Candidate> findFoundationToColumnCandidates() {
+        return foundations().stream()
+                .filter(ObjectUtils::isNotEmpty)
+                .map(Stack::peek)
+                .map(this::fromFoundationToColumn)
+                .filter(Objects::nonNull)
+                .map(it -> new Candidate(List.of(it.getRight()), FOUNDATION, suitCode(it.getRight()), COLUMN, it.getLeft()));
+    }
+
+    protected Pair<Integer, Card> fromFoundationToColumn(Card card) {
+        int targetCol = range(0, columns().size())
+                .filter(isNotEmpty.and(isNotImmediateFoundationable))
+                .filter(i -> card.isHigherWithDifferentColor(peek(i)))
+                .findFirst()
+                .orElse(-1);
+        if (targetCol >= 0) {
+            targetCol = range(0, columns().size())
+                    .filter(isNotEmpty)
+                    .filter(i -> peek(i).isHigherWithDifferentColor(card))
+                    .findFirst()
+                    .orElse(-1);
+            if (targetCol >= 0) {
+                return Pair.of(targetCol, card);
+            }
+        }
+        return null;
     }
 
     protected Stream<Candidate> findFoundationCandidates() {
@@ -106,12 +145,12 @@ class KlondikeBoard extends GameBoard {
     }
 
     protected boolean isFoundationCandidate(Card card) {
-        var foundation = foundations.get(suitCode(card));
+        var foundationCard = foundations.get(suitCode(card));
 
-        return Optional.of(foundation)
+        return Optional.of(foundationCard)
                 .filter(Stack::isEmpty)
                 .map(it -> card.isAce())
-                .orElseGet(() -> foundation.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
+                .orElseGet(() -> foundationCard.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
     }
 
     protected Stream<Candidate> findMovableCandidates() {
@@ -143,16 +182,18 @@ class KlondikeBoard extends GameBoard {
     }
 
     private boolean isAppendable(Column column, Candidate candidate) {
-        var card = candidate.peek();
+        return Optional.of(column)
+                .filter(Column::isNotEmpty)
+                .map(it -> it.peek().isHigherWithDifferentColor(candidate.peek()))
+                .orElseGet(() -> isMovableToEmptyColumn(candidate));
+    }
 
-        if (column.isEmpty()) {
-            return card.isKing() && isMovable(candidate);
-        }
-        return column.peek().isHigherWithDifferentColor(card);
+    private boolean isMovableToEmptyColumn(Candidate candidate) {
+        return candidate.peek().isKing() && isMovableToEmptyColumn.test(candidate);
     }
 
     protected boolean isMovable(Candidate candidate) {
-        if (COLUMN.equals(candidate.origin())) {
+        if (candidate.isFromColumn()) {
             return Optional.of(candidate.from())
                     .map(columns::get)
                     .filter(it -> it.indexOf(candidate.peek()) > 0)
@@ -162,7 +203,7 @@ class KlondikeBoard extends GameBoard {
     }
 
     protected boolean isNotSameColumn(int colNum, Candidate candidate) {
-        return !(COLUMN.equals(candidate.origin()) && candidate.from() == colNum);
+        return !(candidate.isFromColumn() && candidate.from() == colNum);
     }
 
     protected List<Candidate> findOpenCandidates() {
@@ -250,6 +291,9 @@ class KlondikeBoard extends GameBoard {
     }
 
     protected boolean isImmediateToFoundation(Card card) {
+        if (!stateChanged()) {
+            return true;
+        }
         return foundations.stream()
                 .allMatch(it -> diffOfValues(card, it.isEmpty() ? null : it.peek()) <= 2);
     }
@@ -268,7 +312,7 @@ class KlondikeBoard extends GameBoard {
     private boolean checkRecycleDeck() {
         Optional.of(deck())
                 .filter(Deck::isEmpty)
-                .filter(it -> stateChanged)
+                .filter(it -> stateChanged())
                 .ifPresent(it -> {
                     while (isNotEmpty(deckPile())) {
                         it.push(deckPile().pop());
@@ -283,8 +327,9 @@ class KlondikeBoard extends GameBoard {
      ************************************************************************************************************/
     @Override
     public KlondikeBoard updateBoard(Candidate candidate) {
-        stateChanged(true);
-
+        if (candidate.isNotToDeck()) {
+            stateChanged(true);
+        }
         return removeFromSource(candidate)
                 .moveToTarget(candidate);
     }
@@ -374,7 +419,7 @@ class KlondikeBoard extends GameBoard {
     }
 
     private int calcBlockers(int at) {
-        var foundationCard = foundations.get(at).isEmpty() ? null : foundations.get(at).peek();
+        var foundationCard = foundationCard(at);
 
         if (nonNull(foundationCard) && foundationCard.isKing()) {
             return 0;
@@ -432,6 +477,18 @@ class KlondikeBoard extends GameBoard {
 
     public List<Stack<Card>> foundations() {
         return foundations;
+    }
+
+    public Card foundationCard(Card card) {
+        return foundationCard(suitCode(card));
+    }
+
+    public Card foundationCard(int suitCode) {
+        return Optional.of(suitCode)
+                .map(foundations()::get)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(Stack::peek)
+                .orElse(null);
     }
 
     @Override

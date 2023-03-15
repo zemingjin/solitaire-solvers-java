@@ -7,6 +7,7 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.RED;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 import static org.solitaire.pyramid.Pyramid.ACE;
 import static org.solitaire.pyramid.Pyramid.KING;
 import static org.solitaire.util.CardHelper.VALUES;
@@ -82,7 +83,7 @@ public record Card(int at, String value, String suit, String raw) {
     }
 
     public boolean isHigherOfSameColor(Card other) {
-        return isSameColor(other) && isHigherOrder(other);
+        return nonNull(other) && isSameColor(other) && isHigherOrder(other);
     }
 
     public boolean isLowerWithSameSuit(Card other) {

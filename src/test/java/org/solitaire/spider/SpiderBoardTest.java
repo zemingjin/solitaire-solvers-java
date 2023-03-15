@@ -86,13 +86,13 @@ class SpiderBoardTest {
         var source = board.columns().get(1);
         var candidate = new Candidate(source.subList(1, source.size()), COLUMN, 1, COLUMN, 0);
 
-        assertTrue(board.isNotColumnToEmptyColumn.test(candidate));
+        assertTrue(board.isMovableToEmptyColumn.test(candidate));
 
         candidate = new Candidate(source, COLUMN, 1, COLUMN, 0);
-        assertTrue(board.isNotColumnToEmptyColumn.test(candidate));
+        assertTrue(board.isMovableToEmptyColumn.test(candidate));
 
         board.columns().get(0).clear();
-        assertFalse(board.isNotColumnToEmptyColumn.test(candidate));
+        assertFalse(board.isMovableToEmptyColumn.test(candidate));
     }
 
     @Test
@@ -273,7 +273,7 @@ class SpiderBoardTest {
         assertEquals(0, board.path().size());
         var result = board.appendToTarget(candidate);
         assertEquals(1, result.path().size());
-        assertEquals("d0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
+        assertEquals("D0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
         assertTrue(range(0, board.columns().size())
                 .allMatch(i -> candidate.cards().get(i).equals(board.columns().get(i).peek())));
     }
@@ -309,7 +309,7 @@ class SpiderBoardTest {
     void test_drawDeck() {
         var candidates = board.drawDeck();
         assertEquals(1, candidates.size());
-        assertEquals("d0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
+        assertEquals("D0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
 
         board.deck().clear();
         assertTrue(board.drawDeck().isEmpty());

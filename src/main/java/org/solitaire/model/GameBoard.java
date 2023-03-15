@@ -5,11 +5,17 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
+    public transient final IntPredicate isNotEmpty = i -> isNotEmpty(columns().get(i));
+    public transient final Predicate<Candidate> isMovableToEmptyColumn
+            = c -> !c.isFromColumn() || (c.cards().size() < columns().get(c.from()).size() || isNotEmpty.test(c.to()));
     protected final Columns columns;
     protected final Path<String> path;
     protected int totalScore;
@@ -96,5 +102,13 @@ public class GameBoard implements Board<String, Candidate> {
 
     public int countEmptyColumns() {
         return (int) columns.stream().filter(ObjectUtils::isEmpty).count();
+    }
+
+    public Card peek(int colId) {
+        return Optional.of(colId)
+                .map(columns()::get)
+                .filter(ObjectUtils::isNotEmpty)
+                .map(Column::peek)
+                .orElse(null);
     }
 }
