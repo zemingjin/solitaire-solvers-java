@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.MAX_VALUE;
@@ -41,9 +42,11 @@ import static org.solitaire.util.CardHelper.suitCode;
 @Slf4j
 public class SpiderBoard extends GameBoard {
     protected final Deck deck;
-    protected transient final IntPredicate isNotEmpty = i -> !columns().get(i).isEmpty();
+    protected transient final IntPredicate isNotEmpty = i -> isNotEmpty(columns().get(i));
     private transient final IntPredicate isLongEnoughForRun = i -> 13 <= columns().get(i).size();
     private transient final IntPredicate isThereARun = i -> isThereARun(columns().get(i));
+    protected transient final Predicate<Candidate> isNotColumnToEmptyColumn
+            = c -> c.cards().size() < columns().get(c.from()).size() || isNotEmpty.test(c.to());
 
     public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
@@ -85,7 +88,7 @@ public class SpiderBoard extends GameBoard {
     }
 
     private Stream<Candidate> findCandidates(Pair<Integer, List<Card>> pair,
-                                               TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
+                                             TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
                 .mapToObj(j -> finder.apply(pair.getLeft(), j, pair.getRight()))
                 .filter(Objects::nonNull);
@@ -124,6 +127,7 @@ public class SpiderBoard extends GameBoard {
         return Optional.of(candidate)
                 .filter(this::isNotRepeatingCandidate)
                 .filter(this::isLongerTargetSequence)
+                .filter(isNotColumnToEmptyColumn)
                 .map(it -> !(it.isKing() && isAtTop(it)))
                 .orElse(false);
     }
@@ -260,7 +264,7 @@ public class SpiderBoard extends GameBoard {
     public int score() {
         if (super.score() == 0) {
             // The smaller, the better.
-            var boardCards = columns().stream().mapToInt(Column::size).sum() * 2;
+            var boardCards = columns().stream().mapToInt(Column::size).sum() * 3;
             var blockerCount = countBlockers();
             // The larger, the better.
             var sequences = calcSequences();
@@ -303,12 +307,27 @@ public class SpiderBoard extends GameBoard {
 
     // The bigger, the better
     protected int calcSequences() {
-        return columns.stream()
-                .map(this::getOrderedCardsAtColumn)
-                .mapToInt(List::size)
-                .filter(i -> i > 1)
-                .map(it -> it * it)
+        return range(0, columns().size())
+                .filter(i -> isNotEmpty(columns().get(i)))
+                .mapToObj(i -> Pair.of(i, getOrderedCardsAtColumn(columns.get(i))))
+                .mapToInt(this::calcSequenceScore)
                 .sum();
+    }
+
+    protected int calcSequenceScore(Pair<Integer, List<Card>> pair) {
+        var cards = pair.getRight();
+        var size = cards.size();
+
+        if (size == 1) {
+            return 1;
+        } else if (isBestSequence(cards, pair.getLeft())) {
+            return size * size;
+        }
+        return size * 2;
+    }
+
+    boolean isBestSequence(List<Card> cards, int col) {
+        return cards.get(0).isKing() && cards.size() == columns.get(col).size();
     }
 
 

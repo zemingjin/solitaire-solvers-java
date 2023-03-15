@@ -1,5 +1,6 @@
 package org.solitaire.spider;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
@@ -45,12 +46,12 @@ class SpiderBoardTest {
 
     @Test
     void test_score() {
-        assertEquals(-129, board.score());
+        assertEquals(-173, board.score());
 
         board.columns().get(9).add(board.columns().get(5).pop());
         board.columns().get(9).add(card("Ah"));
         board.score(0);
-        assertEquals(-121, board.score());
+        assertEquals(-170, board.score());
     }
 
     @Test
@@ -71,6 +72,27 @@ class SpiderBoardTest {
 
         board.columns().get(3).clear();
         assertEquals(ZERO, board.countBlockers(3));
+    }
+
+    @Test
+    void test_calcSequenceScore() {
+        board.columns().get(9).set(0, card("Kh"));
+
+        assertEquals(25, board.calcSequenceScore(Pair.of(9, board.columns().get(9))));
+    }
+
+    @Test
+    void test_isNotTheWholeColumn() {
+        var source = board.columns().get(1);
+        var candidate = new Candidate(source.subList(1, source.size()), COLUMN, 1, COLUMN, 0);
+
+        assertTrue(board.isNotColumnToEmptyColumn.test(candidate));
+
+        candidate = new Candidate(source, COLUMN, 1, COLUMN, 0);
+        assertTrue(board.isNotColumnToEmptyColumn.test(candidate));
+
+        board.columns().get(0).clear();
+        assertFalse(board.isNotColumnToEmptyColumn.test(candidate));
     }
 
     @Test
