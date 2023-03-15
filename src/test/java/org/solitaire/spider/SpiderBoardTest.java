@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Column;
+import org.solitaire.util.IOHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -18,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
-import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.spider.SpiderHelper.build;
@@ -30,6 +30,10 @@ import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 class SpiderBoardTest {
+    private static final String TEST_FILE = "games/spider/spider-122922-expert.txt";
+
+    private static final String[] cards = IOHelper.loadFile(TEST_FILE);
+
     private SpiderBoard board;
 
     @BeforeEach
@@ -242,8 +246,6 @@ class SpiderBoardTest {
 
     @Test
     void test_appendToTarget_deck() {
-        var floor = board.deck().size() - 10;
-
         var candidate = board.drawDeck().get(0);
 
         assertEquals(0, board.path().size());
@@ -320,6 +322,19 @@ class SpiderBoardTest {
 
         board.columns().get(0).clear();
         assertFalse(board.isNotEmpty.test(0));
+    }
+
+    @Test
+    void test_verify() {
+        var result = board.verify();
+
+        assertTrue(result.isEmpty());
+
+        board.columns().get(1).add(card("Th"));
+        board.columns().get(0).remove(0);
+        result = board.verify();
+        assertEquals(2, result.size());
+        assertEquals("[Extra card: Th, Missing card: 4h]", result.toString());
     }
 
     private static Column mockRun() {

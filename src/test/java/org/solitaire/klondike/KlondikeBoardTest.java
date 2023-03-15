@@ -455,6 +455,19 @@ class KlondikeBoardTest {
         assertFalse(board.stateChanged());
     }
 
+    @Test
+    void test_verify() {
+        var result = board.verify();
+
+        assertTrue(result.isEmpty());
+
+        board.columns().get(0).remove(0);
+        board.columns().get(1).add(card("Kd"));
+
+        result = board.verify();
+        assertEquals("[Extra card: Kd, Missing card: Th]", result.toString());
+    }
+
     private void mockFullFoundations(List<Stack<Card>> foundations) {
         range(0, 4)
                 .forEach(i -> range(0, 13)

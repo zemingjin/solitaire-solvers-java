@@ -32,6 +32,7 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.SolveExecutor.isPrint;
+import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
@@ -310,4 +311,9 @@ public class SpiderBoard extends GameBoard {
                 .sum();
     }
 
+
+    @Override
+    public List<String> verify() {
+        return verifyBoard(columns(), deck());
+    }
 }

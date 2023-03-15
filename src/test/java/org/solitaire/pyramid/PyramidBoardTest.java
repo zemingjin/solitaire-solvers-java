@@ -46,7 +46,7 @@ class PyramidBoardTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("Duplicated card: Ad", result.get(0));
+        assertEquals("Extra card: Ad", result.get(0));
 
         board.deck().pop();
         board.cards()[0] = null;

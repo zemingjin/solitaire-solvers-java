@@ -74,7 +74,7 @@ class TriPeaksBoardTest {
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals("[Duplicated card: Jc, Missing card: 5c]", result.toString());
+        assertEquals("[Extra card: Jc, Missing card: 5c]", result.toString());
 
         board.cards()[0] = null;
 

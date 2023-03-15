@@ -19,12 +19,7 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
-@SuppressWarnings("rawtypes")
 public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
-    //        private final Function<List<T>, List<T>> checkReducingBoards = boards ->
-//            isReducingBoards()
-//                    ? range(boards.size() * 3 / 5, boards.size()).mapToObj(boards::get).toList()
-//                    : boards;
     private static boolean singleSolution = false;
     private static int hsdDepth = 6;
     private static boolean isPrint = true;
@@ -46,33 +41,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     public SolveExecutor(T initialBoard, Function<T, T> cloner) {
         this(initialBoard);
         cloner(cloner);
-    }
-
-    /**************************************************************************************************************
-     * Accessors
-     *************************************************************************************************************/
-    public static boolean singleSolution() {
-        return singleSolution;
-    }
-
-    public static void singleSolution(boolean singleSolution) {
-        SolveExecutor.singleSolution = singleSolution;
-    }
-
-    public static int hsdDepth() {
-        return hsdDepth;
-    }
-
-    public static void hsdDepth(int hsdDepth) {
-        SolveExecutor.hsdDepth = hsdDepth;
-    }
-
-    public static boolean isPrint() {
-        return isPrint;
-    }
-
-    public static void isPrint(boolean isPrint) {
-        SolveExecutor.isPrint = isPrint;
     }
 
     /**************************************************************************************************************
@@ -186,9 +154,10 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         this.maxDepth = maxDepth;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Pair<Integer, List> maxScore() {
-        throw new RuntimeException("Not supported!");
+        throw new RuntimeException("Maximum score is not supported!");
     }
 
     private T getBoard(BoardStack<T> boards) {
@@ -215,6 +184,33 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         if (stack.size() > maxDepth()) {
             maxDepth(stack.size());
         }
+    }
+
+    /**************************************************************************************************************
+     * Accessors
+     *************************************************************************************************************/
+    public static boolean singleSolution() {
+        return singleSolution;
+    }
+
+    public static void singleSolution(boolean singleSolution) {
+        SolveExecutor.singleSolution = singleSolution;
+    }
+
+    public static int hsdDepth() {
+        return hsdDepth;
+    }
+
+    public static void hsdDepth(int hsdDepth) {
+        SolveExecutor.hsdDepth = hsdDepth;
+    }
+
+    public static boolean isPrint() {
+        return isPrint;
+    }
+
+    public static void isPrint(boolean isPrint) {
+        SolveExecutor.isPrint = isPrint;
     }
 
     public T board() {

@@ -9,6 +9,7 @@ import java.util.Objects;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
@@ -30,6 +31,12 @@ public class GameBoardTest {
     void setup() {
         useSuit(false);
         board = mockState(Objects.requireNonNull(build(cards).board()));
+    }
+
+    @Test
+    void test_verify() {
+        var ex = assertThrows(RuntimeException.class, () -> board.verify());
+        assertEquals("'verify' not implemented", ex.getMessage());
     }
 
     @Test
@@ -65,4 +72,5 @@ public class GameBoardTest {
         assertEquals(6, board.columns.get(0).size());
         assertEquals(6, board.columns.get(1).size());
     }
+
 }

@@ -72,7 +72,7 @@ public class GameBoard implements Board<String, Candidate> {
 
     @Override
     public List<String> verify() {
-        return emptyList();
+        throw new RuntimeException("'verify' not implemented");
     }
 
     @Override

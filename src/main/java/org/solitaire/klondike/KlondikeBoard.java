@@ -28,6 +28,7 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
+import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
@@ -441,5 +442,10 @@ class KlondikeBoard extends GameBoard {
 
     public List<Stack<Card>> foundations() {
         return foundations;
+    }
+
+    @Override
+    public List<String> verify() {
+        return verifyBoard(columns, deck);
     }
 }
