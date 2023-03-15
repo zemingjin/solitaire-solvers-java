@@ -52,6 +52,7 @@ public class BoardHelper {
                 .filter(Objects::nonNull)
                 .forEach(it -> {
                     var at = suitCode(it);
+
                     maps[at][0]++;
                     maps[at][it.rank()]++;
                 });
