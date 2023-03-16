@@ -1,5 +1,7 @@
 package org.solitaire.model;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.List;
 
 import static org.solitaire.model.Origin.COLUMN;
@@ -39,6 +41,10 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
 
     public static Candidate buildFoundationCandidate(Card card, Origin origin, int from) {
         return new Candidate(List.of(card), origin, from, FOUNDATION, suitCode(card));
+    }
+
+    public static Candidate buildFoundationToColumn(Pair<Integer, Card> pair) {
+        return new Candidate(List.of(pair.getRight()), FOUNDATION, suitCode(pair.getRight()), COLUMN, pair.getLeft());
     }
 
     public String notation() {

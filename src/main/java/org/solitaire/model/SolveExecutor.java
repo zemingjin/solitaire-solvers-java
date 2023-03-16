@@ -57,7 +57,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                 Optional.ofNullable(stack.peek())
                         .filter(ObjectUtils::isNotEmpty)
                         .map(this::getBoard)
-                        .filter(this::isBoardNotSolved)
+                        .filter(this::isUnsolvedBoard)
                         .ifPresent(solveBoard());
             }
         } else {
@@ -102,7 +102,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     public Stream<T> applyCandidates(List<U> candidates, T board) {
         return (Stream<T>) candidates.stream()
                 .map(it -> clone(board).updateBoard(it))
-                .filter(it -> isBoardNotSolved((T) it))
+                .filter(it -> isUnsolvedBoard((T) it))
                 .filter(Objects::nonNull);
     }
 
@@ -110,11 +110,11 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
      * Helper routines
      *************************************************************************************************************/
     public boolean isContinuing() {
-        return !singleSolution() || totalSolutions() != 1;
+        return !singleSolution() || totalSolutions() == 0;
     }
 
-    public boolean isBoardNotSolved(T board) {
-        if (nonNull(board) && board.isSolved()) {
+    public boolean isUnsolvedBoard(T board) {
+        if (nonNull(board) && board.isSolved() && isContinuing()) {
             solutionConsumers.forEach(it -> it.accept(board.path()));
             return false;
         }
@@ -127,7 +127,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
             if (isNull(shortestPath()) || shortestPath().size() > path.size()) {
                 shortestPath(path);
             }
-            if (isNull(longestPath()) || longestPath().size() < path.size()) {
+            if (!singleSolution() && (isNull(longestPath()) || longestPath().size() < path.size())) {
                 longestPath(path);
             }
             if (isPrint()) {

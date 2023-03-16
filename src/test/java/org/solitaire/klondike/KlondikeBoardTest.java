@@ -78,22 +78,22 @@ class KlondikeBoardTest {
 
     @Test
     void test_findFoundationToColumnCandidates() {
-        var result = board.findFoundationToColumnCandidates().toList();
+        var result = board.findFoundationToColumnCandidates();
 
         assertEquals(0, result.size());
 
         var card = card("5d");
         board.foundations().get(suitCode(card)).add(card);
 
-        result = board.findFoundationToColumnCandidates().toList();
+        result = board.findFoundationToColumnCandidates();
         assertEquals(0, result.size());
 
         board.columns().get(5).add(card("6s"));
-        result = board.findFoundationToColumnCandidates().toList();
+        result = board.findFoundationToColumnCandidates();
         assertEquals("F5:5d", result.get(0).notation());
 
         board.columns().get(3).remove(3);
-        result = board.findFoundationToColumnCandidates().toList();
+        result = board.findFoundationToColumnCandidates();
         assertEquals(0, result.size());
     }
 
@@ -102,18 +102,18 @@ class KlondikeBoardTest {
         var card = card("Th");
         board.foundations().get(suitCode(card)).add(card);
 
-        assertEquals(0, board.findFoundationToColumnCandidates().toList().size());
+        assertEquals(0, board.findFoundationToColumnCandidates().size());
 
         board.columns().get(2).clear();
         board.columns().get(2).add(card("Jc"));
 
-        assertEquals("F2:Th", board.findFoundationToColumnCandidates().toList().get(0).notation());
+        assertEquals("F2:Th", board.findFoundationToColumnCandidates().get(0).notation());
 
         card = card("9h");
         board.foundations().get(suitCode(card)).add(card);
         board.columns().get(1).add(card("8c"));
 
-        assertEquals("F6:9h", board.findFoundationToColumnCandidates().toList().get(0).notation());
+        assertEquals("F6:9h", board.findFoundationToColumnCandidates().get(0).notation());
     }
 
     @Test

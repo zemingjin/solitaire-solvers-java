@@ -100,9 +100,9 @@ public class SolitaireApp {
 
         System.out.printf("Found %,d solutions in %,d scenarios - total time: %s with maximum depth of %d.\n",
                 solver().totalSolutions(), solver().totalScenarios(), stopWatch.formatTime(), solver().maxDepth());
-        checkPath(solver::shortestPath, "Shortest");
-        checkPath(solver::longestPath, "Longest");
-        if (solver().totalSolutions() > 0) {
+        checkPath(solver::shortestPath, singleSolution() ? "One" : "Shortest");
+        if (!singleSolution()) {
+            checkPath(solver::longestPath, "Longest");
             checkMaxScore(solver());
         }
     }

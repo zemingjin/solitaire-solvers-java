@@ -72,6 +72,18 @@ class SpiderTest {
     }
 
     @Test
+    void test_isContinuing() {
+        singleSolution(false);
+        assertTrue(spider.isContinuing());
+
+        spider.totalSolutions(SOLUTION_LIMIT - 1);
+        assertTrue(spider.isContinuing());
+
+        spider.totalSolutions(SOLUTION_LIMIT);
+        assertFalse(spider.isContinuing());
+    }
+
+    @Test
     void test_solve_cleared() {
         when(board.isSolved()).thenReturn(true);
         when(board.path()).thenReturn(mockPath());

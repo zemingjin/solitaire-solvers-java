@@ -13,6 +13,7 @@ import static java.util.Objects.nonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.solitaire.model.SolveExecutor.isPrint;
+import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;
@@ -42,6 +44,7 @@ class SolveExecutorTest {
 
     @Test
     void test_defaultSolutionConsumer() {
+        singleSolution(false);
         executor.defaultSolutionConsumer(List.of("1"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(1, executor.longestPath().size());
@@ -55,6 +58,16 @@ class SolveExecutorTest {
         assertEquals(1, executor.shortestPath().size());
         assertEquals(2, executor.longestPath().size());
         assertEquals("[1, 2]", executor.longestPath().toString());
+    }
+
+    @Test
+    void test_defaultSolutionConsumer_singleSolution() {
+        singleSolution(true);
+
+        executor.defaultSolutionConsumer(List.of("1"));
+
+        assertEquals(1, executor.shortestPath().size());
+        assertNull(executor.longestPath());
     }
 
     @Test
