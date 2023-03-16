@@ -14,10 +14,10 @@ import static org.solitaire.util.BoardHelper.listNotEmpty;
 
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
-    protected final Columns columns;
     public transient final IntPredicate isNotEmpty = i -> isNotEmpty(columns().get(i));
     public transient final Predicate<Candidate> isMovableToEmptyColumn
             = c -> !c.isFromColumn() || (c.cards().size() < columns().get(c.from()).size() || isNotEmpty.test(c.to()));
+    protected final Columns columns;
     protected final Path<String> path;
     protected int totalScore;
     private transient int score = 0;

@@ -136,7 +136,7 @@ class KlondikeTest {
         var klondike = new Klondike(new Columns(), new Deck(), new ArrayList<>());
 
         klondike.stack().clear();
-        klondike.addBoard(board);
+        klondike.addBoard().accept(board);
         klondike.cloner(it -> board);
 
         return klondike;

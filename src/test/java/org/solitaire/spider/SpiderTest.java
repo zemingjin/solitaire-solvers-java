@@ -1,5 +1,6 @@
 package org.solitaire.spider;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +11,7 @@ import org.solitaire.model.Path;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,7 +53,7 @@ class SpiderTest {
         spider = MockSpider.build();
         spider.cloner(i -> board);
         spider.stack().clear();
-        spider.addBoard(board);
+        spider.addBoard().accept(board);
 
         candidate = mockCandidate();
     }
@@ -127,7 +129,7 @@ class SpiderTest {
     void test_solve_applyCandidates_no_recurse() {
         when(board.updateBoard(candidate)).thenReturn(board);
 
-        var result = spider.applyCandidates(mockCandidateList(), board).toList();
+        var result = spider.applyCandidates().apply(Pair.of(mockCandidateList(), board)).toList();
 
         assertFalse(result.isEmpty());
         verify(board).updateBoard(candidate);
@@ -138,7 +140,7 @@ class SpiderTest {
     void test_updateColumns() {
         when(board.updateBoard(candidate)).thenReturn(board);
 
-        var result = spider.applyCandidates(mockCandidateList(), board).toList();
+        var result = spider.applyCandidates().apply(Pair.of(mockCandidateList(), board)).toList();
 
         assertFalse(result.isEmpty());
         verify(board, times(ONE)).updateBoard(candidate);
@@ -148,7 +150,7 @@ class SpiderTest {
     void test_updateColumns_null() {
         when(board.updateBoard(candidate)).thenReturn(null);
 
-        var result = spider.applyCandidates(mockCandidateList(), board).toList();
+        var result = spider.applyCandidates().apply(Pair.of(mockCandidateList(), board)).toList();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -182,10 +184,14 @@ class SpiderTest {
         }
 
         @Override
+        public Consumer<Collection<SpiderBoard>> addBoards() {
+            return this::addBoards;
+        }
+
         public void addBoards(Collection<SpiderBoard> boards) {
             if (first) {
                 first = false;
-                super.addBoards(boards);
+                super.addBoards().accept(boards);
             }
             first = true;
         }

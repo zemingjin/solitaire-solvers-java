@@ -1,5 +1,6 @@
 package org.solitaire.pyramid;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Board;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
@@ -7,12 +8,12 @@ import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Objects.isNull;
@@ -62,53 +63,51 @@ public class PyramidBoard implements Board<Card[], Candidate> {
      **************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        var openCards = findOpenCards();
-
-        var candidates = range(0, openCards.size())
-                .mapToObj(i -> findPairsOf13(openCards, i))
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-
-        if (candidates.isEmpty()) {
-            return Optional.ofNullable(drawDeckCard()).map(List::of).orElseGet(Collections::emptyList);
-        }
-        return candidates;
+        return Optional.of(findOpenCards())
+                .filter(listIsNotEmpty)
+                .map(findCardsOf13s)
+                .filter(listIsNotEmpty)
+                .orElseGet(drawDeckCards);
     }
 
-
-    private List<Candidate> findPairsOf13(List<Card> openCards, int i) {
+    private transient final Function<Pair<Integer, List<Card>>, Stream<Candidate>> cardsOf13s = pair -> {
+        var openCards = pair.getRight();
+        var i = pair.getLeft();
         var card = openCards.get(i);
 
         if (card.isKing()) {
-            return List.of(buildCandidate(List.of(card), BOARD, REMOVE));
+            return Stream.of(buildCandidate(List.of(card), BOARD, REMOVE));
         }
         return range(i + 1, openCards.size())
                 .mapToObj(openCards::get)
-                .filter(it -> it.isNotKing() && (card.rank() + it.rank()) == 13)
+                .filter(it -> card.rank() + it.rank() == 13)
                 .map(it -> List.of(card, it))
-                .map(it -> buildCandidate(it, BOARD, REMOVE))
-                .toList();
-    }
+                .map(it -> buildCandidate(it, BOARD, REMOVE));
+    };
+
+    private transient final Function<List<Card>, List<Candidate>> findCardsOf13s =
+            openCards -> range(0, openCards.size())
+                    .mapToObj(i -> Pair.of(i, openCards))
+                    .flatMap(cardsOf13s)
+                    .toList();
+
 
     protected List<Card> findOpenCards() {
-        return Optional.of(getBoardOpenCards())
-                .map(this::getDeckCards)
-                .orElseThrow();
+        return Stream.concat(getBoardOpenCards(), getDeckCards()).toList();
     }
 
-    private List<Card> getDeckCards(List<Card> list) {
-        if (!deck.isEmpty()) list.add(deck.peek());
-        if (!flippedDeck.isEmpty()) list.add(flippedDeck.peek());
-        return list;
+    private Stream<Card> getDeckCards() {
+        return Stream.of(deck(), flippedDeck())
+                .filter(listIsNotEmpty)
+                .map(Stack::peek);
     }
 
-    private List<Card> getBoardOpenCards() {
+    private Stream<Card> getBoardOpenCards() {
         return rangeClosed(0, LAST_BOARD_INDEX)
                 .map(i -> LAST_BOARD_INDEX - i)
                 .mapToObj(i -> cards[i])
                 .filter(isNotNull)
-                .filter(this::isOpen)
-                .collect(Collectors.toCollection(ArrayList::new));
+                .filter(this::isOpen);
     }
 
     protected boolean isOpen(Card card) {
@@ -130,7 +129,12 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         return row == 7 || (isNull(cards[coveredBy]) && isNull(cards[coveredBy + 1]));
     }
 
-    public Candidate drawDeckCard() {
+    private transient final Supplier<List<Candidate>> drawDeckCards = () ->
+            Optional.ofNullable(drawDeckCard())
+                    .map(List::of)
+                    .orElseGet(Collections::emptyList);
+
+    protected Candidate drawDeckCard() {
         if (checkDeck()) {
             return buildCandidate(List.of(deck.peek()), DECKPILE, DECKPILE);
         }
@@ -151,14 +155,22 @@ public class PyramidBoard implements Board<Card[], Candidate> {
      **************************************************************************************************************/
     @Override
     public PyramidBoard updateBoard(Candidate candidate) {
+        removeFromOrigin(candidate);
+        updateTargets((candidate));
+        return this;
+    }
+
+    private void updateTargets(Candidate candidate) {
         var cards = candidate.cards();
         if (candidate.target() == DECKPILE) {
             flippedDeck.push(cards.get(0));
         } else {
             path.add(cards.toArray(new Card[0]));
         }
-        cards.forEach(this::removeCardFromBoard);
-        return this;
+    }
+
+    private void removeFromOrigin(Candidate candidate) {
+        candidate.cards().forEach(this::removeCardFromBoard);
     }
 
     private void removeCardFromBoard(Card card) {
@@ -205,7 +217,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     }
 
     protected Card[] allCards() {
-        return Stream.concat(Stream.of(cards), deck.stream()).toArray(Card[]::new);
+        return Stream.of(Stream.of(cards), deck.stream(), flippedDeck.stream()).flatMap(it -> it).toArray(Card[]::new);
     }
 
     public Card[] cards() {

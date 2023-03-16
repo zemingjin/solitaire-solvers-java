@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,8 +36,10 @@ import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.isNull;
 import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
+import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.cloneArray;
+import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
 
@@ -301,48 +305,43 @@ public class FreeCellBoard extends GameBoard {
     @Override
     public int score() {
         if (super.score() == 0) {
-            var hsdHeuristic = calcHsdHeuristic();
+            var blockerScores = calcBlockerScore();
             var foundationScore = Stream.of(foundations).mapToInt(CardHelper::rank).sum();
 
-            score(hsdHeuristic + foundationScore);
+            score(
+                    -blockerScores
+                            + foundationScore
+            );
         }
         return super.score();
     }
 
-    private int calcHsdHeuristic() {
-        return Optional.of(range(0, foundations.length).map(this::calcHsdHeuristic).sum())
-                .map(it -> it * heuristicMultiplier())
-                .orElse(0);
+    protected int calcBlockerScore() {
+        return range(0, foundations().length)
+                .mapToObj(nextFoundationCard)
+                .filter(isNotNull)
+                .mapToInt(calcBlockers)
+                .sum();
     }
 
-    private int heuristicMultiplier() {
-        return (countFreeCells() > 0 || countEmptyColumns() > 0) ? 1 : 2;
-    }
+    private transient final IntFunction<Card> nextFoundationCard = i ->
+            Optional.of(rank(foundations()[i]) + 1)
+                    .filter(rank -> rank <= 13)
+                    .map(rank -> card(VALUES.charAt(rank - 1) + suit(i).toLowerCase()))
+                    .orElse(null);
 
-    private int calcHsdHeuristic(int at) {
-        var foundationCard = foundations[at];
-
-        if (nonNull(foundationCard) && foundationCard.isKing()) {
-            return 0;
-        }
-        return calcHeuristicByNextCard(nextCard(foundationCard, at));
-    }
-
-    private int calcHeuristicByNextCard(Card card) {
-        if (Arrays.asList(freeCells).contains(card)) {
+    private transient final ToIntFunction<Card> calcBlockers = card -> {
+        if (Arrays.asList(freeCells()).contains(card)) {
             return 0;
         }
         return columns.stream()
                 .filter(listNotEmpty)
                 .filter(it -> it.contains(card))
-                .map(it -> -(it.size() - it.indexOf(card) - 1))
+                .map(it -> it.size() - it.indexOf(card) - 1)
+                .map(i -> (countFreeCells() > 0 || countEmptyColumns() > 0) ? i : i * 2)
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
-    }
-
-    private Card nextCard(Card card, int suitCode) {
-        return nonNull(card) ? CardHelper.nextCard(card) : card("A" + suit(suitCode));
-    }
+    };
 
     @Override
     public List<String> verify() {

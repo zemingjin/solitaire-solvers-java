@@ -9,6 +9,7 @@ import org.solitaire.util.CardHelper;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.copyOf;
@@ -25,16 +26,16 @@ public class PyramidHelper {
     public static Pyramid build(String[] cards) {
         return Optional.of(cards)
                 .map(CardHelper::toCards)
-                .map(PyramidHelper::buildPyramidState)
+                .map(buildPyramidBoard)
                 .map(Pyramid::new)
                 .orElseThrow();
     }
 
-    private static PyramidBoard buildPyramidState(Card[] cards) {
+    private static final Function<Card[], PyramidBoard> buildPyramidBoard = cards -> {
         assert cards.length == 52 : "Invalid # of cards: " + cards.length;
 
         return new PyramidBoard(copyOf(cards, LAST_BOARD), buildDeck(cards), new Stack<>(), new Path<>(), 3);
-    }
+    };
 
     private static Stack<Card> buildDeck(Card[] cards) {
         var deck = new Stack<Card>();

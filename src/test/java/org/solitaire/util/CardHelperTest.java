@@ -23,6 +23,7 @@ import static org.solitaire.util.CardHelper.checkDuplicates;
 import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.getSuit;
 import static org.solitaire.util.CardHelper.higherCardOfSameSuit;
+import static org.solitaire.util.CardHelper.nextCard;
 import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.string;
 import static org.solitaire.util.CardHelper.stringOfRaws;
@@ -109,6 +110,11 @@ public class CardHelperTest {
     }
 
     @Test
+    void test_nextCard() {
+        assertEquals("2d", nextCard(card("Ad")).raw());
+    }
+
+    @Test
     void test_higherCardOfSameSuit() {
         assertEquals("2h", higherCardOfSameSuit(card("Ah")).raw());
         assertEquals("Kh", higherCardOfSameSuit(card("Kh")).raw());
@@ -117,8 +123,8 @@ public class CardHelperTest {
     @Test
     void test_string() {
         assertEquals("Ad", string(List.of(card("Ad"))));
-        assertEquals("Ad Ks", string(List.of(new Card[]{card("Ad"), card("Ks")})));
-        assertEquals("[Ad, Ks] Qh",
+        assertEquals("Ad, Ks", string(List.of(new Card[]{card("Ad"), card("Ks")})));
+        assertEquals("[Ad, Ks], Qh",
                 string(List.of(new Card[]{card("Ad"), card("Ks")}, card("Qh"))));
     }
 }

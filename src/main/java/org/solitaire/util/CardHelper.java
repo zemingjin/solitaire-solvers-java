@@ -143,7 +143,7 @@ public class CardHelper {
     public static String string(List<?> cards) {
         return cards.stream()
                 .map(CardHelper::stringOfRaws)
-                .collect(Collectors.joining(" "));
+                .collect(Collectors.joining(", "));
     }
 
     protected static String stringOfRaws(Object obj) {

@@ -424,4 +424,15 @@ public class FreeCellBoardTest {
         board.score(0);
         assertThrows(NoSuchElementException.class, () -> board.score());
     }
+
+    @Test
+    void test_calcBlockerScore() {
+        var card = card("Qc");
+
+        board.foundations()[suitCode(card)] = card;
+        assertEquals(7, board.calcBlockerScore());
+
+        board.foundations()[suitCode(card)] = card("Kc");
+        assertEquals(4, board.calcBlockerScore());
+    }
 }
