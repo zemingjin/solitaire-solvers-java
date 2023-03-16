@@ -1,12 +1,10 @@
 package org.solitaire.model;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Consumer;
@@ -18,6 +16,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.solitaire.util.BoardHelper.isNotNull;
+import static org.solitaire.util.BoardHelper.listNotEmpty;
 
 public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     private static boolean singleSolution = false;
@@ -44,6 +44,33 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     /**************************************************************************************************************
+     * Accessors
+     *************************************************************************************************************/
+    public static boolean singleSolution() {
+        return singleSolution;
+    }
+
+    public static void singleSolution(boolean singleSolution) {
+        SolveExecutor.singleSolution = singleSolution;
+    }
+
+    public static int hsdDepth() {
+        return hsdDepth;
+    }
+
+    public static void hsdDepth(int hsdDepth) {
+        SolveExecutor.hsdDepth = hsdDepth;
+    }
+
+    public static boolean isPrint() {
+        return isPrint;
+    }
+
+    public static void isPrint(boolean isPrint) {
+        SolveExecutor.isPrint = isPrint;
+    }
+
+    /**************************************************************************************************************
      * Execution routines
      *************************************************************************************************************/
     @Override
@@ -55,7 +82,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                 checkMaxDepth();
 
                 Optional.ofNullable(stack.peek())
-                        .filter(ObjectUtils::isNotEmpty)
+                        .filter(listNotEmpty)
                         .map(this::getBoard)
                         .filter(this::isUnsolvedBoard)
                         .ifPresent(solveBoard());
@@ -69,7 +96,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         Optional.of(board)
                 .map(this::searchBoard)
                 .map(Stream::toList)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
 //                .map(checkReducingBoards)
                 .ifPresent(this::addBoards);
     }
@@ -81,7 +108,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
             boards = boards.stream().flatMap(this::searchBoard).toList();
         }
         Optional.of(boards)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .map(List::stream)
                 .map(it -> it.sorted(comparingInt(T::score)))
                 .map(this::getBestBoard)
@@ -92,7 +119,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         totalScenarios++;
         return Optional.of(board)
                 .map(T::findCandidates)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .map(it -> applyCandidates(it, board))
                 .stream()
                 .flatMap(it -> it);
@@ -100,10 +127,11 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     @SuppressWarnings("unchecked")
     public Stream<T> applyCandidates(List<U> candidates, T board) {
-        return (Stream<T>) candidates.stream()
+        return (Stream<T>) candidates.parallelStream()
                 .map(it -> clone(board).updateBoard(it))
                 .filter(it -> isUnsolvedBoard((T) it))
-                .filter(Objects::nonNull);
+                .filter(isNotNull)
+                .peek(Board::score);
     }
 
     /**************************************************************************************************************
@@ -124,15 +152,23 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     protected void defaultSolutionConsumer(List<S> path) {
         totalSolutions(totalSolutions() + 1);
         if (nonNull(path) && isNotEmpty(path)) {
-            if (isNull(shortestPath()) || shortestPath().size() > path.size()) {
-                shortestPath(path);
-            }
-            if (!singleSolution() && (isNull(longestPath()) || longestPath().size() < path.size())) {
-                longestPath(path);
-            }
+            checkShortestPath(path);
+            checkLongestPath(path);
             if (isPrint()) {
                 System.out.printf("%d: %s\n", path.size(), path);
             }
+        }
+    }
+
+    private void checkLongestPath(List<S> path) {
+        if (!singleSolution() && (isNull(longestPath()) || longestPath().size() < path.size())) {
+            longestPath(path);
+        }
+    }
+
+    private void checkShortestPath(List<S> path) {
+        if (isNull(shortestPath()) || shortestPath().size() > path.size()) {
+            shortestPath(path);
         }
     }
 
@@ -167,7 +203,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     public void addBoards(Collection<T> boards) {
         Optional.of(boards)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .ifPresent(it -> stack().add(new BoardStack<>(it)));
     }
 
@@ -180,33 +216,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         if (stack.size() > maxDepth()) {
             maxDepth(stack.size());
         }
-    }
-
-    /**************************************************************************************************************
-     * Accessors
-     *************************************************************************************************************/
-    public static boolean singleSolution() {
-        return singleSolution;
-    }
-
-    public static void singleSolution(boolean singleSolution) {
-        SolveExecutor.singleSolution = singleSolution;
-    }
-
-    public static int hsdDepth() {
-        return hsdDepth;
-    }
-
-    public static void hsdDepth(int hsdDepth) {
-        SolveExecutor.hsdDepth = hsdDepth;
-    }
-
-    public static boolean isPrint() {
-        return isPrint;
-    }
-
-    public static void isPrint(boolean isPrint) {
-        SolveExecutor.isPrint = isPrint;
     }
 
     public T board() {
@@ -222,7 +231,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     protected T getBestBoard(Stream<T> boards) {
-        return boards.reduce(null, (a, b) -> isNull(a) || b.score() >= a.score() ? b : a);
+        return boards.reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
     }
 
     public Stack<BoardStack<T>> stack() {

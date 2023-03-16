@@ -1,6 +1,5 @@
 package org.solitaire;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.solitaire.freecell.FreeCellHelper;
 import org.solitaire.klondike.KlondikeHelper;
@@ -22,6 +21,7 @@ import java.util.function.Supplier;
 
 import static java.util.stream.IntStream.range;
 import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.CardHelper.string;
 
 public class SolitaireApp {
@@ -42,20 +42,11 @@ public class SolitaireApp {
     }};
 
     private static final SolitaireApp app = new SolitaireApp();
-
-    public static SolitaireApp app() {
-        return SolitaireApp.app;
-    }
-
     private GameSolver solver;
     private StopWatch stopWatch;
 
-    public StopWatch stopWatch() {
-        return stopWatch;
-    }
-
-    public void stopWatch(StopWatch stopWatch) {
-        this.stopWatch = stopWatch;
+    public static SolitaireApp app() {
+        return SolitaireApp.app;
     }
 
     public static void main(String[] args) {
@@ -72,6 +63,14 @@ public class SolitaireApp {
 
     private static boolean checkParam(String[] args, String target) {
         return range(1, args.length).anyMatch(i -> target.equalsIgnoreCase(args[i]));
+    }
+
+    public StopWatch stopWatch() {
+        return stopWatch;
+    }
+
+    public void stopWatch(StopWatch stopWatch) {
+        this.stopWatch = stopWatch;
     }
 
     public GameSolver solver() {
@@ -128,7 +127,7 @@ public class SolitaireApp {
     public void checkPath(Supplier<List> supplier, String type) {
         Optional.of(supplier)
                 .map(Supplier::get)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), string(it)));
     }
 

@@ -67,7 +67,7 @@ class SolitaireAppTest {
         assertFalse(singleSolution());
         assertNotNull(app.solver());
         assertEquals(7983, app.solver().totalSolutions());
-        assertEquals(557, outputStream.toString().length());
+        assertEquals(827, outputStream.toString().length());
         assertTrue(outputStream.toString().contains("Max Score"));
     }
 

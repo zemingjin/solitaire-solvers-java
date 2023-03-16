@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
@@ -31,6 +30,9 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Candidate.buildFoundationCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.FREECELL;
+import static org.solitaire.util.BoardHelper.isNotNull;
+import static org.solitaire.util.BoardHelper.isNull;
+import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.cloneArray;
@@ -157,16 +159,16 @@ public class FreeCellBoard extends GameBoard {
     protected Stream<Candidate> findColumnToColumnCandidates() {
         return range(0, columns.size())
                 .mapToObj(this::findCandidateAtColumn)
-                .filter(Objects::nonNull);
+                .filter(isNotNull);
     }
 
     protected Candidate findCandidateAtColumn(int col) {
         return Optional.of(col)
                 .map(columns::get)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .filter(it -> !isFoundationable(it.peek()))
                 .map(this::findCandidateAtColumn)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .map(it -> buildCandidate(col, COLUMN, it))
                 .orElse(null);
     }
@@ -199,7 +201,7 @@ public class FreeCellBoard extends GameBoard {
     protected List<Candidate> cleanupCandidates(List<Candidate> candidates) {
         range(0, candidates.size() - 1)
                 .forEach(i -> cleanupCandidates(candidates, i));
-        return candidates.stream().filter(Objects::nonNull).toList();
+        return candidates.stream().filter(isNotNull).toList();
     }
 
     protected Stream<Candidate> getFoundationCandidates() {
@@ -284,7 +286,7 @@ public class FreeCellBoard extends GameBoard {
     }
 
     protected int countFreeCells() {
-        return (int) stream(freeCells).filter(Objects::isNull).count();
+        return (int) stream(freeCells).filter(isNull).count();
     }
 
     protected int maxCardsToMove(int to) {
@@ -331,7 +333,7 @@ public class FreeCellBoard extends GameBoard {
             return 0;
         }
         return columns.stream()
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .filter(it -> it.contains(card))
                 .map(it -> -(it.size() - it.indexOf(card) - 1))
                 .findFirst()

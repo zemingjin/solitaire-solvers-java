@@ -4,22 +4,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.solitaire.util.BoardHelper.listNotEmpty;
 
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
+    protected final Columns columns;
     public transient final IntPredicate isNotEmpty = i -> isNotEmpty(columns().get(i));
     public transient final Predicate<Candidate> isMovableToEmptyColumn
             = c -> !c.isFromColumn() || (c.cards().size() < columns().get(c.from()).size() || isNotEmpty.test(c.to()));
-    public transient final Predicate<Object> isNotNull = Objects::nonNull;
-    public transient final Predicate<Object> listNotEmpty = ObjectUtils::isNotEmpty;
-    protected final Columns columns;
     protected final Path<String> path;
     protected int totalScore;
     private transient int score = 0;

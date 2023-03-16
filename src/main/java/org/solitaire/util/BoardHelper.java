@@ -1,11 +1,13 @@
 package org.solitaire.util;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -18,6 +20,10 @@ import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
 
 public class BoardHelper {
+    public static final Predicate<Object> isNull = Objects::isNull;
+    public static final Predicate<Object> isNotNull = Objects::nonNull;
+    public static final Predicate<Object> listNotEmpty = ObjectUtils::isNotEmpty;
+
     public static List<String> verifyBoard(List<Column> columns, List<Card> deck) {
         return verifyBoard(concat(toStream(columns), deck.stream()).toArray(Card[]::new));
     }
@@ -49,7 +55,7 @@ public class BoardHelper {
         var maps = new int[4][14];
 
         Stream.of(cards)
-                .filter(Objects::nonNull)
+                .filter(isNotNull)
                 .forEach(it -> {
                     var at = suitCode(it);
 

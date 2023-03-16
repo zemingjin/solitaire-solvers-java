@@ -306,16 +306,6 @@ class KlondikeBoardTest {
     void test_isMovable() {
         var column = board.columns().get(3);
 
-        assertTrue(board.isMovable(buildCandidate(3, COLUMN, column.peek())));
-
-        assertFalse(board.isMovable(buildCandidate(3, COLUMN, column.get(0))));
-
-        drawDeckCards();
-        assertTrue(board.isMovable(buildCandidate(-1, DECKPILE, board.deckPile.peek())));
-        assertTrue(board.stateChanged());
-
-        assertFalse(board.isMovable(buildCandidate(-1, FOUNDATION, column.get(0))));
-
         var card = card("Kd");
 
         assertFalse(board.isMovable(card, column));

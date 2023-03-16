@@ -10,7 +10,6 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -29,6 +28,7 @@ import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD_INDEX;
 import static org.solitaire.pyramid.PyramidHelper.isBoardCard;
 import static org.solitaire.pyramid.PyramidHelper.row;
+import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
@@ -106,7 +106,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         return rangeClosed(0, LAST_BOARD_INDEX)
                 .map(i -> LAST_BOARD_INDEX - i)
                 .mapToObj(i -> cards[i])
-                .filter(Objects::nonNull)
+                .filter(isNotNull)
                 .filter(this::isOpen)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
@@ -189,7 +189,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     }
 
     private int calcBlockers() {
-        return (int) Stream.of(cards).filter(Objects::nonNull).count();
+        return (int) Stream.of(cards).filter(isNotNull).count();
     }
 
     protected void score(int score) {

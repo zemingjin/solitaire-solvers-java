@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.IntPredicate;
@@ -30,6 +29,8 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
+import static org.solitaire.util.BoardHelper.isNotNull;
+import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
@@ -45,13 +46,11 @@ import static org.solitaire.util.CardHelper.suitCode;
  */
 class KlondikeBoard extends GameBoard {
     private static int drawNumber = 3;
-
+    protected Deck deck;
+    protected Stack<Card> deckPile;
+    protected List<Stack<Card>> foundations;
     protected transient final IntPredicate isNotImmediateFoundationable =
             i -> !peek(i).isHigherOfSameColor(foundationCard(peek(i)));
-
-    protected final Deck deck;
-    protected final Stack<Card> deckPile;
-    protected final List<Stack<Card>> foundations;
     protected boolean stateChanged;
 
     KlondikeBoard(Columns columns,
@@ -62,10 +61,10 @@ class KlondikeBoard extends GameBoard {
                   List<Stack<Card>> foundations,
                   boolean stateChanged) {
         super(columns, path, totalScore);
-        this.deck = deck;
-        this.deckPile = deckPile;
-        this.foundations = foundations;
-        this.stateChanged = stateChanged;
+        deck(deck);
+        deckPile(deckPile);
+        foundations(foundations);
+        stateChanged(stateChanged);
     }
 
     KlondikeBoard(KlondikeBoard that) {
@@ -76,6 +75,18 @@ class KlondikeBoard extends GameBoard {
                 cloneStack(that.deckPile()),
                 cloneStacks(that.foundations()),
                 that.stateChanged);
+    }
+
+    private static int calcBlocker(List<Card> cards, Card target) {
+        return cards.size() - cards.lastIndexOf(target) - 1;
+    }
+
+    public static int drawNumber() {
+        return drawNumber;
+    }
+
+    public static void drawNumber(int drawNumber) {
+        KlondikeBoard.drawNumber = drawNumber;
     }
 
     /***************************************************************************************************************
@@ -170,7 +181,8 @@ class KlondikeBoard extends GameBoard {
     }
 
     protected List<Candidate> findTarget(Candidate candidate) {
-        return Optional.of(checkColumnsForAppendables(candidate))
+        return Optional.of(candidate)
+                .map(this::checkColumnsForAppendables)
                 .orElseThrow();
     }
 
@@ -182,10 +194,9 @@ class KlondikeBoard extends GameBoard {
     }
 
     private boolean isMatchingColumn(int colNum, Candidate candidate) {
-        if (isNotSameColumn(colNum, candidate)) {
-            return isAppendable(columns.get(colNum), candidate);
-        }
-        return false;
+        return Optional.of(candidate)
+                .map(it -> isAppendable(columns.get(colNum), it))
+                .orElse(false);
     }
 
     private boolean isAppendable(Column column, Candidate candidate) {
@@ -199,16 +210,6 @@ class KlondikeBoard extends GameBoard {
         return candidate.peek().isKing() && isMovableToEmptyColumn.test(candidate);
     }
 
-    protected boolean isMovable(Candidate candidate) {
-        if (candidate.isFromColumn()) {
-            return Optional.of(candidate.from())
-                    .map(columns::get)
-                    .filter(it -> it.indexOf(candidate.peek()) > 0)
-                    .isPresent();
-        }
-        return DECKPILE.equals(candidate.origin());
-    }
-
     protected boolean isNotSameColumn(int colNum, Candidate candidate) {
         return !(candidate.isFromColumn() && candidate.from() == colNum);
     }
@@ -220,7 +221,7 @@ class KlondikeBoard extends GameBoard {
     protected Stream<Candidate> findCandidatesFromColumns() {
         return range(0, 7)
                 .mapToObj(this::findCandidateAtColumn)
-                .filter(Objects::nonNull);
+                .filter(isNotNull);
     }
 
     private Stream<Candidate> findCandidateAtDeck() {
@@ -446,21 +447,9 @@ class KlondikeBoard extends GameBoard {
                 .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
     }
 
-    private static int calcBlocker(List<Card> cards, Card target) {
-        return cards.size() - cards.lastIndexOf(target) - 1;
-    }
-
     /*************************************************************************************************************
-     * Accessors
+     * Accessors/Helpers
      ************************************************************************************************************/
-
-    public static int drawNumber() {
-        return drawNumber;
-    }
-
-    public static void drawNumber(int drawNumber) {
-        KlondikeBoard.drawNumber = drawNumber;
-    }
 
     protected boolean stateChanged() {
         return stateChanged;
@@ -474,6 +463,10 @@ class KlondikeBoard extends GameBoard {
         return deck;
     }
 
+    public void deck(Deck deck) {
+        this.deck = deck;
+    }
+
     public Columns columns() {
         return columns;
     }
@@ -482,8 +475,16 @@ class KlondikeBoard extends GameBoard {
         return deckPile;
     }
 
+    public void deckPile(Stack<Card> deckPile) {
+        this.deckPile = deckPile;
+    }
+
     public List<Stack<Card>> foundations() {
         return foundations;
+    }
+
+    public void foundations(List<Stack<Card>> foundations) {
+        this.foundations = foundations;
     }
 
     public Card foundationCard(Card card) {
@@ -502,4 +503,5 @@ class KlondikeBoard extends GameBoard {
     public List<String> verify() {
         return verifyBoard(columns, deck);
     }
+
 }
