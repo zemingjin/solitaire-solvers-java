@@ -34,7 +34,7 @@ public class BoardHelper {
                 check(maps, it -> it < numberOfEachCards, Missing)).toList();
     }
 
-    private static int numberOfEachCard(int[][] maps) {
+    protected static int numberOfEachCard(int[][] maps) {
         var numberOfSuits = (int) Stream.of(maps).filter(it -> it[0] > 0).count();
 
         return switch (numberOfSuits) {

@@ -133,8 +133,12 @@ public class SolitaireApp {
     }
 
     public void checkMaxScore(GameSolver solver) {
-        Optional.of(solver)
-                .map(GameSolver::maxScore)
-                .ifPresent(it -> System.out.printf("Max Score(%,d): %s\n", it.getLeft(), string(it.getRight())));
+        try {
+            Optional.of(solver)
+                    .map(GameSolver::maxScore)
+                    .ifPresent(it -> System.out.printf("Max Score(%,d): %s\n", it.getLeft(), string(it.getRight())));
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 }

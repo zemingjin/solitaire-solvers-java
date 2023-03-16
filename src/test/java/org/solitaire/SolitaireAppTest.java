@@ -47,7 +47,7 @@ class SolitaireAppTest {
         assertFalse(isPrint());
         isPrint(true);
         main(ARGS);
-        assertEquals(921, outputStream.toByteArray().length);
+        assertEquals(889, outputStream.toByteArray().length);
 
         assertThrows(RuntimeException.class, () -> main(new String[]{}));
     }
@@ -86,8 +86,8 @@ class SolitaireAppTest {
         ARGS[1] = FREECELL;
         ARGS[2] = null;
 
-        var result = assertThrows(RuntimeException.class, () -> app.run(ARGS));
-        assertEquals("Maximum score is not supported!", result.getMessage());
+        app.run(ARGS);
+        assertTrue(outputStream.toString().contains("Maximum score is not supported!"));
         assertEquals(FreeCell.SOLUTION_LIMIT, app.solver().totalSolutions());
     }
 
@@ -99,6 +99,7 @@ class SolitaireAppTest {
 
         app.run(ARGS);
         assertEquals(ZERO, app.solver().totalSolutions());
+        assertFalse(outputStream.toString().contains("not supported"));
     }
 
     @Test

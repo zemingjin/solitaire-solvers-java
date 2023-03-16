@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntPredicate;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.MAX_VALUE;
@@ -42,11 +41,8 @@ import static org.solitaire.util.CardHelper.suitCode;
 @Slf4j
 public class SpiderBoard extends GameBoard {
     protected final Deck deck;
-    protected transient final IntPredicate isNotEmpty = i -> isNotEmpty(columns().get(i));
     private transient final IntPredicate isLongEnoughForRun = i -> 13 <= columns().get(i).size();
     private transient final IntPredicate isThereARun = i -> isThereARun(columns().get(i));
-    protected transient final Predicate<Candidate> isNotColumnToEmptyColumn
-            = c -> c.cards().size() < columns().get(c.from()).size() || isNotEmpty.test(c.to());
 
     public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
@@ -127,7 +123,7 @@ public class SpiderBoard extends GameBoard {
         return Optional.of(candidate)
                 .filter(this::isNotRepeatingCandidate)
                 .filter(this::isLongerTargetSequence)
-                .filter(isNotColumnToEmptyColumn)
+                .filter(isMovableToEmptyColumn)
                 .map(it -> !(it.isKing() && isAtTop(it)))
                 .orElse(false);
     }

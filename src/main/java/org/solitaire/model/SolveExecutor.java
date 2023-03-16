@@ -57,7 +57,8 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                 Optional.ofNullable(stack.peek())
                         .filter(ObjectUtils::isNotEmpty)
                         .map(this::getBoard)
-                        .ifPresent(this::processBoard);
+                        .filter(this::isBoardNotSolved)
+                        .ifPresent(solveBoard());
             }
         } else {
             throw new RuntimeException(verify.toString());
@@ -101,6 +102,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     public Stream<T> applyCandidates(List<U> candidates, T board) {
         return (Stream<T>) candidates.stream()
                 .map(it -> clone(board).updateBoard(it))
+                .filter(it -> isBoardNotSolved((T) it))
                 .filter(Objects::nonNull);
     }
 
@@ -111,18 +113,12 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         return !singleSolution() || totalSolutions() != 1;
     }
 
-    public boolean checkBoard(T board) {
-        if (board.isSolved()) {
+    public boolean isBoardNotSolved(T board) {
+        if (nonNull(board) && board.isSolved()) {
             solutionConsumers.forEach(it -> it.accept(board.path()));
             return false;
         }
         return true;
-    }
-
-    private void processBoard(T board) {
-        Optional.of(board)
-                .filter(this::checkBoard)
-                .ifPresent(it -> solveBoard().accept(it));
     }
 
     protected void defaultSolutionConsumer(List<S> path) {

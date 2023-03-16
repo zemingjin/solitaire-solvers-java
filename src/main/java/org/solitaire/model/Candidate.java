@@ -3,6 +3,7 @@ package org.solitaire.model;
 import java.util.List;
 
 import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suitCode;
@@ -48,8 +49,9 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
         return switch (origin) {
             case COLUMN -> Integer.toString(from);
             case FREECELL -> "f";
-            case DECKPILE -> "d";
+            case DECKPILE -> "D";
             case BOARD -> "b";
+            case FOUNDATION -> "F";
             default -> throw new RuntimeException("Invalid Origin: " + this);
         };
     }
@@ -78,10 +80,22 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
     }
 
     public boolean isToColumn() {
-        return COLUMN == target;
+        return COLUMN == target();
     }
 
     public boolean isToFoundation() {
-        return FOUNDATION == target;
+        return FOUNDATION == target();
+    }
+
+    public boolean isFromColumn() {
+        return COLUMN == origin();
+    }
+
+    public boolean isToDeck() {
+        return DECKPILE == target();
+    }
+
+    public boolean isNotToDeck() {
+        return !isToDeck();
     }
 }
