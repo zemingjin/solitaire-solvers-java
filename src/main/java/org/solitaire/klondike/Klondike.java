@@ -10,7 +10,10 @@ import org.solitaire.model.Path;
 import org.solitaire.model.SolveExecutor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Stack;
+
+import static org.solitaire.model.Board.listIsNotEmpty;
 
 @Slf4j
 public class Klondike extends SolveExecutor<String, Candidate, KlondikeBoard> {
@@ -23,6 +26,10 @@ public class Klondike extends SolveExecutor<String, Candidate, KlondikeBoard> {
                     List<Stack<Card>> foundations) {
         super(new KlondikeBoard(columns, new Path<>(), 0, deck, new Stack<>(), foundations, true),
                 KlondikeBoard::new);
+        Optional.of(board().drawDeck())
+                .filter(listIsNotEmpty)
+                .map(it -> it.get(0))
+                .ifPresent(it -> board().updateBoard(it));
     }
 
     @Override

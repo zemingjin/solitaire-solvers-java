@@ -1,6 +1,5 @@
 package org.solitaire.pyramid;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Board;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -70,9 +70,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
                 .orElseGet(drawDeckCards);
     }
 
-    private transient final Function<Pair<Integer, List<Card>>, Stream<Candidate>> cardsOf13s = pair -> {
-        var openCards = pair.getRight();
-        var i = pair.getLeft();
+    private transient final Function<List<Card>, IntFunction<Stream<Candidate>>> cardsOf13s = openCards -> i -> {
         var card = openCards.get(i);
 
         if (card.isKing()) {
@@ -85,11 +83,14 @@ public class PyramidBoard implements Board<Card[], Candidate> {
                 .map(it -> buildCandidate(it, BOARD, REMOVE));
     };
 
-    private transient final Function<List<Card>, List<Candidate>> findCardsOf13s =
-            openCards -> range(0, openCards.size())
-                    .mapToObj(i -> Pair.of(i, openCards))
-                    .flatMap(cardsOf13s)
-                    .toList();
+    private transient final Function<List<Card>, List<Candidate>> findCardsOf13s = openCards -> {
+        IntFunction<Stream<Candidate>> getCardsOf13s = cardsOf13s.apply(openCards);
+
+        return range(0, openCards.size())
+                .mapToObj(getCardsOf13s)
+                .flatMap(it -> it)
+                .toList();
+    };
 
 
     protected List<Card> findOpenCards() {

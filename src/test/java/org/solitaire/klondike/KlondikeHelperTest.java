@@ -25,7 +25,7 @@ class KlondikeHelperTest {
         var klondike = KlondikeHelper.build(CARDS).board();
 
         assertNotNull(klondike);
-        assertEquals("23:Ts", klondike.deck().peek().toString());
+        assertEquals("20:Kd", klondike.deck().peek().toString());
         assertEquals("0:Jc", klondike.deck().get(0).toString());
         assertEquals(1, klondike.columns().get(0).size());
         assertEquals("24:Th", klondike.columns().get(0).get(0).toString());

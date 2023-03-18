@@ -110,7 +110,7 @@ class TriPeaksBoardTest {
     void test_isOpenCard() {
         var state = new TriPeaksBoard(toArray(null, null, null, null, null), null);
 
-        assertTrue(state.isOpenCard(buildCard(0, "Ad")));
+        assertTrue(state.isOpenCard.test(buildCard(0, "Ad")));
     }
 
     @Test
@@ -118,7 +118,7 @@ class TriPeaksBoardTest {
         var state = new TriPeaksBoard(null, null);
         var card = buildCard(LAST_BOARD, "Ad");
 
-        var ex = assertThrows(RuntimeException.class, () -> state.isOpenCard(card));
+        var ex = assertThrows(RuntimeException.class, () -> state.isOpenCard.test(card));
 
         assertNotNull(ex);
         assertEquals("Invalid card position: 28", ex.getMessage());
@@ -126,8 +126,8 @@ class TriPeaksBoardTest {
 
     @Test
     void test_isOpenCard_allBoardCards() {
-        assertTrue(Arrays.stream(board.cards(), ZERO, INI_COVERED).noneMatch(board::isOpenCard));
-        assertTrue(Arrays.stream(board.cards(), INI_COVERED, LAST_BOARD).allMatch(board::isOpenCard));
+        assertTrue(Arrays.stream(board.cards(), ZERO, INI_COVERED).noneMatch(board.isOpenCard));
+        assertTrue(Arrays.stream(board.cards(), INI_COVERED, LAST_BOARD).allMatch(board.isOpenCard));
     }
 
     @Test

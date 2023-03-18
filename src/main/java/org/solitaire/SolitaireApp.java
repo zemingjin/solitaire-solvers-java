@@ -24,6 +24,7 @@ import static java.util.stream.IntStream.range;
 import static org.solitaire.model.SolutionType.Longest;
 import static org.solitaire.model.SolutionType.One;
 import static org.solitaire.model.SolutionType.Shortest;
+import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.CardHelper.string;
@@ -36,6 +37,7 @@ public class SolitaireApp {
     public static final String FREECELL = "-f";
     public static final String USE_SUITS = "-suits";
     public static final String SINGLE_SOLUTION = "-single";
+    public static final String PRINT = "-print";
 
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
         put(TRIPEAKS, TriPeaksHelper::build);
@@ -63,6 +65,10 @@ public class SolitaireApp {
 
     public static void checkSingleSolution(String[] args) {
         singleSolution(checkParam(args, SINGLE_SOLUTION));
+    }
+
+    public static void checkPrint(String[] args) {
+        isPrint(checkParam(args, PRINT));
     }
 
     private static boolean checkParam(String[] args, String target) {
@@ -93,6 +99,7 @@ public class SolitaireApp {
         stopWatch().start();
         checkUseSuits(args);
         checkSingleSolution(args);
+        checkPrint(args);
         solver(Optional.of(getPath(args))
                 .map(IOHelper::loadFile)
                 .map(buildSolver)

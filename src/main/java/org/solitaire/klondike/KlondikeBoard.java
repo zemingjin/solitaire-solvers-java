@@ -37,8 +37,8 @@ import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
-import static org.solitaire.util.CardHelper.diffOfValues;
 import static org.solitaire.util.CardHelper.nextCard;
+import static org.solitaire.util.CardHelper.rankDifference;
 import static org.solitaire.util.CardHelper.suitCode;
 
 /**
@@ -164,12 +164,12 @@ class KlondikeBoard extends GameBoard {
     }
 
     protected transient final Predicate<Card> isFoundationCandidate = card -> {
-        var foundationCard = foundations.get(suitCode(card));
+        var foundationCards = foundations.get(suitCode(card));
 
-        return Optional.of(foundationCard)
+        return Optional.of(foundationCards)
                 .filter(Stack::isEmpty)
                 .map(it -> card.isAce())
-                .orElseGet(() -> foundationCard.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
+                .orElseGet(() -> foundationCards.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
     };
 
     private transient final IntPredicate isFoundationCandidateFromColumn = i -> isFoundationCandidate.test(peek(i));
@@ -189,12 +189,12 @@ class KlondikeBoard extends GameBoard {
                     .map(it -> it.peek().isHigherWithDifferentColor(pair.getRight().peek()))
                     .orElseGet(() -> isMovableToEmptyColumn(pair.getRight()));
 
-    private transient final Function<Candidate, LinkedList<Candidate>> checkColumnsForAppendable =
+    private transient final Function<Candidate, List<Candidate>> checkColumnsForAppendable =
             candidate -> range(0, columns.size())
                     .mapToObj(i -> Pair.of(i, candidate))
                     .filter(isAppendable)
                     .map(it -> Candidate.buildColumnCandidate(it.getRight(), it.getLeft()))
-                    .collect(Collectors.toCollection(LinkedList::new));
+                    .collect(Collectors.toList());
 
     protected transient final Function<Candidate, List<Candidate>> findTarget =
             candidate -> Optional.of(candidate)
@@ -262,11 +262,20 @@ class KlondikeBoard extends GameBoard {
     }
 
     protected boolean isImmediateToFoundation(Card card) {
-        if (!stateChanged()) {
-            return true;
+        if (card.isHigherOrder(foundationCard(suitCode(card)))) {
+            if (!stateChanged() || helpOpenCard(card)) {
+                return true;
+            }
+            return foundations.stream()
+                    .allMatch(it -> rankDifference(card, it.isEmpty() ? null : it.peek()) <= 2);
         }
-        return foundations.stream()
-                .allMatch(it -> diffOfValues(card, it.isEmpty() ? null : it.peek()) <= 2);
+        return false;
+    }
+
+    private boolean helpOpenCard(Card card) {
+        return columns().stream()
+                .filter(it -> it.contains(card))
+                .anyMatch(it -> it.indexOf(card) - it.openAt() == 1);
     }
 
     protected List<Candidate> drawDeck() {
@@ -464,7 +473,7 @@ class KlondikeBoard extends GameBoard {
 
     @Override
     public List<String> verify() {
-        return verifyBoard(columns, deck);
+        return verifyBoard(columns, deck, deckPile);
     }
 
 }

@@ -107,9 +107,13 @@ public class GameBoard implements Board<String, Candidate> {
 
     public Card peek(int colId) {
         return Optional.of(colId)
-                .map(columns()::get)
+                .map(this::column)
                 .filter(listNotEmpty)
                 .map(Column::peek)
                 .orElse(null);
+    }
+
+    public Column column(int colId) {
+        return columns().get(colId);
     }
 }

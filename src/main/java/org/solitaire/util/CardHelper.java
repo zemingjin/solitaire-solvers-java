@@ -45,14 +45,11 @@ public class CardHelper {
                 .orElse(0);
     }
 
-    public static int diffOfValues(Card a, Card b) {
-        assert nonNull(a);
-        var aValue = VALUES.indexOf(a.value());
-
+    public static int rankDifference(Card a, Card b) {
         if (nonNull(b)) {
-            return aValue - VALUES.indexOf(b.value());
+            return requireNonNull(a).rank() - b.rank();
         }
-        return aValue + 1;
+        return requireNonNull(a).rank();
     }
 
     public static int suitCode(Card card) {
