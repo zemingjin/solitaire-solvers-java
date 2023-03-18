@@ -47,7 +47,7 @@ class SolitaireAppTest {
         assertFalse(isPrint());
         isPrint(true);
         main(ARGS);
-        assertEquals(889, outputStream.toByteArray().length);
+        assertTrue(outputStream.toString().contains("One Path(47):"));
 
         assertThrows(RuntimeException.class, () -> main(new String[]{}));
     }
@@ -64,8 +64,12 @@ class SolitaireAppTest {
 
         assertTrue(app.stopWatch().isStopped());
         assertTrue(useSuit());
+        assertFalse(singleSolution());
         assertNotNull(app.solver());
         assertEquals(7983, app.solver().totalSolutions());
+        assertTrue(outputStream.toString().contains("Max Score"));
+        assertTrue(outputStream.toString().contains("Longest Path"));
+        assertEquals(14, app.solver().maxDepth());
     }
 
     @Test
@@ -77,7 +81,8 @@ class SolitaireAppTest {
 
 
         assertNotNull(app.solver());
-        assertEquals(512, app.solver().totalSolutions());
+        assertEquals(1536, app.solver().totalSolutions());
+        assertEquals(11, app.solver().maxDepth());
     }
 
     @Test
@@ -100,6 +105,7 @@ class SolitaireAppTest {
         app.run(ARGS);
         assertEquals(ZERO, app.solver().totalSolutions());
         assertFalse(outputStream.toString().contains("not supported"));
+        assertFalse(outputStream.toString().contains("Max Score"));
     }
 
     @Test

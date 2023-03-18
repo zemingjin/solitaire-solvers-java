@@ -30,14 +30,15 @@ class PyramidHelperTest {
         useSuit(false);
         singleSolution(false);
         pyramid = build(cards);
-        pyramid.isPrint(false);
+        Pyramid.isPrint(false);
     }
 
     @Test
     void test_build() {
         assertNotNull(pyramid);
         assertEquals(28, Objects.requireNonNull(pyramid.stack().peek().peek()).cards().length);
-        assertEquals(24, Objects.requireNonNull(pyramid.stack().peek().peek()).deck().size());
+        assertEquals(23, Objects.requireNonNull(pyramid.stack().peek().peek()).deck().size());
+        assertEquals(1, Objects.requireNonNull(pyramid.stack().peek().peek()).flippedDeck().size());
 
         pyramid.solve();
         var maxScore = pyramid.maxScore();

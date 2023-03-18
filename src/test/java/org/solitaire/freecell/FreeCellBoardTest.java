@@ -10,7 +10,6 @@ import org.solitaire.util.IOHelper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
@@ -28,6 +27,7 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.Origin.FREECELL;
+import static org.solitaire.util.BoardHelper.isNull;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.isCleared;
 import static org.solitaire.util.CardHelper.suitCode;
@@ -242,7 +242,7 @@ public class FreeCellBoardTest {
         assertEquals("13:2d", result.columns().get(candidate.to()).peek().toString());
         assertEquals(1, board.path().size());
         assertEquals("17:2d", board.path().get(0));
-        assertTrue(Arrays.stream(board.freeCells()).allMatch(Objects::isNull));
+        assertTrue(Arrays.stream(board.freeCells()).allMatch(isNull));
 
         result = board.updateBoard(Candidate.buildColumnCandidate(candidate, 0));
         assertEquals(8, result.columns().get(0).size());
@@ -423,5 +423,16 @@ public class FreeCellBoardTest {
         board.columns().get(1).clear();
         board.score(0);
         assertThrows(NoSuchElementException.class, () -> board.score());
+    }
+
+    @Test
+    void test_calcBlockerScore() {
+        var card = card("Qc");
+
+        board.foundations()[suitCode(card)] = card;
+        assertEquals(7, board.calcBlockerScore());
+
+        board.foundations()[suitCode(card)] = card("Kc");
+        assertEquals(4, board.calcBlockerScore());
     }
 }

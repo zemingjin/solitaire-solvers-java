@@ -28,8 +28,8 @@ class PyramidTest {
     void test_solve() {
         pyramid.solve();
 
-        assertEquals(4956, pyramid.totalScenarios());
-        assertEquals(512, pyramid.totalSolutions());
+        assertEquals(14857, pyramid.totalScenarios());
+        assertEquals(1536, pyramid.totalSolutions());
         assertEquals(28, pyramid.shortestPath().size());
         assertEquals(28, pyramid.longestPath().size());
     }

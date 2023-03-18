@@ -6,6 +6,7 @@ import org.solitaire.model.Columns;
 import org.solitaire.util.IOHelper;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -85,9 +86,13 @@ class FreeCellTest {
         }
 
         @Override
+        public Consumer<Collection<FreeCellBoard>> addBoards() {
+            return this::addBoards;
+        }
+
         public void addBoards(Collection<FreeCellBoard> boards) {
             if (add) {
-                super.addBoards(boards);
+                super.addBoards().accept(boards);
             }
         }
     }

@@ -3,10 +3,11 @@ package org.solitaire.pyramid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
+import org.solitaire.util.IOHelper;
 
 import java.util.List;
-import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,15 +17,18 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Origin.BOARD;
+import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.REMOVE;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
-import static org.solitaire.pyramid.PyramidTest.cards;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidBoardTest {
+    protected static final String TEST_FILE = "games/pyramid/pyramid-121122-expert.txt";
+    static final String[] cards = IOHelper.loadFile(TEST_FILE);
+
     private PyramidBoard board;
 
     @BeforeEach
@@ -63,44 +67,58 @@ class PyramidBoardTest {
         var result = board.findCandidates();
 
         assertNotNull(result);
-        assertEquals(3, result.size());
+        assertEquals(4, result.size());
         assertEquals("[9s, 4c]", stringOfRaws(result.get(0).cards()));
 
         assertEquals(-28, board.score());
     }
 
     @Test
-    void test_updateState() {
+    void test_updateBoard() {
         var candidate = board.findCandidates().get(0);
         var card = candidate.cards().get(0);
 
         board.updateBoard(candidate);
 
         assertFalse(board.isOpen(card));
-        assertTrue(board.flippedDeck().isEmpty());
+        assertEquals(1, board.flippedDeck().size());
         assertEquals("[9s, 4c]", stringOfRaws(board.path().peek()));
         assertEquals(1, board.path().size());
         assert board.path().peek() != null;
-        assertEquals("27:9s", Objects.requireNonNull(board.path().peek())[0].toString());
+        assertEquals("27:9s", requireNonNull(board.path().peek())[0].toString());
 
         card = board.deck().peek();
         var c = List.of(card, board.cards()[LAST_BOARD - 2]);
         board.updateBoard(new Candidate(c, BOARD, 0, REMOVE, 0));
 
         assertFalse(board.isOpen(card));
-        assertEquals(23, board.deck().size());
-        assertEquals("50:Kh", board.deck().peek().toString());
+        assertEquals(22, board.deck().size());
+        assertEquals("49:6c", board.deck().peek().toString());
         assertEquals(2, board.path().size());
         assert board.path().peek() != null;
-        assertEquals("51:Kc", Objects.requireNonNull(board.path().peek())[0].toString());
+        assertEquals("50:Kh", requireNonNull(board.path().peek())[0].toString());
 
+        card = board.deck().peek();
+        candidate = new Candidate(List.of(card), DECKPILE, 0, REMOVE, 0);
+        assertEquals(22, board.deck().size());
+        board.updateBoard(candidate);
+        assertEquals(card, requireNonNull(board.path().peek())[0]);
+        assertEquals(21, board.deck().size());
+        assertFalse(board.flippedDeck().isEmpty());
+
+        card = board.flippedDeck().peek();
+        candidate = new Candidate(List.of(card), DECKPILE, 0, REMOVE, 0);
+        board.updateBoard(candidate);
+
+        assertTrue(board.flippedDeck().isEmpty());
+        assertEquals(card, requireNonNull(board.path().peek())[0]);
     }
 
     @Test
     void test_recycle() {
         assertNotNull(board.updateBoard(board.drawDeckCard()));
-        assertEquals(23, board.deck().size());
-        assertEquals(1, board.flippedDeck().size());
+        assertEquals(22, board.deck().size());
+        assertEquals(2, board.flippedDeck().size());
 
         while (!board.deck().isEmpty()) {
             board.flippedDeck().push(board.deck().pop());
@@ -130,7 +148,7 @@ class PyramidBoardTest {
         var cards = board.findCandidates();
 
         assertNotNull(cards);
-        assertEquals(3, cards.size());
+        assertEquals(4, cards.size());
     }
 
     @Test
@@ -138,7 +156,7 @@ class PyramidBoardTest {
         var cards = board.findOpenCards();
 
         assertNotNull(cards);
-        assertEquals(8, cards.size());
+        assertEquals(9, cards.size());
     }
 
     @Test

@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -16,6 +15,7 @@ import static java.util.Arrays.stream;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
+import static org.solitaire.util.BoardHelper.isNull;
 
 public class CardHelper {
     public static final String DIAMOND = "♦";   // \u2666
@@ -137,13 +137,13 @@ public class CardHelper {
     }
 
     public static boolean isCleared(Card[] cards, int startInclusive, int endExclusive) {
-        return stream(cards, startInclusive, endExclusive).allMatch(Objects::isNull);
+        return stream(cards, startInclusive, endExclusive).allMatch(isNull);
     }
 
     public static String string(List<?> cards) {
         return cards.stream()
                 .map(CardHelper::stringOfRaws)
-                .collect(Collectors.joining(" "));
+                .collect(Collectors.joining(", "));
     }
 
     protected static String stringOfRaws(Object obj) {

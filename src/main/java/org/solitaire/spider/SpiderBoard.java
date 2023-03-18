@@ -1,7 +1,6 @@
 package org.solitaire.spider;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.function.TriFunction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Candidate;
@@ -15,7 +14,6 @@ import org.solitaire.model.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntPredicate;
 import java.util.stream.Stream;
@@ -32,6 +30,8 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.SolveExecutor.isPrint;
+import static org.solitaire.util.BoardHelper.isNotNull;
+import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
@@ -70,7 +70,7 @@ public class SpiderBoard extends GameBoard {
         return Optional.of(concat(findCandidates(this::findCandidateOfSameSuit),
                         findCandidates(this::findCandidateOfDifferentColors)))
                 .map(Stream::toList)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .orElseGet(this::drawDeck);
     }
 
@@ -87,7 +87,7 @@ public class SpiderBoard extends GameBoard {
                                              TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
                 .mapToObj(j -> finder.apply(pair.getLeft(), j, pair.getRight()))
-                .filter(Objects::nonNull);
+                .filter(isNotNull);
     }
 
     protected Candidate findCandidateOfSameSuit(Integer i, Integer j, List<Card> cards) {
@@ -289,7 +289,7 @@ public class SpiderBoard extends GameBoard {
             var value = range(0, columns().size())
                     .filter(i -> i != col)
                     .mapToObj(columns()::get)
-                    .filter(ObjectUtils::isNotEmpty)
+                    .filter(listNotEmpty)
                     .filter(it -> it.contains(next))
                     .mapToInt(it -> it.size() - it.lastIndexOf(next) - 1)
                     .reduce(MAX_VALUE, Math::min);

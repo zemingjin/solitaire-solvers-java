@@ -37,6 +37,19 @@ class SpiderBoardTest {
 
     private SpiderBoard board;
 
+    private static Column mockRun() {
+        return mockRun(VALUES.length());
+    }
+
+    private static Column mockRun(int length) {
+        var column = new Column();
+
+        for (int i = length; i-- > 0; ) {
+            column.add(card(VALUES.charAt(i) + "d"));
+        }
+        return column;
+    }
+
     @BeforeEach
     void setup() {
         useSuit(false);
@@ -357,19 +370,6 @@ class SpiderBoardTest {
         result = board.verify();
         assertEquals(2, result.size());
         assertEquals("[Extra card: Th, Missing card: 4h]", result.toString());
-    }
-
-    private static Column mockRun() {
-        return mockRun(VALUES.length());
-    }
-
-    private static Column mockRun(int length) {
-        var column = new Column();
-
-        for (int i = length; i-- > 0; ) {
-            column.add(card(VALUES.charAt(i) + "d"));
-        }
-        return column;
     }
 
     private void mockColumn(int col, int h, int l) {

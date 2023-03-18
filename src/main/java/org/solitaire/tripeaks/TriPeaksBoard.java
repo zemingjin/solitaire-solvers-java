@@ -7,7 +7,6 @@ import org.solitaire.util.CardHelper;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +23,7 @@ import static java.util.stream.Stream.concat;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
+import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
@@ -78,7 +78,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
         return range(0, min(cards.length, LAST_BOARD))
                 .map(reverseBoard)
                 .mapToObj(i -> cards[i])
-                .filter(Objects::nonNull)
+                .filter(isNotNull)
                 .filter(this::isOpenCard)
                 .filter(target::isAdjacent)
                 .collect(Collectors.toList());
@@ -88,7 +88,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
         return rangeClosed(LAST_BOARD, LAST_DECK - 1)
                 .map(reverse)
                 .mapToObj(i -> cards[i])
-                .filter(Objects::nonNull)
+                .filter(isNotNull)
                 .findFirst()
                 .orElse(null);
     }
@@ -188,7 +188,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
 
     private int findBoardBlockers(Card card) {
         return Arrays.stream(cards, 0, LAST_BOARD)
-                .filter(Objects::nonNull)
+                .filter(isNotNull)
                 .filter(it -> it.isAdjacent(card))
                 .mapToInt(this::calcBlockerCards)
                 .reduce(Integer.MAX_VALUE, Math::min);
@@ -220,7 +220,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
         }
         return rangeClosed(at, at + 1)
                 .mapToObj(i -> cards[i])
-                .filter(Objects::nonNull);
+                .filter(isNotNull);
     }
 
     protected int findBlockersInDeck(Card card) {
@@ -236,14 +236,14 @@ public class TriPeaksBoard implements Board<Card, Card> {
 
     private int calcDeckBlockers(int from) {
         return (int) Arrays.stream(cards, from, LAST_DECK)
-                .filter(Objects::nonNull)
+                .filter(isNotNull)
                 .count();
     }
 
     private Stream<Card> findOpenBoardCards() {
         return range(0, LAST_BOARD)
                 .mapToObj(this::getOpenBoardCard)
-                .filter(Objects::nonNull);
+                .filter(isNotNull);
     }
 
     private Card getOpenBoardCard(int i) {

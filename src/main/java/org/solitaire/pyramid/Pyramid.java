@@ -17,6 +17,7 @@ public class Pyramid extends SolveExecutor<Card[], Candidate, PyramidBoard> {
     public Pyramid(PyramidBoard board) {
         super(board, PyramidBoard::new);
         addSolutionConsumer(this::solutionConsumer);
+        board.updateBoard(board.drawDeckCard());
     }
 
     @SuppressWarnings("rawtypes")

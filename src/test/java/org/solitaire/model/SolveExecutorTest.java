@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -13,6 +15,7 @@ import static java.util.Objects.nonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
@@ -20,6 +23,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.solitaire.model.SolveExecutor.isPrint;
+import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;
@@ -30,11 +34,14 @@ class SolveExecutorTest {
     private static final String ABC = "ABC";
 
     @Mock Board<String, String> board;
+    private ByteArrayOutputStream outputStream;
 
     private SolveExecutor<String, String, Board<String, String>> executor;
 
     @BeforeEach
     void setup() {
+        outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
         isPrint(false);
         executor = new SolveExecutor<>(board);
         executor.cloner(it -> board);
@@ -42,19 +49,33 @@ class SolveExecutorTest {
 
     @Test
     void test_defaultSolutionConsumer() {
-        executor.defaultSolutionConsumer(List.of("1"));
+        singleSolution(false);
+        executor.defaultSolutionConsumer.accept(List.of("1"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(1, executor.longestPath().size());
 
-        executor.defaultSolutionConsumer(List.of("1", "2"));
+        executor.defaultSolutionConsumer.accept(List.of("1", "2"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(2, executor.longestPath().size());
         assertEquals("[1, 2]", executor.longestPath().toString());
 
-        executor.defaultSolutionConsumer(List.of("2", "3"));
+        executor.defaultSolutionConsumer.accept(List.of("2", "3"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(2, executor.longestPath().size());
         assertEquals("[1, 2]", executor.longestPath().toString());
+
+        assertEquals("", outputStream.toString());
+    }
+
+    @Test
+    void test_defaultSolutionConsumer_singleSolution() {
+        singleSolution(true);
+
+        executor.defaultSolutionConsumer.accept(List.of("1"));
+
+        assertEquals(1, executor.shortestPath().size());
+        assertNull(executor.longestPath());
+        assertEquals("", outputStream.toString());
     }
 
     @Test
@@ -106,14 +127,14 @@ class SolveExecutorTest {
     @Test
     void test_addBoard() {
         assertEquals(ONE, executor.stack().size());
-        executor.addBoard(board);
+        executor.addBoard().accept(board);
         assertEquals(TWO, executor.stack().size());
-        executor.addBoard(null);
+        executor.addBoard().accept(null);
     }
 
     @Test
     void test_addBoards() {
-        executor.addBoards(List.of(board, board));
+        executor.addBoards().accept(List.of(board, board));
         assertEquals(TWO, executor.stack().size());
         assertEquals(TWO, executor.stack().peek().size());
     }

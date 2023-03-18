@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.solitaire.util.BoardHelper.listNotEmpty;
 
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
@@ -107,7 +108,7 @@ public class GameBoard implements Board<String, Candidate> {
     public Card peek(int colId) {
         return Optional.of(colId)
                 .map(columns()::get)
-                .filter(ObjectUtils::isNotEmpty)
+                .filter(listNotEmpty)
                 .map(Column::peek)
                 .orElse(null);
     }
