@@ -90,7 +90,7 @@ class KlondikeBoardTest {
 
         board.columns().get(5).add(card("6s"));
         result = board.findFoundationToColumnCandidates();
-        assertEquals("F5:5d", result.get(0).notation());
+        assertEquals("$5:5d", result.get(0).notation());
 
         board.columns().get(3).remove(3);
         result = board.findFoundationToColumnCandidates();
@@ -107,13 +107,13 @@ class KlondikeBoardTest {
         board.columns().get(2).clear();
         board.columns().get(2).add(card("Jc"));
 
-        assertEquals("F2:Th", board.findFoundationToColumnCandidates().get(0).notation());
+        assertEquals("$2:Th", board.findFoundationToColumnCandidates().get(0).notation());
 
         card = card("9h");
         board.foundations().get(suitCode(card)).add(card);
         board.columns().get(1).add(card("8c"));
 
-        assertEquals("F6:9h", board.findFoundationToColumnCandidates().get(0).notation());
+        assertEquals("$6:9h", board.findFoundationToColumnCandidates().get(0).notation());
     }
 
     @Test

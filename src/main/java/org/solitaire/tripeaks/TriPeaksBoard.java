@@ -119,21 +119,21 @@ public class TriPeaksBoard implements Board<Card, Card> {
             case 4 -> 0;
             case 3 -> at + 9;
             case 2 -> at + (at - 3) / 2 + 6;
-            case 1 -> at * 2 + 3;
-            default -> throw new RuntimeException("Invalid card: " + card);
+            default -> at * 2 + 3;
         };
     }
 
     protected int row(int at) {
-        if (INI_COVERED <= at && at < LAST_BOARD)
+        if (at < 0 || at >= LAST_BOARD) {
+            throw new RuntimeException("Invalid card position: " + at);
+        } else if (at >= INI_COVERED) {
             return 4;
-        else if (9 <= at && at < INI_COVERED)
+        } else if (at >= 9) {
             return 3;
-        else if (3 <= at && at < 9)
+        } else if (at >= 3) {
             return 2;
-        else if (0 <= at && at < 3)
-            return 1;
-        return 0;
+        }
+        return 1;
     }
 
     private boolean isNotCovered(int at) {

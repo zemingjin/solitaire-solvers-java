@@ -181,7 +181,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         }
     }
 
-    private boolean surePop(Card card, Stack<Card> stack) {
+    protected boolean surePop(Card card, Stack<Card> stack) {
         if (isNotEmpty(stack) && stack.peek().equals(card)) {
             stack.pop();
             return true;

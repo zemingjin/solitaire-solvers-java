@@ -225,6 +225,11 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         throw new RuntimeException("Maximum score is not supported!");
     }
 
+    @Override
+    public String pathString(List path) {
+        return string(path);
+    }
+
     private final Function<BoardStack<T>, T> getBoard = boards -> {
         var board = boards.pop();
 

@@ -19,4 +19,6 @@ public interface GameSolver {
     List shortestPath();
 
     List longestPath();
+
+    String pathString(List path);
 }

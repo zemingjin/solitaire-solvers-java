@@ -121,7 +121,7 @@ class TriPeaksBoardTest {
         var ex = assertThrows(RuntimeException.class, () -> state.isOpenCard(card));
 
         assertNotNull(ex);
-        assertEquals("Invalid card: " + card, ex.getMessage());
+        assertEquals("Invalid card position: 28", ex.getMessage());
     }
 
     @Test
@@ -132,9 +132,8 @@ class TriPeaksBoardTest {
 
     @Test
     void test_row() {
-        assertEquals(0, board.row(-1));
+        assertThrows(RuntimeException.class, () -> board.row(-1));
         assertEquals(1, board.row(0));
-        assertEquals(1, board.row(1));
         assertEquals(1, board.row(2));
         assertEquals(2, board.row(3));
         assertEquals(2, board.row(8));
@@ -142,6 +141,6 @@ class TriPeaksBoardTest {
         assertEquals(3, board.row(INI_COVERED - 1));
         assertEquals(4, board.row(INI_COVERED));
         assertEquals(4, board.row(LAST_BOARD - 1));
-        assertEquals(0, board.row(LAST_BOARD));
+        assertThrows(RuntimeException.class, () -> board.row(LAST_BOARD));
     }
 }

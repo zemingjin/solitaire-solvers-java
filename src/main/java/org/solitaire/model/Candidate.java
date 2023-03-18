@@ -55,9 +55,9 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
         return switch (origin) {
             case COLUMN -> Integer.toString(from);
             case FREECELL -> "f";
-            case DECKPILE -> "D";
+            case DECKPILE -> "^";
             case BOARD -> "b";
-            case FOUNDATION -> "F";
+            case FOUNDATION -> "$";
             default -> throw new RuntimeException("Invalid Origin: " + this);
         };
     }
@@ -66,8 +66,8 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
         return switch (target) {
             case COLUMN -> Integer.toString(to);
             case FREECELL -> "f";
-            case FOUNDATION -> "F";
-            case DECKPILE -> "D";
+            case FOUNDATION -> "$";
+            case DECKPILE -> "^";
             case BOARD -> "b";
             case REMOVE -> "r";
         };

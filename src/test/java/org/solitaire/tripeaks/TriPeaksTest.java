@@ -3,11 +3,15 @@ package org.solitaire.tripeaks;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
+import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.IOHelper.loadFile;
 
@@ -50,10 +54,18 @@ class TriPeaksTest {
 
     @Test
     void test_verify_exception() {
-        triPeaks.board().cards()[0] = null;
+        triPeaks.board().cards()[0] = card("5d");
 
         var result = assertThrows(RuntimeException.class, () -> triPeaks.solve());
 
-        assertEquals("[Missing card: 5c]", result.getMessage());
+        assertEquals("[Extra card: 5d, Missing card: 5c]", result.getMessage());
+    }
+
+    @Test
+    void test_pathString() {
+        var cards = triPeaks.board().cards();
+        var path = List.of(cards[LAST_BOARD], cards[0], cards[LAST_BOARD - 1]);
+
+        assertEquals("^Kd, 5c, 3c", triPeaks.pathString(path));
     }
 }

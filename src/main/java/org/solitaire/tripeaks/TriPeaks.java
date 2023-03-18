@@ -7,8 +7,10 @@ import org.solitaire.util.MaxScore;
 
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import static java.util.stream.IntStream.rangeClosed;
+import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
 
 public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
@@ -40,6 +42,14 @@ public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
     @Override
     public Pair<Integer, List> maxScore() {
         return maxScore.maxScore();
+    }
+
+    @SuppressWarnings("rawtypes unchecked")
+    @Override
+    public String pathString(List path) {
+        return ((List<Card>) path).stream()
+                .map(it -> (LAST_BOARD <= it.at() ? "^" : "") + it.raw())
+                .collect(Collectors.joining(", "));
     }
 
     @SuppressWarnings("rawtypes")
