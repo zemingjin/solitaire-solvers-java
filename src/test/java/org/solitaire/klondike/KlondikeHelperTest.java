@@ -21,6 +21,11 @@ class KlondikeHelperTest {
     }
 
     @Test
+    void test_of() {
+        assertNotNull(KlondikeHelper.of());
+    }
+
+    @Test
     void test_build() {
         var klondike = KlondikeHelper.build(CARDS).board();
 

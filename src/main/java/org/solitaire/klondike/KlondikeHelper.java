@@ -62,4 +62,10 @@ public class KlondikeHelper {
     protected static int colEnd(int col) {
         return colStart(col) + col + 1;
     }
+
+    private KlondikeHelper() {}
+
+    public static KlondikeHelper of() {
+        return new KlondikeHelper();
+    }
 }

@@ -16,13 +16,14 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.Stream.concat;
@@ -49,9 +50,9 @@ import static org.solitaire.util.CardHelper.suitCode;
  */
 class KlondikeBoard extends GameBoard {
     private static int drawNumber = 3;
-    protected Deck deck;
-    protected Stack<Card> deckPile;
-    protected List<Stack<Card>> foundations;
+    private Deck deck;
+    private Stack<Card> deckPile;
+    private List<Stack<Card>> foundations;
     protected transient final IntPredicate isNotImmediateFoundationable =
             i -> !peek(i).isHigherOfSameColor(foundationCard(peek(i)));
     protected boolean stateChanged;
@@ -97,14 +98,15 @@ class KlondikeBoard extends GameBoard {
      **************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        var candidates = Stream.concat(findFoundationCandidates(), findMovableCandidates())
-                .collect(Collectors.toList());
+        var candidates = Stream.concat(findToFoundationCandidate(), findMovableCandidates())
+                .toList();
 
         if (candidates.isEmpty()) {
-            candidates.addAll(findFoundationToColumnCandidates());
-        }
-        if (candidates.isEmpty()) {
-            return drawDeck();
+            candidates = findFoundationToColumnCandidates();
+
+            if (candidates.isEmpty()) {
+                return drawDeck();
+            }
         }
         return candidates;
     }
@@ -143,18 +145,18 @@ class KlondikeBoard extends GameBoard {
                     .orElse(null);
 
 
-    protected Stream<Candidate> findFoundationCandidates() {
-        return concat(findFoundationCandidatesFromColumns(), findFoundationCandidateFromDeck());
+    protected Stream<Candidate> findToFoundationCandidate() {
+        return concat(findColumnToFoundationCandidates(), findDeckToFoundationCandidates());
     }
 
-    private Stream<Candidate> findFoundationCandidatesFromColumns() {
+    private Stream<Candidate> findColumnToFoundationCandidates() {
         return range(0, columns().size())
                 .filter(i -> isNotEmpty(columns.get(i)))
-                .filter(isFoundationCandidateFromColumn)
+                .filter(isColumnToFoundationCandidate)
                 .mapToObj(i -> buildCandidate(i, COLUMN, FOUNDATION, columns.get(i).peek()));
     }
 
-    protected Stream<Candidate> findFoundationCandidateFromDeck() {
+    protected Stream<Candidate> findDeckToFoundationCandidates() {
         return Optional.of(deckPile)
                 .filter(listNotEmpty)
                 .map(Stack::peek)
@@ -172,70 +174,27 @@ class KlondikeBoard extends GameBoard {
                 .orElseGet(() -> foundationCards.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
     };
 
-    private transient final IntPredicate isFoundationCandidateFromColumn = i -> isFoundationCandidate.test(peek(i));
+    private transient final IntPredicate isColumnToFoundationCandidate = i -> isFoundationCandidate.test(peek(i));
 
     protected Stream<Candidate> findMovableCandidates() {
-        return Optional.of(findOpenCandidates())
-                .filter(listNotEmpty)
-                .stream()
-                .flatMap(List::stream)
-                .map(findTarget)
-                .flatMap(List::stream);
+        return concat(findColumnToColumnCandidates(), findDeckToColumnCandidates());
     }
 
-    private transient final Predicate<Pair<Integer, Candidate>> isAppendable =
-            pair -> Optional.of(columns().get(pair.getLeft()))
-                    .filter(Column::isNotEmpty)
-                    .map(it -> it.peek().isHigherWithDifferentColor(pair.getRight().peek()))
-                    .orElseGet(() -> isMovableToEmptyColumn(pair.getRight()));
-
-    private transient final Function<Candidate, List<Candidate>> checkColumnsForAppendable =
-            candidate -> range(0, columns.size())
-                    .mapToObj(i -> Pair.of(i, candidate))
-                    .filter(isAppendable)
-                    .map(it -> Candidate.buildColumnCandidate(it.getRight(), it.getLeft()))
-                    .collect(Collectors.toList());
-
-    protected transient final Function<Candidate, List<Candidate>> findTarget =
-            candidate -> Optional.of(candidate)
-                    .map(checkColumnsForAppendable)
-                    .orElseThrow();
-
-    private boolean isMovableToEmptyColumn(Candidate candidate) {
-        return candidate.peek().isKing() && isMovableToEmptyColumn.test(candidate);
-    }
-
-    protected boolean isNotSameColumn(int colNum, Candidate candidate) {
-        return !(candidate.isFromColumn() && candidate.from() == colNum);
-    }
-
-    protected List<Candidate> findOpenCandidates() {
-        return concat(findCandidatesFromColumns(), findCandidateAtDeck()).toList();
-    }
-
-    protected Stream<Candidate> findCandidatesFromColumns() {
+    protected Stream<Candidate> findColumnToColumnCandidates() {
         return range(0, 7)
-                .mapToObj(this::findCandidateAtColumn)
+                .mapToObj(toColumnTargetPair)
+                .flatMap(toColumnCandidates)
                 .filter(isNotNull);
     }
 
-    private Stream<Candidate> findCandidateAtDeck() {
-        return Optional.of(deckPile)
-                .filter(listNotEmpty)
-                .map(Stack::peek)
-                .map(it -> buildCandidate(-1, DECKPILE, it))
-                .stream();
-    }
+    private transient final IntFunction<Pair<Integer, Card>> toColumnTargetPair = i ->
+            Pair.of(i, column(i).isNotEmpty() ? column(i).peek() : null);
 
-    protected Candidate findCandidateAtColumn(int colAt) {
-        return Optional.of(colAt)
-                .map(columns::get)
-                .filter(listNotEmpty)
-                .map(getOrderedCards)
-                .filter(listNotEmpty)
-                .map(it -> buildCandidate(colAt, COLUMN, it))
-                .orElse(null);
-    }
+    protected transient final Function<Pair<Integer, Card>, Stream<Candidate>> toColumnCandidates = pair ->
+            range(0, columns().size())
+                    .mapToObj(i -> toColumnCandidate(i, pair.getLeft(), pair.getRight()))
+                    .filter(isNotNull)
+                    .filter(it -> !path().contains(it.notation()));
 
     protected transient final Function<Column, List<Card>> getOrderedCards = column -> {
         var collector = new LinkedList<Card>();
@@ -252,6 +211,58 @@ class KlondikeBoard extends GameBoard {
         }
         return emptyList();
     };
+
+    protected Candidate toColumnCandidate(int from, int to, Card card) {
+        return Optional.of(from)
+                .filter(it -> it != to)
+                .map(this::column)
+                .map(getOrderedCards)
+                .filter(listNotEmpty)
+                .map(it -> toColumnCandidate(it, from, to, card))
+                .orElse(null);
+    }
+
+    protected Candidate toColumnCandidate(List<Card> cards, int from, int to, Card card) {
+        if (isNull(card)) {
+            if (cards.get(0).isKing()) {
+                return new Candidate(cards, COLUMN, from, COLUMN, to);
+            }
+            return null;
+        }
+        return range(0, cards.size())
+                .filter(i -> card.isHigherWithDifferentColor(cards.get(i)))
+                .mapToObj(i -> new Candidate(cards.subList(i, cards.size()), COLUMN, from, COLUMN, to))
+                .findFirst()
+                .orElse(null);
+    }
+
+    protected Stream<Candidate> findDeckToColumnCandidates() {
+        return Optional.of(deckPile)
+                .filter(listNotEmpty)
+                .map(Stack::peek)
+                .map(deckToColumnCandidates)
+                .orElseGet(Stream::empty);
+    }
+
+    private transient final Function<Card, Stream<Candidate>> deckToColumnCandidates = card ->
+            range(0, columns().size())
+                    .mapToObj(i -> deckToColumnCandidate(i, card))
+                    .filter(isNotNull);
+
+    private Candidate deckToColumnCandidate(int colAt, Card card) {
+        return Stream.of(column(colAt))
+                .map(it -> it.isEmpty() ? null : it.peek())
+                .filter(it -> isDeckToColumnCandidate(card, it))
+                .map(it -> new Candidate(List.of(card), DECKPILE, -1, COLUMN, colAt))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean isDeckToColumnCandidate(Card foundationCard, Card columnCard) {
+        return isNull(columnCard)
+                ? foundationCard.isKing()
+                : columnCard.isHigherWithDifferentColor(foundationCard);
+    }
 
     protected boolean isMovable(Card card, Column column) {
         return !card.isKing() || column.indexOf(card) > 0;
@@ -272,10 +283,8 @@ class KlondikeBoard extends GameBoard {
         return false;
     }
 
-    private boolean helpOpenCard(Card card) {
-        return columns().stream()
-                .filter(it -> it.contains(card))
-                .anyMatch(it -> it.indexOf(card) - it.openAt() == 1);
+    protected boolean helpOpenCard(Card card) {
+        return columns().stream().anyMatch(it -> it.indexOf(card) == it.openAt());
     }
 
     protected List<Candidate> drawDeck() {
@@ -387,13 +396,13 @@ class KlondikeBoard extends GameBoard {
     @Override
     public int score() {
         if (super.score() == 0) {
-            super.score(-calcBlockers());
+            super.score(-calcBlockers() - uncoveredCards());
         }
         return super.score();
     }
 
     // The smaller, the better
-    private int calcBlockers() {
+    protected int calcBlockers() {
         return Optional.of(range(0, foundations.size()).map(this::calcBlockers).sum())
                 .orElse(0);
     }
@@ -417,6 +426,11 @@ class KlondikeBoard extends GameBoard {
                 .map(it -> calcBlocker(it, card))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
+    }
+
+    // The smaller, the better
+    private int uncoveredCards() {
+        return columns().stream().mapToInt(Column::openAt).sum();
     }
 
     /*************************************************************************************************************
