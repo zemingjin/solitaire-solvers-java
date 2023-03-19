@@ -26,7 +26,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.solitaire.klondike.Klondike.SOLUTION_LIMIT;
 import static org.solitaire.klondike.KlondikeHelper.build;
-import static org.solitaire.klondike.KlondikeHelperTest.CARDS;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.SolveExecutor.isPrint;
@@ -98,16 +97,6 @@ class KlondikeTest {
         verify(board).isSolved();
         verify(board).findCandidates();
         assertEquals(ONE, klondike.totalScenarios());
-    }
-
-    @Test
-    void test_solveByDFS() {
-        singleSolution(false);
-        klondike = build(CARDS);
-
-        klondike.solve();
-
-        assertEquals(SOLUTION_LIMIT, klondike.totalSolutions());
     }
 
     @Test

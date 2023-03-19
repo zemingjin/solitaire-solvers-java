@@ -27,6 +27,11 @@ class BoardHelperTest {
     }
 
     @Test
+    void test_of() {
+        assertNotNull(BoardHelper.of());
+    }
+
+    @Test
     void test_numberOfEachCard() {
         var maps = new int[4][14];
 

@@ -9,12 +9,11 @@ import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.util.BoardHelper.listNotEmpty;
 
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
-    public transient final IntPredicate isNotEmpty = i -> isNotEmpty(columns().get(i));
+    public transient final IntPredicate isNotEmpty = i -> column(i).isNotEmpty();
     public transient final Predicate<Candidate> isMovableToEmptyColumn = c ->
             !c.isFromColumn() || (c.cards().size() < columns().get(c.from()).size() || isNotEmpty.test(c.to()));
     protected final Columns columns;
