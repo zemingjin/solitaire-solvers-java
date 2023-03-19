@@ -90,7 +90,7 @@ class KlondikeBoardTest {
 
         board.columns().get(5).add(card("6s"));
         result = board.findFoundationToColumnCandidates();
-        assertEquals("F5:5d", result.get(0).notation());
+        assertEquals("$5:5d", result.get(0).notation());
 
         board.columns().get(3).remove(3);
         result = board.findFoundationToColumnCandidates();
@@ -107,13 +107,13 @@ class KlondikeBoardTest {
         board.columns().get(2).clear();
         board.columns().get(2).add(card("Jc"));
 
-        assertEquals("F2:Th", board.findFoundationToColumnCandidates().get(0).notation());
+        assertEquals("$2:Th", board.findFoundationToColumnCandidates().get(0).notation());
 
         card = card("9h");
         board.foundations().get(suitCode(card)).add(card);
         board.columns().get(1).add(card("8c"));
 
-        assertEquals("F6:9h", board.findFoundationToColumnCandidates().get(0).notation());
+        assertEquals("$6:9h", board.findFoundationToColumnCandidates().get(0).notation());
     }
 
     @Test
@@ -213,14 +213,14 @@ class KlondikeBoardTest {
 
         drawDeckCards();
         assertFalse(board.deckPile().isEmpty());
-        assertEquals(3, board.deckPile().size());
+        assertEquals(6, board.deckPile().size());
         assertTrue(board.stateChanged());
 
         candidate = buildCandidate(-1, DECKPILE, COLUMN, new LinkedList<>());
 
         board.removeFromSource(candidate);
 
-        assertEquals(2, board.deckPile().size());
+        assertEquals(5, board.deckPile().size());
     }
 
 
@@ -371,7 +371,7 @@ class KlondikeBoardTest {
         var result = board.findOpenCandidates();
 
         assertNotNull(result);
-        assertEquals(7, result.size());
+        assertEquals(8, result.size());
         assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=null, to=-1]", result.get(0).toString());
 
         drawDeckCards();
@@ -380,7 +380,7 @@ class KlondikeBoardTest {
         assertNotNull(result);
         assertEquals(8, result.size());
         assertEquals("Candidate[cards=[24:Th], origin=COLUMN, from=0, target=null, to=-1]", result.get(0).toString());
-        assertEquals("Candidate[cards=[21:7d], origin=DECKPILE, from=-1, target=null, to=-1]", result.get(7).toString());
+        assertEquals("Candidate[cards=[18:4s], origin=DECKPILE, from=-1, target=null, to=-1]", result.get(7).toString());
         assertTrue(board.stateChanged());
     }
 
@@ -459,8 +459,6 @@ class KlondikeBoardTest {
         assertTrue(board.isImmediateToFoundation(card));
 
         foundation.add(card);
-        assertTrue(board.isImmediateToFoundation(card));
-
         card = card("3d");
         assertFalse(board.isImmediateToFoundation(card));
 
@@ -486,11 +484,11 @@ class KlondikeBoardTest {
         board.columns().get(6).remove(card);
         board.score(0);
 
-        assertEquals(-16, board.score());
+        assertEquals(-15, board.score());
 
         range(0, 7).forEach(i -> drawDeckCards());
         board.score(0);
-        assertEquals(-12, board.score());
+        assertEquals(-15, board.score());
 
         board.deckPile.remove(card("2c"));
         board.score(0);

@@ -67,11 +67,15 @@ public class SpiderBoard extends GameBoard {
      *************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        return Optional.of(concat(findCandidates(this::findCandidateOfSameSuit),
-                        findCandidates(this::findCandidateOfDifferentColors)))
+        return Optional.of(findBoardCandidates())
                 .map(Stream::toList)
                 .filter(listNotEmpty)
                 .orElseGet(this::drawDeck);
+    }
+
+    private Stream<Candidate> findBoardCandidates() {
+        return concat(findCandidates(this::findCandidateOfSameSuit),
+                findCandidates(this::findCandidateOfDifferentColors));
     }
 
     protected Stream<Candidate> findCandidates(TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
@@ -170,7 +174,7 @@ public class SpiderBoard extends GameBoard {
     }
 
     /**************************************************************************************************************
-     * Update State
+     * Update Board
      * ***********************************************************************************************************/
     @Override
     public SpiderBoard updateBoard(Candidate candidate) {

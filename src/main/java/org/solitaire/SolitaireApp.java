@@ -5,6 +5,7 @@ import org.solitaire.freecell.FreeCellHelper;
 import org.solitaire.klondike.KlondikeHelper;
 import org.solitaire.model.GameBuilder;
 import org.solitaire.model.GameSolver;
+import org.solitaire.model.SolutionType;
 import org.solitaire.pyramid.PyramidHelper;
 import org.solitaire.spider.SpiderHelper;
 import org.solitaire.tripeaks.TriPeaksHelper;
@@ -20,6 +21,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.stream.IntStream.range;
+import static org.solitaire.model.SolutionType.Longest;
+import static org.solitaire.model.SolutionType.One;
+import static org.solitaire.model.SolutionType.Shortest;
+import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.CardHelper.string;
@@ -32,6 +37,7 @@ public class SolitaireApp {
     public static final String FREECELL = "-f";
     public static final String USE_SUITS = "-suits";
     public static final String SINGLE_SOLUTION = "-single";
+    public static final String PRINT = "-print";
 
     private static final Map<String, GameBuilder> BUILDERS = new HashMap<>() {{
         put(TRIPEAKS, TriPeaksHelper::build);
@@ -59,6 +65,10 @@ public class SolitaireApp {
 
     public static void checkSingleSolution(String[] args) {
         singleSolution(checkParam(args, SINGLE_SOLUTION));
+    }
+
+    public static void checkPrint(String[] args) {
+        isPrint(checkParam(args, PRINT));
     }
 
     private static boolean checkParam(String[] args, String target) {
@@ -89,6 +99,7 @@ public class SolitaireApp {
         stopWatch().start();
         checkUseSuits(args);
         checkSingleSolution(args);
+        checkPrint(args);
         solver(Optional.of(getPath(args))
                 .map(IOHelper::loadFile)
                 .map(buildSolver)
@@ -99,9 +110,9 @@ public class SolitaireApp {
 
         System.out.printf("Found %,d solutions in %,d scenarios - total time: %s with maximum depth of %d.\n",
                 solver().totalSolutions(), solver().totalScenarios(), stopWatch.formatTime(), solver().maxDepth());
-        checkPath(solver::shortestPath, singleSolution() ? "One" : "Shortest");
+        checkPath(solver, singleSolution() ? One : Shortest);
         if (!singleSolution()) {
-            checkPath(solver::longestPath, "Longest");
+            checkPath(solver, Longest);
             checkMaxScore(solver());
         }
     }
@@ -123,13 +134,20 @@ public class SolitaireApp {
                 .orElseThrow(() -> new RuntimeException("Missing solver type; '-t', '-p', '-k', '-f', or '-s'"));
     }
 
-    @SuppressWarnings("rawtypes")
-    public void checkPath(Supplier<List> supplier, String type) {
-        Optional.of(supplier)
+    public void checkPath(GameSolver solver, SolutionType type) {
+        Optional.of(type)
+                .map(pathSupplier)
                 .map(Supplier::get)
                 .filter(listNotEmpty)
-                .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), string(it)));
+                .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), solver.pathString(it)));
     }
+
+    @SuppressWarnings("rawtypes")
+    private final Function<SolutionType, Supplier<List>> pathSupplier = type ->
+            switch (type) {
+                case One, Shortest -> solver::shortestPath;
+                case Longest -> solver::longestPath;
+            };
 
     public void checkMaxScore(GameSolver solver) {
         try {

@@ -42,7 +42,7 @@ class FreeCellTest {
 
         assertEquals(29797, dfs.totalScenarios());
         assertFalse(dfs.stack().isEmpty());
-        assertEquals("[6F:Ad, 1F:2d, 4f:4c, 3f:9d, 3f:8s, 35:8h]", dfs.board().path().toString());
+        assertEquals("[6$:Ad, 1$:2d, 4f:4c, 3f:9d, 3f:8s, 35:8h]", dfs.board().path().toString());
     }
 
     @Test

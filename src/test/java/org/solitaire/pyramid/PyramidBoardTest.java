@@ -3,9 +3,11 @@ package org.solitaire.pyramid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
+import org.solitaire.model.Card;
 import org.solitaire.util.IOHelper;
 
 import java.util.List;
+import java.util.Stack;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
@@ -197,4 +199,14 @@ class PyramidBoardTest {
         assertTrue(board.isOpenAt(14));
     }
 
+    @Test
+    void test_surePop() {
+        var card = card("Ad");
+        var stack = new Stack<Card>();
+
+        assertFalse(board.surePop(card, stack));
+        stack.push(card);
+        assertTrue(board.surePop(card, stack));
+        assertTrue(stack.isEmpty());
+    }
 }

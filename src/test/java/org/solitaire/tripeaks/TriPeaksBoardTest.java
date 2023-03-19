@@ -110,7 +110,7 @@ class TriPeaksBoardTest {
     void test_isOpenCard() {
         var state = new TriPeaksBoard(toArray(null, null, null, null, null), null);
 
-        assertTrue(state.isOpenCard(buildCard(0, "Ad")));
+        assertTrue(state.isOpenCard.test(buildCard(0, "Ad")));
     }
 
     @Test
@@ -118,23 +118,22 @@ class TriPeaksBoardTest {
         var state = new TriPeaksBoard(null, null);
         var card = buildCard(LAST_BOARD, "Ad");
 
-        var ex = assertThrows(RuntimeException.class, () -> state.isOpenCard(card));
+        var ex = assertThrows(RuntimeException.class, () -> state.isOpenCard.test(card));
 
         assertNotNull(ex);
-        assertEquals("Invalid card: " + card, ex.getMessage());
+        assertEquals("Invalid card position: 28", ex.getMessage());
     }
 
     @Test
     void test_isOpenCard_allBoardCards() {
-        assertTrue(Arrays.stream(board.cards(), ZERO, INI_COVERED).noneMatch(board::isOpenCard));
-        assertTrue(Arrays.stream(board.cards(), INI_COVERED, LAST_BOARD).allMatch(board::isOpenCard));
+        assertTrue(Arrays.stream(board.cards(), ZERO, INI_COVERED).noneMatch(board.isOpenCard));
+        assertTrue(Arrays.stream(board.cards(), INI_COVERED, LAST_BOARD).allMatch(board.isOpenCard));
     }
 
     @Test
     void test_row() {
-        assertEquals(0, board.row(-1));
+        assertThrows(RuntimeException.class, () -> board.row(-1));
         assertEquals(1, board.row(0));
-        assertEquals(1, board.row(1));
         assertEquals(1, board.row(2));
         assertEquals(2, board.row(3));
         assertEquals(2, board.row(8));
@@ -142,6 +141,6 @@ class TriPeaksBoardTest {
         assertEquals(3, board.row(INI_COVERED - 1));
         assertEquals(4, board.row(INI_COVERED));
         assertEquals(4, board.row(LAST_BOARD - 1));
-        assertEquals(0, board.row(LAST_BOARD));
+        assertThrows(RuntimeException.class, () -> board.row(LAST_BOARD));
     }
 }

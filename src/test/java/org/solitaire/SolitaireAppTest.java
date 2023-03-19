@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.SolitaireApp.FREECELL;
+import static org.solitaire.SolitaireApp.PRINT;
 import static org.solitaire.SolitaireApp.PYRAMID;
 import static org.solitaire.SolitaireApp.SINGLE_SOLUTION;
 import static org.solitaire.SolitaireApp.TRIPEAKS;
@@ -98,14 +99,13 @@ class SolitaireAppTest {
 
     @Test
     void test_run_freecell_nosolutions() {
-        ARGS[0] = "games/freecell/freecell-022723-hard.txt";
-        ARGS[1] = FREECELL;
-        ARGS[2] = SINGLE_SOLUTION;
+        var FILE = "games/freecell/freecell-022723-hard.txt";
 
-        app.run(ARGS);
+        app.run(new String[]{FILE, FREECELL, SINGLE_SOLUTION, PRINT});
         assertEquals(ZERO, app.solver().totalSolutions());
         assertFalse(outputStream.toString().contains("not supported"));
         assertFalse(outputStream.toString().contains("Max Score"));
+        assertTrue(isPrint());
     }
 
     @Test

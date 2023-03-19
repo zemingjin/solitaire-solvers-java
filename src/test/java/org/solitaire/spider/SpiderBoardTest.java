@@ -225,7 +225,7 @@ class SpiderBoardTest {
 
         assertNotNull(result);
         assertTrue(column.isEmpty());
-        assertEquals("0F:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", board.path().get(0));
+        assertEquals("0$:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", board.path().get(0));
         assertEquals(600, board.totalScore());
         assertEquals("Run: [Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]",
                 outputStream.toString().trim());
@@ -286,7 +286,7 @@ class SpiderBoardTest {
         assertEquals(0, board.path().size());
         var result = board.appendToTarget(candidate);
         assertEquals(1, result.path().size());
-        assertEquals("D0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
+        assertEquals("^0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
         assertTrue(range(0, board.columns().size())
                 .allMatch(i -> candidate.cards().get(i).equals(board.columns().get(i).peek())));
     }
@@ -322,7 +322,7 @@ class SpiderBoardTest {
     void test_drawDeck() {
         var candidates = board.drawDeck();
         assertEquals(1, candidates.size());
-        assertEquals("D0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
+        assertEquals("^0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
 
         board.deck().clear();
         assertTrue(board.drawDeck().isEmpty());

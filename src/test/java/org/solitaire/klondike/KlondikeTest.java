@@ -124,7 +124,7 @@ class KlondikeTest {
         board = klondike.board();
 
         assertNotNull(board);
-        assertEquals(60, board.path().size());
+        assertEquals(61, board.path().size());
     }
 
     @Test

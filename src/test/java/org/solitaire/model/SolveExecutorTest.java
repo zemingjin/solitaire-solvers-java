@@ -169,7 +169,13 @@ class SolveExecutorTest {
         assertEquals(THREE, executor.maxDepth());
     }
 
+    @Test
+    void test_pathString() {
+        assertEquals(ABC, executor.pathString(List.of(ABC)));
+    }
+
     void mockSolutionConsumer(List<String> path) {
         assertTrue(nonNull(path));
     }
+
 }

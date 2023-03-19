@@ -24,8 +24,9 @@ public class BoardHelper {
     public static final Predicate<Object> isNotNull = Objects::nonNull;
     public static final Predicate<Object> listNotEmpty = ObjectUtils::isNotEmpty;
 
-    public static List<String> verifyBoard(List<Column> columns, List<Card> deck) {
-        return verifyBoard(concat(toStream(columns), deck.stream()).toArray(Card[]::new));
+    @SafeVarargs
+    public static List<String> verifyBoard(List<Column> columns, List<Card>... decks) {
+        return verifyBoard(concat(toStream(columns), toStream(decks)).toArray(Card[]::new));
     }
 
     public static List<String> verifyBoard(List<Column> columns) {
@@ -78,7 +79,11 @@ public class BoardHelper {
                 .mapToObj(j -> format("%s card: %s%s", type, VALUES.charAt(j - 1), suit(i).toLowerCase()));
     }
 
-    private static Stream<Card> toStream(List<Column> columns) {
-        return columns.stream().flatMap(List::stream);
+    private static Stream<Card> toStream(List<Column> lists) {
+        return lists.stream().flatMap(List::stream);
+    }
+
+    private static Stream<Card> toStream(List<Card>[] lists) {
+        return Stream.of(lists).flatMap(List::stream);
     }
 }

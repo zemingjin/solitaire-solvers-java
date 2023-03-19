@@ -20,7 +20,7 @@ import static org.solitaire.util.CardHelper.SPADE;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.checkDuplicates;
-import static org.solitaire.util.CardHelper.diffOfValues;
+import static org.solitaire.util.CardHelper.rankDifference;
 import static org.solitaire.util.CardHelper.getSuit;
 import static org.solitaire.util.CardHelper.higherCardOfSameSuit;
 import static org.solitaire.util.CardHelper.nextCard;
@@ -90,8 +90,8 @@ public class CardHelperTest {
         var a = card("Ts");
         var b = card("9d");
 
-        assertEquals(1, diffOfValues(a, b));
-        assertEquals(10, diffOfValues(a, null));
+        assertEquals(1, rankDifference(a, b));
+        assertEquals(10, rankDifference(a, null));
     }
 
     @Test

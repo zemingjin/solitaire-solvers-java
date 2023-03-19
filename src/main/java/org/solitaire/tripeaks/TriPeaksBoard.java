@@ -10,8 +10,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 
 import static java.lang.Math.min;
@@ -20,6 +24,7 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
 import static java.util.stream.Stream.concat;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
@@ -61,33 +66,43 @@ public class TriPeaksBoard implements Board<Card, Card> {
      ***********************************************************************************************************/
     @Override
     public List<Card> findCandidates() {
-        var candidates = Optional.of(wastePile.peek())
-                .map(this::findAdjacentCardsFromBoard)
+        return Optional.of(getCandidatesViaWastePile())
+                .filter(listIsNotEmpty)
+                .orElseGet(getCandidatesFromDeck);
+    }
+
+    private transient final Supplier<List<Card>> getCandidatesFromDeck = () ->
+            Optional.ofNullable(getTopDeckCard())
+                    .map(List::of)
+                    .orElseGet(Collections::emptyList);
+
+    private List<Card> getCandidatesViaWastePile() {
+        return Optional.of(wastePile.peek())
+                .map(findAdjacentCardsFromBoard)
                 .orElseGet(Collections::emptyList);
-        if (candidates.isEmpty()) {
-            var deckCard = getTopDeckCard();
-
-            if (nonNull(deckCard)) {
-                candidates.add(deckCard);
-            }
-        }
-        return candidates;
     }
 
-    private List<Card> findAdjacentCardsFromBoard(Card target) {
-        return range(0, min(cards.length, LAST_BOARD))
-                .map(reverseBoard)
-                .mapToObj(i -> cards[i])
-                .filter(isNotNull)
-                .filter(this::isOpenCard)
-                .filter(target::isAdjacent)
-                .collect(Collectors.toList());
-    }
+    protected transient final Predicate<Card> isOpenCard = card -> {
+        var at = calcCoveredAt(card);
+
+        return at == 0 || isNotCovered(at);
+    };
+
+    private transient final IntFunction<Card> cardAt = i -> cards[i];
+
+    private transient final Function<Card, List<Card>> findAdjacentCardsFromBoard = target ->
+            range(0, min(cards.length, LAST_BOARD))
+                    .map(reverseBoard)
+                    .mapToObj(cardAt)
+                    .filter(isNotNull)
+                    .filter(isOpenCard)
+                    .filter(target::isAdjacent)
+                    .toList();
 
     private Card getTopDeckCard() {
         return rangeClosed(LAST_BOARD, LAST_DECK - 1)
                 .map(reverse)
-                .mapToObj(i -> cards[i])
+                .mapToObj(cardAt)
                 .filter(isNotNull)
                 .findFirst()
                 .orElse(null);
@@ -106,12 +121,6 @@ public class TriPeaksBoard implements Board<Card, Card> {
         return null;
     }
 
-    protected boolean isOpenCard(Card card) {
-        var at = calcCoveredAt(card);
-
-        return at == 0 || isNotCovered(at);
-    }
-
     private int calcCoveredAt(Card card) {
         var at = card.at();
 
@@ -119,21 +128,21 @@ public class TriPeaksBoard implements Board<Card, Card> {
             case 4 -> 0;
             case 3 -> at + 9;
             case 2 -> at + (at - 3) / 2 + 6;
-            case 1 -> at * 2 + 3;
-            default -> throw new RuntimeException("Invalid card: " + card);
+            default -> at * 2 + 3;
         };
     }
 
     protected int row(int at) {
-        if (INI_COVERED <= at && at < LAST_BOARD)
+        if (at < 0 || at >= LAST_BOARD) {
+            throw new RuntimeException("Invalid card position: " + at);
+        } else if (at >= INI_COVERED) {
             return 4;
-        else if (9 <= at && at < INI_COVERED)
+        } else if (at >= 9) {
             return 3;
-        else if (3 <= at && at < 9)
+        } else if (at >= 3) {
             return 2;
-        else if (0 <= at && at < 3)
-            return 1;
-        return 0;
+        }
+        return 1;
     }
 
     private boolean isNotCovered(int at) {
@@ -190,19 +199,19 @@ public class TriPeaksBoard implements Board<Card, Card> {
         return Arrays.stream(cards, 0, LAST_BOARD)
                 .filter(isNotNull)
                 .filter(it -> it.isAdjacent(card))
-                .mapToInt(this::calcBlockerCards)
+                .mapToInt(calcBlockerCards)
                 .reduce(Integer.MAX_VALUE, Math::min);
     }
 
-    private int calcBlockerCards(Card card) {
+    private transient final ToIntFunction<Card> calcBlockerCards = card -> {
         var stack = new Stack<Card>();
         var count = new AtomicInteger(0);
         stack.push(card);
 
-        while (!stack.isEmpty()) {
+        while (isNotEmpty(stack)) {
             var next = stack.pop();
 
-            if (!isOpenCard(next)) {
+            if (!isOpenCard.test(next)) {
                 getCoveringCards(next).forEach(c -> {
                     stack.push(c);
                     count.set(count.get() + 1);
@@ -210,7 +219,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
             }
         }
         return count.get();
-    }
+    };
 
     protected Stream<Card> getCoveringCards(Card card) {
         var at = calcCoveredAt(card);
@@ -219,7 +228,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
             return Stream.empty();
         }
         return rangeClosed(at, at + 1)
-                .mapToObj(i -> cards[i])
+                .mapToObj(cardAt)
                 .filter(isNotNull);
     }
 
@@ -248,7 +257,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
 
     private Card getOpenBoardCard(int i) {
         return Optional.ofNullable(cards[i])
-                .filter(this::isOpenCard)
+                .filter(isOpenCard)
                 .filter(Card::isNotKing)
                 .orElse(null);
     }
