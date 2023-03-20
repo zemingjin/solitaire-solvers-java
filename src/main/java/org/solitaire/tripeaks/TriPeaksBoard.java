@@ -39,6 +39,41 @@ public class TriPeaksBoard implements Board<Card, Card> {
     private final IntUnaryOperator reverseBoard = i -> LAST_BOARD - i - 1;
 
     private Card[] cards;
+    protected transient final Predicate<Card> isOpenCard = card -> {
+        var at = calcCoveredAt(card);
+
+        return at == 0 || isNotCovered(at);
+    };
+    private transient final IntFunction<Card> cardAt = i -> cards[i];
+    private transient final Supplier<List<Card>> getCandidatesFromDeck = () ->
+            Optional.ofNullable(getTopDeckCard())
+                    .map(List::of)
+                    .orElseGet(Collections::emptyList);
+    private transient final Function<Card, List<Card>> findAdjacentCardsFromBoard = target ->
+            range(0, min(cards.length, LAST_BOARD))
+                    .map(reverseBoard)
+                    .mapToObj(cardAt)
+                    .filter(isNotNull)
+                    .filter(isOpenCard)
+                    .filter(target::isAdjacent)
+                    .toList();
+    private transient final ToIntFunction<Card> calcBlockerCards = card -> {
+        var stack = new Stack<Card>();
+        var count = new AtomicInteger(0);
+        stack.push(card);
+
+        while (isNotEmpty(stack)) {
+            var next = stack.pop();
+
+            if (!isOpenCard.test(next)) {
+                getCoveringCards(next).forEach(c -> {
+                    stack.push(c);
+                    count.set(count.get() + 1);
+                });
+            }
+        }
+        return count.get();
+    };
     private Stack<Card> wastePile;
     private transient int score;
 
@@ -71,33 +106,11 @@ public class TriPeaksBoard implements Board<Card, Card> {
                 .orElseGet(getCandidatesFromDeck);
     }
 
-    private transient final Supplier<List<Card>> getCandidatesFromDeck = () ->
-            Optional.ofNullable(getTopDeckCard())
-                    .map(List::of)
-                    .orElseGet(Collections::emptyList);
-
     private List<Card> getCandidatesViaWastePile() {
         return Optional.of(wastePile.peek())
                 .map(findAdjacentCardsFromBoard)
                 .orElseGet(Collections::emptyList);
     }
-
-    protected transient final Predicate<Card> isOpenCard = card -> {
-        var at = calcCoveredAt(card);
-
-        return at == 0 || isNotCovered(at);
-    };
-
-    private transient final IntFunction<Card> cardAt = i -> cards[i];
-
-    private transient final Function<Card, List<Card>> findAdjacentCardsFromBoard = target ->
-            range(0, min(cards.length, LAST_BOARD))
-                    .map(reverseBoard)
-                    .mapToObj(cardAt)
-                    .filter(isNotNull)
-                    .filter(isOpenCard)
-                    .filter(target::isAdjacent)
-                    .toList();
 
     private Card getTopDeckCard() {
         return rangeClosed(LAST_BOARD, LAST_DECK - 1)
@@ -202,24 +215,6 @@ public class TriPeaksBoard implements Board<Card, Card> {
                 .mapToInt(calcBlockerCards)
                 .reduce(Integer.MAX_VALUE, Math::min);
     }
-
-    private transient final ToIntFunction<Card> calcBlockerCards = card -> {
-        var stack = new Stack<Card>();
-        var count = new AtomicInteger(0);
-        stack.push(card);
-
-        while (isNotEmpty(stack)) {
-            var next = stack.pop();
-
-            if (!isOpenCard.test(next)) {
-                getCoveringCards(next).forEach(c -> {
-                    stack.push(c);
-                    count.set(count.get() + 1);
-                });
-            }
-        }
-        return count.get();
-    };
 
     protected Stream<Card> getCoveringCards(Card card) {
         var at = calcCoveredAt(card);

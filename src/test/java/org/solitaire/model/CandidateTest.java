@@ -3,8 +3,6 @@ package org.solitaire.model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,6 +15,7 @@ import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.Origin.FREECELL;
 import static org.solitaire.model.Origin.REMOVE;
 import static org.solitaire.util.CardHelper.card;
+import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class CandidateTest {
@@ -27,12 +26,12 @@ class CandidateTest {
 
     @Test
     void test_isToDeck() {
-        var candidate = new Candidate(List.of(card("Ad")), DECKPILE, -1, DECKPILE, -1);
+        var candidate = new Candidate(toArray(card("Ad")), DECKPILE, -1, DECKPILE, -1);
 
         assertTrue(candidate.isToDeck());
         assertFalse(candidate.isNotToDeck());
 
-        candidate = new Candidate(List.of(card("Ad")), DECKPILE, -1, COLUMN, 0);
+        candidate = new Candidate(toArray(card("Ad")), DECKPILE, -1, COLUMN, 0);
 
         assertFalse(candidate.isToDeck());
         assertTrue(candidate.isNotToDeck());
@@ -40,7 +39,7 @@ class CandidateTest {
 
     @Test
     void test_notation() {
-        var cards = List.of(card("Ks"));
+        var cards = toArray(card("Ks"));
 
         assertEquals("01:Ks", new Candidate(cards, COLUMN, 0, COLUMN, 1).notation());
         assertEquals("0f:Ks", new Candidate(cards, COLUMN, 0, FREECELL, -1).notation());
@@ -52,7 +51,7 @@ class CandidateTest {
         assertEquals("bb:Ks", new Candidate(cards, BOARD, 1, BOARD, 0).notation());
         assertEquals("br:Ks", new Candidate(cards, BOARD, -1, REMOVE, -1).notation());
         assertEquals("01:[Ks, Qs]",
-                new Candidate(List.of(card("Ks"), card("Qs")), COLUMN, 0, COLUMN, 1).notation());
+                new Candidate(toArray(card("Ks"), card("Qs")), COLUMN, 0, COLUMN, 1).notation());
 
         assertThrows(RuntimeException.class,
                 () -> new Candidate(cards, REMOVE, -1, COLUMN, 1).notation());
@@ -76,6 +75,13 @@ class CandidateTest {
         candidate = buildCandidate(0, FREECELL, FOUNDATION, card("Ks"));
         assertTrue(candidate.isToFoundation());
         assertFalse(candidate.isToColumn());
+    }
+
+    @Test
+    void test_toString() {
+        assertEquals("Candidate(Ks, COLUMN, 0, COLUMN, -1)",
+                buildCandidate(0, COLUMN, COLUMN, card("Ks")).toString());
+
     }
 
 }

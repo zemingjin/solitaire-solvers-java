@@ -19,7 +19,7 @@ import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class FreeCellTest {
-    private static final String TEST_FILE = "games/freecell/freecell-020623-easy.txt";
+    private static final String TEST_FILE = "games/freecell/freecell-easy-020623.txt";
     protected static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
     private FreeCell dfs;
@@ -67,7 +67,7 @@ class FreeCellTest {
 
     @Test
     void test_solve_verify_dfs() {
-        dfs.board().columns().get(0).pop();
+        dfs.board().column(0).pop();
         var result = assertThrows(RuntimeException.class, () -> dfs.solve());
 
         assertEquals("[Missing card: 6c]", result.getMessage());

@@ -32,6 +32,7 @@ import static org.solitaire.spider.Spider.hsdDepth;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
+import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.ONE;
@@ -167,7 +168,7 @@ class SpiderTest {
 
     private Path<String> mockPath() {
         var path = new Path<String>();
-        path.add(new Candidate(List.of(card("Ah")), COLUMN, 0, COLUMN, 5).notation());
+        path.add(new Candidate(toArray(card("Ah")), COLUMN, 0, COLUMN, 5).notation());
         return path;
     }
 

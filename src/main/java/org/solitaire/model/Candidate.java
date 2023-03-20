@@ -2,37 +2,43 @@ package org.solitaire.model;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.List;
 import java.util.function.Function;
 
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suitCode;
+import static org.solitaire.util.CardHelper.toArray;
 
-public record Candidate(List<Card> cards, Origin origin, int from, Origin target, int to) {
+public record Candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
+    public static final Function<Pair<Integer, Card>, Candidate> buildFoundationToColumn =
+            pair -> new Candidate(toArray(pair.getRight()), FOUNDATION, suitCode(pair.getRight()),
+                    COLUMN, pair.getLeft());
+
     public static Candidate buildCandidate(int from, Origin origin, Origin target, Card card) {
-        return buildCandidate(from, origin, target, List.of(card));
+        return buildCandidate(from, origin, target, toArray(card));
     }
 
-    public static Candidate buildCandidate(int from, Origin origin, Origin target, List<Card> cards) {
+    public static Candidate buildCandidate(int from, Origin origin, Origin target, Card[] cards) {
         return new Candidate(cards, origin, from, target, -1);
     }
 
     public static Candidate buildCandidate(int from, Origin origin, Card card) {
-        return buildCandidate(from, origin, List.of(card));
+        return buildCandidate(from, origin, toArray(card));
     }
 
-    public static Candidate buildCandidate(int from, Origin origin, List<Card> cards) {
+    public static Candidate buildCandidate(int from, Origin origin, Card[] cards) {
         return buildCandidate(from, origin, cards, -1);
     }
 
-    public static Candidate buildCandidate(List<Card> cards, Origin origin, Origin target) {
-        return new Candidate(cards, origin, cards.get(0).at(), target, 0);
+    public static Candidate buildCandidate(Card[] cards, Origin origin, Origin target) {
+        return new Candidate(cards, origin, cards[0].at(), target, 0);
     }
 
-    public static Candidate buildCandidate(int from, Origin origin, List<Card> cards, int to) {
+    public static Candidate buildCandidate(int from, Origin origin, Card[] cards, int to) {
         return new Candidate(cards, origin, from, null, to);
     }
 
@@ -41,11 +47,8 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
     }
 
     public static Candidate buildFoundationCandidate(Card card, Origin origin, int from) {
-        return new Candidate(List.of(card), origin, from, FOUNDATION, suitCode(card));
+        return new Candidate(toArray(card), origin, from, FOUNDATION, suitCode(card));
     }
-
-    public static final Function<Pair<Integer, Card>, Candidate> buildFoundationToColumn =
-            pair -> new Candidate(List.of(pair.getRight()), FOUNDATION, suitCode(pair.getRight()), COLUMN, pair.getLeft());
 
     public String notation() {
         return originNotation() + targetNotation() + ":" + valueNotation();
@@ -63,7 +66,9 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
     }
 
     private String targetNotation() {
-        return switch (target) {
+        return isNull(target)
+                ? "_"
+                : switch (target) {
             case COLUMN -> Integer.toString(to);
             case FREECELL -> "f";
             case FOUNDATION -> "$";
@@ -74,11 +79,11 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
     }
 
     private String valueNotation() {
-        return stringOfRaws(cards().toArray(Card[]::new));
+        return stringOfRaws(cards);
     }
 
     public Card peek() {
-        return cards.get(0);
+        return cards[0];
     }
 
     public boolean isKing() {
@@ -103,5 +108,10 @@ public record Candidate(List<Card> cards, Origin origin, int from, Origin target
 
     public boolean isNotToDeck() {
         return !isToDeck();
+    }
+
+    @Override
+    public String toString() {
+        return format("Candidate(%s, %s, %d, %s, %d)", stringOfRaws(cards), origin, from, target, to);
     }
 }

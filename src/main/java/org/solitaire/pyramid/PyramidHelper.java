@@ -22,6 +22,11 @@ public class PyramidHelper {
     protected static final int LAST_DECK = 52;
     protected static final int LAST_BOARD_INDEX = LAST_BOARD - 1;
     protected static final int[] ROW_SCORES = new int[]{500, 250, 150, 100, 75, 50, 25};
+    private static final Function<Card[], PyramidBoard> buildPyramidBoard = cards -> {
+        assert cards.length == 52 : "Invalid # of cards: " + cards.length;
+
+        return new PyramidBoard(copyOf(cards, LAST_BOARD), buildDeck(cards), new Stack<>(), new Path<>(), 3);
+    };
 
     public static Pyramid build(String[] cards) {
         return Optional.of(cards)
@@ -30,12 +35,6 @@ public class PyramidHelper {
                 .map(Pyramid::new)
                 .orElseThrow();
     }
-
-    private static final Function<Card[], PyramidBoard> buildPyramidBoard = cards -> {
-        assert cards.length == 52 : "Invalid # of cards: " + cards.length;
-
-        return new PyramidBoard(copyOf(cards, LAST_BOARD), buildDeck(cards), new Stack<>(), new Path<>(), 3);
-    };
 
     private static Stack<Card> buildDeck(Card[] cards) {
         var deck = new Stack<Card>();

@@ -88,7 +88,7 @@ class SolitaireAppTest {
 
     @Test
     void test_run_freecell() {
-        ARGS[0] = "games/freecell/freecell-020623-easy.txt";
+        ARGS[0] = "games/freecell/freecell-easy-020623.txt";
         ARGS[1] = FREECELL;
         ARGS[2] = null;
 

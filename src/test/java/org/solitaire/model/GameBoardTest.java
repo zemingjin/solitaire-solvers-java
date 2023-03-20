@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.solitaire.util.IOHelper;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
@@ -17,6 +16,7 @@ import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.card;
+import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
 public class GameBoardTest {
@@ -38,7 +38,7 @@ public class GameBoardTest {
 
     @Test
     void test_add() {
-        var result = board.add(new LinkedList<>(), new Candidate(List.of(card("Ad")), COLUMN, 0, COLUMN, 1));
+        var result = board.add(new LinkedList<>(), new Candidate(toArray(card("Ad")), COLUMN, 0, COLUMN, 1));
 
         assertEquals(1, result.size());
         assertEquals("01:Ad", result.get(0).notation());

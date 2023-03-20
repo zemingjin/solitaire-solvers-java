@@ -12,7 +12,7 @@ import static org.solitaire.klondike.KlondikeHelper.LAST_DECK;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class KlondikeHelperTest {
-    private static final String TEST_FILE = "games/klondike/klondike-122822-medium.txt";
+    private static final String TEST_FILE = "games/klondike/klondike-medium-122822.txt";
     protected static final String[] CARDS = IOHelper.loadFile(TEST_FILE);
 
     @BeforeEach
@@ -32,9 +32,9 @@ class KlondikeHelperTest {
         assertNotNull(klondike);
         assertEquals("20:Kd", klondike.deck().peek().toString());
         assertEquals("0:Jc", klondike.deck().get(0).toString());
-        assertEquals(1, klondike.columns().get(0).size());
-        assertEquals("24:Th", klondike.columns().get(0).get(0).toString());
-        assertEquals("25:8h", klondike.columns().get(1).get(0).toString());
+        assertEquals(1, klondike.column(0).size());
+        assertEquals("24:Th", klondike.column(0).get(0).toString());
+        assertEquals("25:8h", klondike.column(1).get(0).toString());
     }
 
     @Test

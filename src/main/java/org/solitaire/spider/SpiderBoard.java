@@ -11,7 +11,6 @@ import org.solitaire.model.Deck;
 import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -37,12 +36,13 @@ import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suitCode;
+import static org.solitaire.util.CardHelper.toArray;
 
 @Slf4j
 public class SpiderBoard extends GameBoard {
     protected final Deck deck;
-    private transient final IntPredicate isLongEnoughForRun = i -> 13 <= columns().get(i).size();
-    private transient final IntPredicate isThereARun = i -> isThereARun(columns().get(i));
+    private transient final IntPredicate isLongEnoughForRun = i -> 13 <= column(i).size();
+    private transient final IntPredicate isThereARun = i -> isThereARun(column(i));
 
     public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
@@ -81,7 +81,7 @@ public class SpiderBoard extends GameBoard {
     protected Stream<Candidate> findCandidates(TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
                 .filter(isNotEmpty)
-                .mapToObj(i -> Pair.of(i, columns().get(i)))
+                .mapToObj(i -> Pair.of(i, column(i)))
                 .map(it -> Pair.of(it.getLeft(), getOrderedCardsAtColumn(it.getRight())))
                 .flatMap(it -> findCandidates(it, finder))
                 .filter(this::isMovable);
@@ -95,16 +95,16 @@ public class SpiderBoard extends GameBoard {
     }
 
     protected Candidate findCandidateOfSameSuit(Integer i, Integer j, List<Card> cards) {
-        var column = columns().get(j);
+        var column = column(j);
 
         if (column.isEmpty() || column.peek().isHigherOfSameColor(cards.get(0))) {
-            return new Candidate(cards, COLUMN, i, COLUMN, j);
+            return new Candidate(cards.toArray(Card[]::new), COLUMN, i, COLUMN, j);
         }
         var card = column.peek();
         if (card.isSameSuit(cards.get(0))) {
             for (int k = 0; k < cards.size(); k++) {
                 if (card.isHigherOfSameColor(cards.get(k))) {
-                    return new Candidate(cards.subList(k, cards.size()), COLUMN, i, COLUMN, j);
+                    return new Candidate(cards.subList(k, cards.size()).toArray(Card[]::new), COLUMN, i, COLUMN, j);
                 }
             }
         }
@@ -113,11 +113,11 @@ public class SpiderBoard extends GameBoard {
 
     private Candidate findCandidateOfDifferentColors(Integer i, Integer j, List<Card> cards) {
         if (cards.size() == 1) {
-            var column = columns().get(j);
+            var column = column(j);
             var card = cards.get(0);
 
             if (column.isEmpty() || column.peek().isHigherWithDifferentColor(card)) {
-                return new Candidate(List.of(card), COLUMN, i, COLUMN, j);
+                return new Candidate(toArray(card), COLUMN, i, COLUMN, j);
             }
         }
         return null;
@@ -137,20 +137,20 @@ public class SpiderBoard extends GameBoard {
     }
 
     private boolean isLongerTargetSequence(Candidate candidate) {
-        var column = columns().get(candidate.to());
+        var column = column(candidate.to());
 
         if (column.isNotEmpty()) {
             var target = column.peek();
 
             if (target.isSameSuit(candidate.peek())) {
-                return targetSize(candidate) > getOrderedCardsAtColumn(columns().get(candidate.from())).size();
+                return targetSize(candidate) > getOrderedCardsAtColumn(column(candidate.from())).size();
             }
         }
         return true;
     }
 
     private int targetSize(Candidate candidate) {
-        return getOrderedCardsAtColumn(columns.get(candidate.to())).size() + candidate.cards().size();
+        return getOrderedCardsAtColumn(columns.get(candidate.to())).size() + candidate.cards().length;
     }
 
     private boolean isNotRepeatingCandidate(Candidate candidate) {
@@ -192,14 +192,14 @@ public class SpiderBoard extends GameBoard {
     }
 
     private void removeFromDeck(Candidate candidate) {
-        candidate.cards().forEach(it -> deck().remove(it));
+        Stream.of(candidate.cards()).forEach(it -> deck().remove(it));
     }
 
     protected SpiderBoard appendToTarget(Candidate candidate) {
         path.add(candidate.notation());
 
         switch (candidate.origin()) {
-            case DECKPILE -> range(0, columns().size()).forEach(i -> columns().get(i).add(candidate.cards().get(i)));
+            case DECKPILE -> range(0, columns().size()).forEach(i -> column(i).add(candidate.cards()[i]));
             case COLUMN -> {
                 addToTargetColumn(candidate);
                 totalScore--;
@@ -230,11 +230,11 @@ public class SpiderBoard extends GameBoard {
     }
 
     private void removeTheRun(int i) {
-        var column = columns().get(i);
+        var column = column(i);
         assert nonNull(column) && 13 <= column.size();
 
         var run = column.subList(column.size() - 13, column.size());
-        var candidate = new Candidate(run, COLUMN, i, FOUNDATION, suitCode(run.get(0)));
+        var candidate = new Candidate(run.toArray(Card[]::new), COLUMN, i, FOUNDATION, suitCode(run.get(0)));
 
         path().add(candidate.notation());
         if (isPrint()) {
@@ -248,7 +248,7 @@ public class SpiderBoard extends GameBoard {
         if (isNoEmptyColumn() && isNotEmpty(deck)) {
             var cards = deck().subList(0, columns.size());
 
-            return List.of(new Candidate(new ArrayList<>(cards), DECKPILE, 0, COLUMN, 0));
+            return List.of(new Candidate(cards.toArray(Card[]::new), DECKPILE, 0, COLUMN, 0));
         }
         return emptyList();
     }
@@ -280,7 +280,7 @@ public class SpiderBoard extends GameBoard {
     }
 
     protected int countBlockers(int col) {
-        var column = columns().get(col);
+        var column = column(col);
 
         if (column.isEmpty()) {
             return 0;
@@ -308,7 +308,7 @@ public class SpiderBoard extends GameBoard {
     // The bigger, the better
     protected int calcSequences() {
         return range(0, columns().size())
-                .filter(i -> isNotEmpty(columns().get(i)))
+                .filter(i -> isNotEmpty(column(i)))
                 .mapToObj(i -> Pair.of(i, getOrderedCardsAtColumn(columns.get(i))))
                 .mapToInt(this::calcSequenceScore)
                 .sum();

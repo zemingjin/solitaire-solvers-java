@@ -2,7 +2,6 @@ package org.solitaire.model;
 
 import java.util.ArrayList;
 import java.util.EmptyStackException;
-import java.util.List;
 
 public class Column extends ArrayList<Card> {
     private int openAt;
@@ -18,21 +17,7 @@ public class Column extends ArrayList<Card> {
 
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj) && openAt == ((Column) obj).openAt;
-    }
-
-    @Override
-    public Card remove(int at) {
-        checkOpenAt(at);
-
-        return super.remove(at);
-    }
-
-    @Override
-    public List<Card> subList(int fromIndex, int toIndex) {
-        checkOpenAt(fromIndex);
-
-        return super.subList(fromIndex, toIndex);
+        return super.equals(obj) && openAt() == ((Column) obj).openAt();
     }
 
     public boolean isNotEmpty() {
@@ -54,15 +39,14 @@ public class Column extends ArrayList<Card> {
     }
 
     public int openAt() {
+        if (openAt >= size()) {
+            openAt(size() - 1);
+        }
         return openAt;
     }
 
     public Column openAt(int openAt) {
         this.openAt = openAt;
         return this;
-    }
-
-    private void checkOpenAt(int at) {
-        openAt(openAt >= at ? at - 1 : openAt);
     }
 }

@@ -16,7 +16,7 @@ import static org.solitaire.freecell.FreeCellHelper.build;
 import static org.solitaire.freecell.FreeCellHelper.getColumn;
 
 class FreeCellHelperTest {
-    private static final String TEST_FILE = "games/freecell/freecell-020623-easy.txt";
+    private static final String TEST_FILE = "games/freecell/freecell-easy-020623.txt";
     protected static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
     private List<Column> columns;

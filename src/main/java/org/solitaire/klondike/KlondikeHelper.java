@@ -17,6 +17,9 @@ public class KlondikeHelper {
     protected static final int LAST_DECK = 24;
     protected static final int NUM_COLUMNS = 7;
 
+    private KlondikeHelper() {
+    }
+
     public static Klondike build(String[] cards) {
         return new Klondike(
                 buildColumns(cards),
@@ -62,8 +65,6 @@ public class KlondikeHelper {
     protected static int colEnd(int col) {
         return colStart(col) + col + 1;
     }
-
-    private KlondikeHelper() {}
 
     public static KlondikeHelper of() {
         return new KlondikeHelper();

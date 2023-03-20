@@ -53,6 +53,23 @@ public class FreeCellBoard extends GameBoard {
         var column = columns.get(i);
         return !column.get(column.size() - 2).isHigherWithDifferentColor(column.peek());
     };
+    private transient final IntFunction<Card> nextFoundationCard = i ->
+            Optional.of(rank(foundations()[i]) + 1)
+                    .filter(rank -> rank <= 13)
+                    .map(rank -> card(VALUES.charAt(rank - 1) + suit(i).toLowerCase()))
+                    .orElse(null);
+    private transient final ToIntFunction<Card> calcBlockers = card -> {
+        if (Arrays.asList(freeCells()).contains(card)) {
+            return 0;
+        }
+        return columns.stream()
+                .filter(listNotEmpty)
+                .filter(it -> it.contains(card))
+                .map(it -> it.size() - it.indexOf(card) - 1)
+                .map(i -> (countFreeCells() > 0 || countEmptyColumns() > 0) ? i : i * 2)
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
+    };
 
     public FreeCellBoard(Columns columns, Path<String> path, Card[] freeCells, Card[] foundations) {
         super(columns, path);
@@ -62,27 +79,6 @@ public class FreeCellBoard extends GameBoard {
 
     protected FreeCellBoard(@Nonnull FreeCellBoard that) {
         this(new Columns(that.columns), new Path<>(that.path), cloneArray(that.freeCells), cloneArray(that.foundations));
-    }
-
-    private static void cleanupCandidates(List<Candidate> candidates, int i) {
-        var a = candidates.get(i);
-
-        if (nonNull(a)) {
-            range(i + 1, candidates.size())
-                    .forEach(j -> cleanupCandidates(candidates, i, a, j));
-        }
-    }
-
-    private static void cleanupCandidates(List<Candidate> candidates, int i, Candidate a, int j) {
-        var b = candidates.get(j);
-
-        if (nonNull(b) && a.peek().equals(b.peek())) {
-            if (a.isToFoundation()) {
-                candidates.set(j, null);
-            } else if (b.isToFoundation()) {
-                candidates.set(i, null);
-            }
-        }
     }
 
     /*****************************************************************************************************************
@@ -99,7 +95,7 @@ public class FreeCellBoard extends GameBoard {
     }
 
     private List<Candidate> findToColumnCandidates() {
-        return concat(findColumnToColumnCandidates(), findFreeCellToColumnCandidates())
+        return concat(getColumnToColumnCandidates(), findFreeCellToColumnCandidates())
                 .flatMap(this::getTargetCandidates)
                 .toList();
     }
@@ -136,6 +132,7 @@ public class FreeCellBoard extends GameBoard {
 
         if (column.isEmpty()) {
             return isNotAtBottom(candidate);
+//            return !candidate.isFromColumn() || isNotAtBottom(candidate);
         }
         return Optional.of(column)
                 .map(Column::peek)
@@ -144,13 +141,13 @@ public class FreeCellBoard extends GameBoard {
     }
 
     private boolean isNotAtBottom(Candidate candidate) {
-        return columns.get(candidate.from()).size() > candidate.cards().size();
+        return column(candidate.from()).size() > candidate.cards().length;
     }
 
     protected boolean isMovable(Candidate candidate, int to) {
         return Optional.of(candidate)
                 .map(Candidate::cards)
-                .map(it -> it.size() <= maxCardsToMove(to))
+                .map(it -> it.length <= maxCardsToMove(to))
                 .orElse(false);
     }
 
@@ -160,7 +157,7 @@ public class FreeCellBoard extends GameBoard {
                 .mapToObj(i -> buildCandidate(i, FREECELL, COLUMN, freeCells[i]));
     }
 
-    protected Stream<Candidate> findColumnToColumnCandidates() {
+    protected Stream<Candidate> getColumnToColumnCandidates() {
         return range(0, columns.size())
                 .mapToObj(this::findCandidateAtColumn)
                 .filter(isNotNull);
@@ -173,7 +170,7 @@ public class FreeCellBoard extends GameBoard {
                 .filter(it -> !isFoundationable(it.peek()))
                 .map(this::findCandidateAtColumn)
                 .filter(listNotEmpty)
-                .map(it -> buildCandidate(col, COLUMN, it))
+                .map(it -> buildCandidate(col, COLUMN, it.toArray(Card[]::new)))
                 .orElse(null);
     }
 
@@ -206,6 +203,27 @@ public class FreeCellBoard extends GameBoard {
         range(0, candidates.size() - 1)
                 .forEach(i -> cleanupCandidates(candidates, i));
         return candidates.stream().filter(isNotNull).toList();
+    }
+
+    private static void cleanupCandidates(List<Candidate> candidates, int i) {
+        var a = candidates.get(i);
+
+        if (nonNull(a)) {
+            range(i + 1, candidates.size())
+                    .forEach(j -> cleanupCandidates(candidates, i, a, j));
+        }
+    }
+
+    private static void cleanupCandidates(List<Candidate> candidates, int i, Candidate a, int j) {
+        var b = candidates.get(j);
+
+        if (nonNull(b) && a.peek().equals(b.peek())) {
+            if (a.isToFoundation()) {
+                candidates.set(j, null);
+            } else if (b.isToFoundation()) {
+                candidates.set(i, null);
+            }
+        }
     }
 
     protected Stream<Candidate> getFoundationCandidates() {
@@ -242,7 +260,7 @@ public class FreeCellBoard extends GameBoard {
             case COLUMN -> {
                 var column = columns.get(candidate.from());
 
-                column.subList(column.size() - candidate.cards().size(), column.size()).clear();
+                column.subList(column.size() - candidate.cards().length, column.size()).clear();
             }
             case FREECELL -> freeCells[candidate.from()] = null;
             default -> throw new RuntimeException("Invalid candidate origin: " + candidate);
@@ -256,7 +274,7 @@ public class FreeCellBoard extends GameBoard {
             case COLUMN -> moveToColumn(candidate);
             case FREECELL -> toFreeCell(candidate.peek());
             case FOUNDATION -> toFoundation(candidate.peek());
-            case DECKPILE -> throw new RuntimeException("Invalid candidate target: " + candidate);
+            case DECKPILE -> throw new RuntimeException("Invalid candidate target: " + candidate.notation());
         }
         return this;
     }
@@ -269,7 +287,7 @@ public class FreeCellBoard extends GameBoard {
         Optional.of(candidate)
                 .map(Candidate::to)
                 .map(columns::get)
-                .ifPresent(it -> it.addAll(candidate.cards()));
+                .ifPresent(it -> it.addAll(List.of(candidate.cards())));
     }
 
     private void toFreeCell(Card card) {
@@ -323,25 +341,6 @@ public class FreeCellBoard extends GameBoard {
                 .mapToInt(calcBlockers)
                 .sum();
     }
-
-    private transient final IntFunction<Card> nextFoundationCard = i ->
-            Optional.of(rank(foundations()[i]) + 1)
-                    .filter(rank -> rank <= 13)
-                    .map(rank -> card(VALUES.charAt(rank - 1) + suit(i).toLowerCase()))
-                    .orElse(null);
-
-    private transient final ToIntFunction<Card> calcBlockers = card -> {
-        if (Arrays.asList(freeCells()).contains(card)) {
-            return 0;
-        }
-        return columns.stream()
-                .filter(listNotEmpty)
-                .filter(it -> it.contains(card))
-                .map(it -> it.size() - it.indexOf(card) - 1)
-                .map(i -> (countFreeCells() > 0 || countEmptyColumns() > 0) ? i : i * 2)
-                .findFirst()
-                .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
-    };
 
     @Override
     public List<String> verify() {

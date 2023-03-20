@@ -33,13 +33,38 @@ import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.cloneStack;
+import static org.solitaire.util.CardHelper.toArray;
 
 public class PyramidBoard implements Board<Card[], Candidate> {
     private final Card[] cards;
     private final Stack<Card> deck;
     private final Stack<Card> flippedDeck;
     private final Path<Card[]> path;
+    private transient final Function<List<Card>, IntFunction<Stream<Candidate>>> cardsOf13s = openCards -> i -> {
+        var card = openCards.get(i);
+
+        if (card.isKing()) {
+            return Stream.of(buildCandidate(toArray(card), BOARD, REMOVE));
+        }
+        return range(i + 1, openCards.size())
+                .mapToObj(openCards::get)
+                .filter(it -> card.rank() + it.rank() == 13)
+                .map(it -> toArray(card, it))
+                .map(it -> buildCandidate(it, BOARD, REMOVE));
+    };
+    private transient final Function<List<Card>, List<Candidate>> findCardsOf13s = openCards -> {
+        IntFunction<Stream<Candidate>> getCardsOf13s = cardsOf13s.apply(openCards);
+
+        return range(0, openCards.size())
+                .mapToObj(getCardsOf13s)
+                .flatMap(it -> it)
+                .toList();
+    };
     private int recycleCount;
+    private transient final Supplier<List<Candidate>> drawDeckCards = () ->
+            Optional.ofNullable(drawDeckCard())
+                    .map(List::of)
+                    .orElseGet(Collections::emptyList);
     private transient int score = 0;
 
     public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
@@ -69,29 +94,6 @@ public class PyramidBoard implements Board<Card[], Candidate> {
                 .filter(listIsNotEmpty)
                 .orElseGet(drawDeckCards);
     }
-
-    private transient final Function<List<Card>, IntFunction<Stream<Candidate>>> cardsOf13s = openCards -> i -> {
-        var card = openCards.get(i);
-
-        if (card.isKing()) {
-            return Stream.of(buildCandidate(List.of(card), BOARD, REMOVE));
-        }
-        return range(i + 1, openCards.size())
-                .mapToObj(openCards::get)
-                .filter(it -> card.rank() + it.rank() == 13)
-                .map(it -> List.of(card, it))
-                .map(it -> buildCandidate(it, BOARD, REMOVE));
-    };
-
-    private transient final Function<List<Card>, List<Candidate>> findCardsOf13s = openCards -> {
-        IntFunction<Stream<Candidate>> getCardsOf13s = cardsOf13s.apply(openCards);
-
-        return range(0, openCards.size())
-                .mapToObj(getCardsOf13s)
-                .flatMap(it -> it)
-                .toList();
-    };
-
 
     protected List<Card> findOpenCards() {
         return Stream.concat(getBoardOpenCards(), getDeckCards()).toList();
@@ -130,14 +132,9 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         return row == 7 || (isNull(cards[coveredBy]) && isNull(cards[coveredBy + 1]));
     }
 
-    private transient final Supplier<List<Candidate>> drawDeckCards = () ->
-            Optional.ofNullable(drawDeckCard())
-                    .map(List::of)
-                    .orElseGet(Collections::emptyList);
-
     protected Candidate drawDeckCard() {
         if (checkDeck()) {
-            return buildCandidate(List.of(deck.peek()), DECKPILE, DECKPILE);
+            return buildCandidate(toArray(deck.peek()), DECKPILE, DECKPILE);
         }
         return null;
     }
@@ -164,14 +161,14 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     private void updateTargets(Candidate candidate) {
         var cards = candidate.cards();
         if (candidate.target() == DECKPILE) {
-            flippedDeck.push(cards.get(0));
+            flippedDeck.push(cards[0]);
         } else {
-            path.add(cards.toArray(new Card[0]));
+            path.add(cards);
         }
     }
 
     private void removeFromOrigin(Candidate candidate) {
-        candidate.cards().forEach(this::removeCardFromBoard);
+        Stream.of(candidate.cards()).forEach(this::removeCardFromBoard);
     }
 
     private void removeCardFromBoard(Card card) {
