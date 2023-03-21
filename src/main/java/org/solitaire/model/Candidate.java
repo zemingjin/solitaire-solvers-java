@@ -5,10 +5,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.function.Function;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
+import static org.solitaire.model.Origin.FREECELL;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suitCode;
 import static org.solitaire.util.CardHelper.toArray;
@@ -66,9 +66,7 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
     }
 
     private String targetNotation() {
-        return isNull(target)
-                ? "_"
-                : switch (target) {
+        return switch (target) {
             case COLUMN -> Integer.toString(to);
             case FREECELL -> "f";
             case FOUNDATION -> "$";
@@ -95,7 +93,11 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
     }
 
     public boolean isToFoundation() {
-        return FOUNDATION == target();
+        return FOUNDATION == target;
+    }
+
+    public boolean isNotToFoundation() {
+        return !isToFoundation();
     }
 
     public boolean isFromColumn() {
@@ -108,6 +110,18 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
 
     public boolean isNotToDeck() {
         return !isToDeck();
+    }
+
+    public boolean isToFreeCell() {
+        return FREECELL == target();
+    }
+
+    public boolean isNotToFreeCell() {
+        return !isToFreeCell();
+    }
+
+    public boolean isSameSource(Candidate other) {
+        return origin() == other.origin() && from() == other.from();
     }
 
     @Override

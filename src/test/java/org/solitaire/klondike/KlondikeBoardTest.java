@@ -123,6 +123,22 @@ class KlondikeBoardTest {
         assertNotNull(result);
         assertEquals(3, result.size());
         assertEquals("10:9s", result.get(0).notation());
+
+        range(0, board.columns().size()).forEach(i -> board.column(i).clear());
+        result = board.findCandidates();
+        assertEquals("^^:[4s, 9c, Kd]", result.get(0).notation());
+    }
+
+    @Test
+    void test_candidateToEmptyColumn() {
+        var cards = toArray(card("Ks"), card("Qh"), card("Jc"));
+
+        var result = board.candidateToEmptyColumn(cards, 6, 0);
+
+        assertEquals("60:[Ks, Qh, Jc]", result.notation());
+
+        result = board.candidateToEmptyColumn(cards, 2, 0);
+        assertNull(result);
     }
 
     @Test

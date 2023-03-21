@@ -84,4 +84,9 @@ public class GameBoardTest {
         assertEquals(6, board.columns.get(1).size());
     }
 
+    @Test
+    void test_candidateToEmptyColumn() {
+        assertThrows(RuntimeException.class, () -> board.candidateToEmptyColumn(null, 0, 0));
+    }
+
 }

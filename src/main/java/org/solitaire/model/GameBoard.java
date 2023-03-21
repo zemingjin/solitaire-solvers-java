@@ -118,9 +118,14 @@ public class GameBoard implements Board<String, Candidate> {
         }
         return range(0, cards.length)
                 .filter(i -> card.isHigherWithDifferentColor(cards[i]))
+                .filter(i -> isMovable(cards.length - i, to))
                 .mapToObj(i -> new Candidate(copyOfRange(cards, i, cards.length), COLUMN, from, COLUMN, to))
                 .findFirst()
                 .orElse(null);
+    }
+
+    protected boolean isMovable(int length, int to) {
+        return true;
     }
 
     protected Candidate candidateToEmptyColumn(Card[] cards, int from, int to) {

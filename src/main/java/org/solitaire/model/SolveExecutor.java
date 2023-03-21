@@ -37,7 +37,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     private final Consumer<T> addBoard =
             board -> Optional.ofNullable(board)
                     .map(List::of)
-                    .ifPresent(addBoards);
+                    .ifPresent(addBoards());
     private final Function<Stream<T>, T> getBestBoard =
             boards -> boards.reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
     private final Function<BoardStack<T>, T> getBoard = boards -> {
@@ -156,7 +156,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                 .map(sortBoards)
                 .map(Stream::toList)
                 .filter(listNotEmpty)
-                .ifPresent(addBoards);
+                .ifPresent(addBoards());
     }
 
     public void solveByHSD(T board) {
@@ -236,7 +236,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     public T board() {
-        return stack.peek().peek();
+        return stack.isEmpty() ? null : stack.peek().peek();
     }
 
     public T clone(T board) {

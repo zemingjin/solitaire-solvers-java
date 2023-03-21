@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.freecell.FreeCell.SOLUTION_LIMIT;
 import static org.solitaire.freecell.FreeCellHelper.buildBoard;
+import static org.solitaire.model.SolveExecutor.hsdDepth;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.useSuit;
@@ -22,53 +23,53 @@ class FreeCellTest {
     private static final String TEST_FILE = "games/freecell/freecell-easy-020623.txt";
     protected static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
-    private FreeCell dfs;
-    private FreeCellHSD hsd;
+    private FreeCell freeCell;
+    private FreeCellHSD mockFreeCell;
 
     @BeforeEach
     void setup() {
         useSuit(false);
-        singleSolution(false);
         isPrint(false);
-        dfs = new FreeCell(buildBoard(cards));
+        freeCell = new FreeCell(buildBoard(cards));
+        hsdDepth(5);
         FreeCellHSD.add(true);
         singleSolution(true);
-        hsd = new FreeCellHSD(buildBoard(cards));
+        mockFreeCell = new FreeCellHSD(buildBoard(cards));
     }
 
     @Test
     void test_solveByHSD() {
-        dfs.solveByHSD(dfs.stack().pop().peek());
+        freeCell.solveByHSD(freeCell.stack().pop().peek());
 
-        assertEquals(29797, dfs.totalScenarios());
-        assertFalse(dfs.stack().isEmpty());
-        assertEquals("[6$:Ad, 1$:2d, 4f:4c, 3f:9d, 3f:8s, 35:8h]", dfs.board().path().toString());
+        assertEquals(4477, freeCell.totalScenarios());
+        assertFalse(freeCell.stack().isEmpty());
+        assertEquals("[4f:4c, 3f:9d, 3f:8s, 35:8h, 6$:Ad]", freeCell.board().path().toString());
     }
 
     @Test
     void test_solve_hsd_noclone() {
         assertTrue(singleSolution());
 
-        hsd.solve();
+        mockFreeCell.solve();
 
-        assertEquals(38723, hsd.totalScenarios());
+        assertEquals(4477, mockFreeCell.totalScenarios());
     }
 
     @Test
-    void test_solve_dfs() {
+    void test_isContinuing() {
         singleSolution(false);
-        dfs.solve();
+        assertTrue(freeCell.isContinuing());
 
-        assertEquals(1910, dfs.totalScenarios());
-        assertEquals(SOLUTION_LIMIT, dfs.totalSolutions());
-        assertEquals(98, dfs.shortestPath().size());
-        assertEquals(99, dfs.longestPath().size());
+        freeCell.totalSolutions(SOLUTION_LIMIT - 1);
+        assertTrue(freeCell.isContinuing());
+        freeCell.totalSolutions(SOLUTION_LIMIT);
+        assertFalse(freeCell.isContinuing());
     }
 
     @Test
     void test_solve_verify_dfs() {
-        dfs.board().column(0).pop();
-        var result = assertThrows(RuntimeException.class, () -> dfs.solve());
+        freeCell.board().column(0).pop();
+        var result = assertThrows(RuntimeException.class, () -> freeCell.solve());
 
         assertEquals("[Missing card: 6c]", result.getMessage());
     }
@@ -93,6 +94,7 @@ class FreeCellTest {
         public void addBoards(Collection<FreeCellBoard> boards) {
             if (add) {
                 super.addBoards().accept(boards);
+                add(false);
             }
         }
     }

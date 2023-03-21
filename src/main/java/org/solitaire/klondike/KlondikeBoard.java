@@ -182,7 +182,7 @@ class KlondikeBoard extends GameBoard {
 
     @Override
     protected Candidate candidateToEmptyColumn(Card[] cards, int from, int to) {
-        if (cards[0].isKing()) {
+        if (cards[0].isKing() && column(from).size() > cards.length) {
             return new Candidate(cards, COLUMN, from, COLUMN, to);
         }
         return null;

@@ -1,6 +1,5 @@
 package org.solitaire.freecell;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
@@ -12,23 +11,20 @@ import org.solitaire.util.CardHelper;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
-import static java.util.stream.Stream.concat;
-import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Candidate.buildFoundationCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.FREECELL;
@@ -42,15 +38,16 @@ import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
+import static org.solitaire.util.CardHelper.toArray;
 
 public class FreeCellBoard extends GameBoard {
     protected static final Function<FreeCellBoard, List<Candidate>> findCandidates = FreeCellBoard::findCandidates;
     private final Card[] freeCells;
     private final Card[] foundations;
-    protected final IntPredicate isNotFoundationable = i -> !isFoundationable(columns.get(i).peek());
-    private final IntPredicate hasMultipleCards = i -> columns.get(i).size() > 1;
+    protected final IntPredicate isNotFoundationable = i -> !isFoundationable(peek(i));
+    private final IntPredicate hasMultipleCards = i -> column(i).size() > 1;
     private final IntPredicate isNotInSequence = i -> {
-        var column = columns.get(i);
+        var column = column(i);
         return !column.get(column.size() - 2).isHigherWithDifferentColor(column.peek());
     };
     private transient final IntFunction<Card> nextFoundationCard = i ->
@@ -75,6 +72,7 @@ public class FreeCellBoard extends GameBoard {
         super(columns, path);
         this.freeCells = freeCells;
         this.foundations = foundations;
+        isInSequence(Card::isHigherWithDifferentColor);
     }
 
     protected FreeCellBoard(@Nonnull FreeCellBoard that) {
@@ -86,29 +84,108 @@ public class FreeCellBoard extends GameBoard {
      ****************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        return Optional.of(findToColumnCandidates())
-                .map(it -> concat(it.stream(), findColumnToFreeCellCandidates(it)))
-                .map(it -> concat(it, getFoundationCandidates()))
-                .map(it -> it.collect(Collectors.toList()))
-                .map(this::cleanupCandidates)
-                .orElseThrow();
+        var candidates = Stream.of(
+                        findColumnToFoundationCandidates(),
+                        findFreeCellToFoundationCandidates(),
+                        findColumnToColumnCandidates(),
+                        findFreeCellToColumnCandidates(),
+                        findColumnToFreeCellCandidates()
+                )
+                .flatMap(flattenStream)
+                .toList();
+        return filterCandidates(candidates);
     }
 
-    private List<Candidate> findToColumnCandidates() {
-        return concat(getColumnToColumnCandidates(), findFreeCellToColumnCandidates())
-                .flatMap(this::getTargetCandidates)
+    private List<Candidate> filterCandidates(List<Candidate> candidates) {
+        return range(0, candidates.size())
+                .mapToObj(i -> filterCandidate(i, candidates))
+                .filter(isNotNull)
                 .toList();
     }
 
-    protected Stream<Candidate> findColumnToFreeCellCandidates(List<Candidate> toColumns) {
-        final IntPredicate isNotInToColumns = i -> toColumns.stream().allMatch(c -> c.from() != i);
+    private Candidate filterCandidate(int i, List<Candidate> candidates) {
+        Predicate<Candidate> removeToFreeCell = candidate ->
+                candidate.isToFreeCell()
+                        && candidates.stream().anyMatch(it -> it.isNotToFreeCell() && it.isSameSource(candidate));
+        Predicate<Candidate> removeNotToFoundation = candidate ->
+                candidate.isNotToFoundation()
+                        && candidates.stream().anyMatch(it -> it.isToFoundation() && it.isSameSource(candidate));
+        var candidate = candidates.get(i);
 
-        if (countFreeCells() > 0) {
+        return removeToFreeCell.test(candidate) || removeNotToFoundation.test(candidate) ? null : candidate;
+    }
+
+    @Override
+    protected Candidate candidateToEmptyColumn(Card[] cards, int from, int to) {
+        if (column(from).size() > cards.length && maxCardsToMove(to) >= cards.length) {
+            return new Candidate(cards, COLUMN, from, COLUMN, to);
+        }
+        return null;
+    }
+
+    @Override
+    protected boolean isMovable(int length, int to) {
+        return length <= maxCardsToMove(to);
+    }
+
+    protected Stream<Candidate> findFreeCellToColumnCandidates() {
+        return range(0, freeCells().length)
+                .filter(i -> nonNull(freeCells()[i]))
+                .mapToObj(this::freeCellToColumnCandidates)
+                .flatMap(flattenStream);
+    }
+
+    private Stream<Candidate> freeCellToColumnCandidates(int from) {
+        return range(0, columns().size())
+                .mapToObj(to -> freeCellToColumnCandidate(from, to))
+                .filter(isNotNull);
+    }
+
+    private Candidate freeCellToColumnCandidate(int from, int to) {
+        var column = column(to);
+
+        if (column.isEmpty() || column.peek().isHigherWithDifferentColor(freeCells()[from])) {
+            return new Candidate(toArray(freeCells()[from]), FREECELL, from, COLUMN, to);
+        }
+        return null;
+    }
+
+    protected Stream<Candidate> findFreeCellToFoundationCandidates() {
+        return range(0, freeCells().length)
+                .filter(i -> nonNull(freeCells()[i]))
+                .filter(i -> isFoundationable(freeCells()[i]))
+                .mapToObj(from -> buildFoundationCandidate(freeCells()[from], FREECELL, from));
+    }
+
+    protected Stream<Candidate> findColumnToFoundationCandidates() {
+        return range(0, columns().size())
+                .mapToObj(this::columnToFoundationCandidate)
+                .filter(isNotNull);
+    }
+
+    private Candidate columnToFoundationCandidate(int from) {
+        return Optional.of(column(from))
+                .filter(listNotEmpty)
+                .map(Column::peek)
+                .filter(this::isFoundationable)
+                .map(it -> buildFoundationCandidate(it, COLUMN, from))
+                .orElse(null);
+
+    }
+
+    protected Stream<Candidate> findColumnToFreeCellCandidates() {
+        var freeCellAt = freeCellAt();
+
+        if (freeCellAt >= 0) {
             return range(0, columns.size())
-                    .filter(hasMultipleCards.and(isNotInSequence).and(isNotFoundationable).and(isNotInToColumns))
-                    .mapToObj(i -> buildCandidate(i, COLUMN, FREECELL, columns.get(i).peek()));
+                    .filter(hasMultipleCards.and(isNotInSequence).and(isNotFoundationable))
+                    .mapToObj(i -> new Candidate(toArray(peek(i)), COLUMN, i, FREECELL, freeCellAt()));
         }
         return Stream.empty();
+    }
+
+    private int freeCellAt() {
+        return range(0, freeCells().length).filter(i -> isNull(freeCells()[i])).findFirst().orElse(-1);
     }
 
     protected boolean isFoundationable(Card card) {
@@ -118,129 +195,6 @@ public class FreeCellBoard extends GameBoard {
         var foundationCard = foundations[suitCode(card)];
 
         return nonNull(foundationCard) && card.isHigherOfSameSuit(foundationCard);
-    }
-
-    protected Stream<Candidate> getTargetCandidates(Candidate candidate) {
-        return range(0, columns.size())
-                .filter(i -> isAppendableToColumn(i, candidate))
-                .filter(i -> isMovable(candidate, i))
-                .mapToObj(i -> Candidate.buildColumnCandidate(candidate, i));
-    }
-
-    protected boolean isAppendableToColumn(int i, Candidate candidate) {
-        var column = columns.get(i);
-
-        if (column.isEmpty()) {
-            return !candidate.isFromColumn() || isNotAtBottom(candidate);
-        }
-        return Optional.of(column)
-                .map(Column::peek)
-                .map(card -> card.isHigherWithDifferentColor(candidate.peek()))
-                .orElse(true);
-    }
-
-    private boolean isNotAtBottom(Candidate candidate) {
-        return column(candidate.from()).size() > candidate.cards().length;
-    }
-
-    protected boolean isMovable(Candidate candidate, int to) {
-        return Optional.of(candidate)
-                .map(Candidate::cards)
-                .map(it -> it.length <= maxCardsToMove(to))
-                .orElse(false);
-    }
-
-    protected Stream<Candidate> findFreeCellToColumnCandidates() {
-        return range(0, freeCells.length)
-                .filter(i -> nonNull(freeCells[i]))
-                .mapToObj(i -> buildCandidate(i, FREECELL, COLUMN, freeCells[i]));
-    }
-
-    protected Stream<Candidate> getColumnToColumnCandidates() {
-        return range(0, columns.size())
-                .mapToObj(this::findCandidateAtColumn)
-                .filter(isNotNull);
-    }
-
-    protected Candidate findCandidateAtColumn(int col) {
-        return Optional.of(col)
-                .map(columns::get)
-                .filter(listNotEmpty)
-                .filter(it -> !isFoundationable(it.peek()))
-                .map(this::findCandidateAtColumn)
-                .filter(listNotEmpty)
-                .map(it -> buildCandidate(col, COLUMN, it.toArray(Card[]::new)))
-                .orElse(null);
-    }
-
-    protected List<Card> findCandidateAtColumn(Column column) {
-        var ceiling = column.size() - 1;
-        var collector = new LinkedList<Card>();
-
-        for (int i = ceiling; i >= 0; i--) {
-            var card = column.get(i);
-
-            if (collector.isEmpty() || card.isHigherWithDifferentColor(collector.get(0))) {
-                collector.add(0, card);
-            } else {
-                break;
-            }
-        }
-        return collector;
-    }
-
-    protected int getCardsInSequence(Column column) {
-        if (column.isNotEmpty()) {
-            return 1 + (int) range(1, column.size())
-                    .filter(i -> column.get(i - 1).isHigherWithDifferentColor(column.get(i)))
-                    .count();
-        }
-        return 0;
-    }
-
-    protected List<Candidate> cleanupCandidates(List<Candidate> candidates) {
-        range(0, candidates.size() - 1)
-                .forEach(i -> cleanupCandidates(candidates, i));
-        return candidates.stream().filter(isNotNull).toList();
-    }
-
-    private static void cleanupCandidates(List<Candidate> candidates, int i) {
-        var a = candidates.get(i);
-
-        if (nonNull(a)) {
-            range(i + 1, candidates.size())
-                    .forEach(j -> cleanupCandidates(candidates, i, a, j));
-        }
-    }
-
-    private static void cleanupCandidates(List<Candidate> candidates, int i, Candidate a, int j) {
-        var b = candidates.get(j);
-
-        if (nonNull(b) && a.peek().equals(b.peek())) {
-            if (a.isToFoundation()) {
-                candidates.set(j, null);
-            } else if (b.isToFoundation()) {
-                candidates.set(i, null);
-            }
-        }
-    }
-
-    protected Stream<Candidate> getFoundationCandidates() {
-        return concat(getFreeCellToFoundation(), getColumnToFoundation());
-    }
-
-    protected Stream<Candidate> getColumnToFoundation() {
-        return range(0, columns.size())
-                .filter(i -> ObjectUtils.isNotEmpty(columns.get(i)))
-                .filter(i -> isFoundationable(columns.get(i).peek()))
-                .mapToObj(i -> buildFoundationCandidate(columns.get(i).peek(), COLUMN, i));
-    }
-
-    protected Stream<Candidate> getFreeCellToFoundation() {
-        return range(0, freeCells.length)
-                .filter(i -> nonNull(freeCells[i]))
-                .filter(i -> isFoundationable(freeCells[i]))
-                .mapToObj(i -> buildFoundationCandidate(freeCells[i], FREECELL, i));
     }
 
     /*****************************************************************************************************************
@@ -257,7 +211,7 @@ public class FreeCellBoard extends GameBoard {
     protected Candidate removeFromOrigin(Candidate candidate) {
         switch (candidate.origin()) {
             case COLUMN -> {
-                var column = columns.get(candidate.from());
+                var column = column(candidate.from());
 
                 column.subList(column.size() - candidate.cards().length, column.size()).clear();
             }
@@ -311,7 +265,7 @@ public class FreeCellBoard extends GameBoard {
     }
 
     protected int maxCardsToMove(int to) {
-        return countFreeCells() + countEmptyColumns() + (columns().get(to).isEmpty() ? 0 : 1);
+        return countFreeCells() + countEmptyColumns() + (column(to).isEmpty() ? 0 : 1);
     }
 
     /*****************************************************************************************************************

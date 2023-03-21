@@ -84,10 +84,7 @@ public record Card(int at, String value, String suit, String raw) {
     }
 
     public boolean isHigherOfSameColor(Card other) {
-        if (nonNull(other)) {
-            return isSameColor(other) && isHigherRank(other);
-        }
-        return isAce();
+        return nonNull(other) && isSameColor(other) && isHigherRank(other);
     }
 
     public boolean isLowerWithSameSuit(Card other) {
@@ -103,10 +100,7 @@ public record Card(int at, String value, String suit, String raw) {
     }
 
     public boolean isSameColor(Card other) {
-        if (nonNull(other)) {
-            return suit.equals(other.suit) || getColor(suit) == getColor(other.suit);
-        }
-        return isAce();
+        return nonNull(other) && (suit.equals(other.suit) || getColor(suit) == getColor(other.suit));
     }
 
     public boolean isDifferentColor(Card other) {
