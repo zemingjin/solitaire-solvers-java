@@ -6,7 +6,6 @@ import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.util.IOHelper;
 
-import java.util.List;
 import java.util.Stack;
 
 import static java.util.Objects.requireNonNull;
@@ -25,6 +24,7 @@ import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
+import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidBoardTest {
@@ -78,7 +78,7 @@ class PyramidBoardTest {
     @Test
     void test_updateBoard() {
         var candidate = board.findCandidates().get(0);
-        var card = candidate.cards().get(0);
+        var card = candidate.cards()[0];
 
         board.updateBoard(candidate);
 
@@ -90,7 +90,7 @@ class PyramidBoardTest {
         assertEquals("27:9s", requireNonNull(board.path().peek())[0].toString());
 
         card = board.deck().peek();
-        var c = List.of(card, board.cards()[LAST_BOARD - 2]);
+        var c = toArray(card, board.cards()[LAST_BOARD - 2]);
         board.updateBoard(new Candidate(c, BOARD, 0, REMOVE, 0));
 
         assertFalse(board.isOpen(card));
@@ -101,7 +101,7 @@ class PyramidBoardTest {
         assertEquals("50:Kh", requireNonNull(board.path().peek())[0].toString());
 
         card = board.deck().peek();
-        candidate = new Candidate(List.of(card), DECKPILE, 0, REMOVE, 0);
+        candidate = new Candidate(toArray(card), DECKPILE, 0, REMOVE, 0);
         assertEquals(22, board.deck().size());
         board.updateBoard(candidate);
         assertEquals(card, requireNonNull(board.path().peek())[0]);
@@ -109,7 +109,7 @@ class PyramidBoardTest {
         assertFalse(board.flippedDeck().isEmpty());
 
         card = board.flippedDeck().peek();
-        candidate = new Candidate(List.of(card), DECKPILE, 0, REMOVE, 0);
+        candidate = new Candidate(toArray(card), DECKPILE, 0, REMOVE, 0);
         board.updateBoard(candidate);
 
         assertTrue(board.flippedDeck().isEmpty());

@@ -72,20 +72,19 @@ public record Card(int at, String value, String suit, String raw) {
     }
 
     public boolean isHigherOfSameSuit(Card other) {
-        return isSameSuit(other) && isHigherOrder(other);
+        return isSameSuit(other) && isHigherRank(other);
     }
 
     public boolean isHigherWithDifferentColor(Card other) {
-        return isDifferentColor(other) && isHigherOrder(other);
+        return isDifferentColor(other) && isHigherRank(other);
     }
 
-    public boolean isHigherOrder(Card other) {
-        return isNull(other) ? isAce()
-                : VALUES.indexOf(value) - VALUES.indexOf(other.value) == 1;
+    public boolean isHigherRank(Card other) {
+        return isNull(other) ? isAce() : (rank() - other.rank()) == 1;
     }
 
     public boolean isHigherOfSameColor(Card other) {
-        return nonNull(other) && isSameColor(other) && isHigherOrder(other);
+        return nonNull(other) && isSameColor(other) && isHigherRank(other);
     }
 
     public boolean isLowerWithSameSuit(Card other) {
@@ -97,11 +96,11 @@ public record Card(int at, String value, String suit, String raw) {
     }
 
     public boolean isSameSuit(Card other) {
-        return suit.equals(other.suit);
+        return isNull(other) || suit.equals(other.suit);
     }
 
     public boolean isSameColor(Card other) {
-        return suit.equals(other.suit) || getColor(suit) == getColor(other.suit);
+        return nonNull(other) && (suit.equals(other.suit) || getColor(suit) == getColor(other.suit));
     }
 
     public boolean isDifferentColor(Card other) {

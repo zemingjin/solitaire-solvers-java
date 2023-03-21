@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.solitaire.model.Card;
 import org.solitaire.model.GameSolver;
 
 import java.util.List;
@@ -20,11 +19,11 @@ import static org.solitaire.util.CardHelper.SPADE;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.checkDuplicates;
-import static org.solitaire.util.CardHelper.rankDifference;
 import static org.solitaire.util.CardHelper.getSuit;
 import static org.solitaire.util.CardHelper.higherCardOfSameSuit;
 import static org.solitaire.util.CardHelper.nextCard;
 import static org.solitaire.util.CardHelper.rank;
+import static org.solitaire.util.CardHelper.rankDifference;
 import static org.solitaire.util.CardHelper.string;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suit;
@@ -123,8 +122,8 @@ public class CardHelperTest {
     @Test
     void test_string() {
         assertEquals("Ad", string(List.of(card("Ad"))));
-        assertEquals("Ad, Ks", string(List.of(new Card[]{card("Ad"), card("Ks")})));
+        assertEquals("Ad, Ks", string(List.of(toArray(card("Ad"), card("Ks")))));
         assertEquals("[Ad, Ks], Qh",
-                string(List.of(new Card[]{card("Ad"), card("Ks")}, card("Qh"))));
+                string(List.of(toArray(card("Ad"), card("Ks")), card("Qh"))));
     }
 }

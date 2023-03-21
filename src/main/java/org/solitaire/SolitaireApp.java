@@ -49,6 +49,12 @@ public class SolitaireApp {
 
     private static final SolitaireApp app = new SolitaireApp();
     private GameSolver solver;
+    @SuppressWarnings("rawtypes")
+    private final Function<SolutionType, Supplier<List>> pathSupplier = type ->
+            switch (type) {
+                case One, Shortest -> solver::shortestPath;
+                case Longest -> solver::longestPath;
+            };
     private StopWatch stopWatch;
 
     public static SolitaireApp app() {
@@ -141,13 +147,6 @@ public class SolitaireApp {
                 .filter(listNotEmpty)
                 .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), solver.pathString(it)));
     }
-
-    @SuppressWarnings("rawtypes")
-    private final Function<SolutionType, Supplier<List>> pathSupplier = type ->
-            switch (type) {
-                case One, Shortest -> solver::shortestPath;
-                case Longest -> solver::longestPath;
-            };
 
     public void checkMaxScore(GameSolver solver) {
         try {

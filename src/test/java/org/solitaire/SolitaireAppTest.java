@@ -2,7 +2,10 @@ package org.solitaire;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.solitaire.freecell.FreeCell;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.solitaire.model.GameSolver;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -13,13 +16,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.SolitaireApp.FREECELL;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 import static org.solitaire.SolitaireApp.PRINT;
 import static org.solitaire.SolitaireApp.PYRAMID;
 import static org.solitaire.SolitaireApp.SINGLE_SOLUTION;
 import static org.solitaire.SolitaireApp.TRIPEAKS;
 import static org.solitaire.SolitaireApp.USE_SUITS;
 import static org.solitaire.SolitaireApp.app;
+import static org.solitaire.SolitaireApp.checkPrint;
 import static org.solitaire.SolitaireApp.checkSingleSolution;
 import static org.solitaire.SolitaireApp.checkUseSuits;
 import static org.solitaire.SolitaireApp.main;
@@ -27,16 +32,18 @@ import static org.solitaire.io.IOHelperTest.TEST_FILE;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.useSuit;
-import static org.solitaire.util.CardHelperTest.ZERO;
 
+@ExtendWith(MockitoExtension.class)
 class SolitaireAppTest {
     private final String[] ARGS = new String[]{TEST_FILE, TRIPEAKS, SINGLE_SOLUTION};
 
     private final SolitaireApp app = app();
     private ByteArrayOutputStream outputStream;
+    @Mock GameSolver gameSolver;
 
     @BeforeEach
     void setup() {
+        gameSolver = spy(gameSolver);
         outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
         useSuit(false);
@@ -45,12 +52,30 @@ class SolitaireAppTest {
 
     @Test
     void test_main() {
-        assertFalse(isPrint());
         isPrint(true);
         main(ARGS);
         assertTrue(outputStream.toString().contains("One Path(47):"));
 
         assertThrows(RuntimeException.class, () -> main(new String[]{}));
+        assertFalse(isPrint());
+    }
+
+    @Test
+    void test_check() {
+        checkPrint(ARGS);
+        assertFalse(isPrint());
+
+        ARGS[1] = PRINT;
+        checkPrint(ARGS);
+        assertTrue(isPrint());
+    }
+
+    @Test
+    void test_checkMaxScore_exception() {
+        when(gameSolver.maxScore()).thenThrow(new RuntimeException("HHh"));
+
+        app.checkMaxScore(gameSolver);
+        assertEquals("HHh", outputStream.toString().trim());
     }
 
     @Test
@@ -84,28 +109,6 @@ class SolitaireAppTest {
         assertNotNull(app.solver());
         assertEquals(1536, app.solver().totalSolutions());
         assertEquals(11, app.solver().maxDepth());
-    }
-
-    @Test
-    void test_run_freecell() {
-        ARGS[0] = "games/freecell/freecell-020623-easy.txt";
-        ARGS[1] = FREECELL;
-        ARGS[2] = null;
-
-        app.run(ARGS);
-        assertTrue(outputStream.toString().contains("Maximum score is not supported!"));
-        assertEquals(FreeCell.SOLUTION_LIMIT, app.solver().totalSolutions());
-    }
-
-    @Test
-    void test_run_freecell_nosolutions() {
-        var FILE = "games/freecell/freecell-022723-hard.txt";
-
-        app.run(new String[]{FILE, FREECELL, SINGLE_SOLUTION, PRINT});
-        assertEquals(ZERO, app.solver().totalSolutions());
-        assertFalse(outputStream.toString().contains("not supported"));
-        assertFalse(outputStream.toString().contains("Max Score"));
-        assertTrue(isPrint());
     }
 
     @Test

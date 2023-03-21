@@ -30,16 +30,16 @@ class SpiderHelperTest {
 
         assertNotNull(state);
         assertEquals(LAST_COLUMN, state.columns().size());
-        assertEquals(6, state.columns().get(0).size());
-        assertEquals(5, state.columns().get(0).openAt());
-        assertEquals(5, state.columns().get(4).size());
-        assertEquals(4, state.columns().get(4).openAt());
-        assertEquals("0:4h", state.columns().get(0).get(0).toString());
-        assertEquals("5:Th", state.columns().get(0).peek().toString());
-        assertEquals("18:As", state.columns().get(3).get(0).toString());
-        assertEquals("23:9s", state.columns().get(3).peek().toString());
-        assertEquals("24:Th", state.columns().get(NUM_LONG).get(0).toString());
-        assertEquals("28:3s", state.columns().get(NUM_LONG).get(COL_LONG - 2).toString());
+        assertEquals(6, state.column(0).size());
+        assertEquals(5, state.column(0).openAt());
+        assertEquals(5, state.column(4).size());
+        assertEquals(4, state.column(4).openAt());
+        assertEquals("0:4h", state.column(0).get(0).toString());
+        assertEquals("5:Th", state.column(0).peek().toString());
+        assertEquals("18:As", state.column(3).get(0).toString());
+        assertEquals("23:9s", state.column(3).peek().toString());
+        assertEquals("24:Th", state.column(NUM_LONG).get(0).toString());
+        assertEquals("28:3s", state.column(NUM_LONG).get(COL_LONG - 2).toString());
         assertEquals(LAST_DECK, state.deck.size());
         assertEquals("54:5s", state.deck.get(0).toString());
         assertEquals("103:9h", state.deck.get(LAST_DECK - 1).toString());

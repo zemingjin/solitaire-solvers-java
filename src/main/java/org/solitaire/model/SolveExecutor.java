@@ -28,12 +28,68 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     private final Stack<BoardStack<T>> stack = new Stack<>();
     private final List<Consumer<List<S>>> solutionConsumers = new LinkedList<>();
+    private final Function<Stream<T>, Stream<T>> sortBoards = it -> it.sorted(comparingInt(T::score));
+    private final Consumer<Collection<T>> push = boards -> stack().add(new BoardStack<>(boards));
+    private final Consumer<Collection<T>> addBoards =
+            boards -> Optional.of(boards)
+                    .filter(listNotEmpty)
+                    .ifPresent(push);
+    private final Consumer<T> addBoard =
+            board -> Optional.ofNullable(board)
+                    .map(List::of)
+                    .ifPresent(addBoards());
+    private final Function<Stream<T>, T> getBestBoard =
+            boards -> boards.reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
+    private final Function<BoardStack<T>, T> getBoard = boards -> {
+        var board = boards.pop();
+
+        if (boards.isEmpty()) {
+            stack.pop();
+        }
+        return board;
+    };
     private int totalScenarios = 0;
     private int totalSolutions = 0;
+    private final Predicate<T> isUnsolvedBoard = board -> {
+        if (nonNull(board) && board.isSolved() && isContinuing()) {
+            solutionConsumers.forEach(it -> it.accept(board.path()));
+            return false;
+        }
+        return true;
+    };
     private Integer maxDepth = 0;
     private Function<T, T> cloner;
+    @SuppressWarnings("unchecked")
+    private final Function<Pair<T, U>, T> clone_Update = pair -> (T) clone(pair.getLeft()).updateBoard(pair.getRight());
+    private final Function<Pair<List<U>, T>, Stream<T>> applyCandidates =
+            pair -> pair.getLeft().parallelStream()
+                    .map(it -> Pair.of(pair.getRight(), it))
+                    .map(clone_Update)
+                    .filter(isUnsolvedBoard)
+                    .filter(isNotNull)
+                    .peek(Board::score);
+    private final Function<T, Stream<T>> searchBoard = board -> {
+        totalScenarios++;
+        return Optional.of(board)
+                .map(T::findCandidates)
+                .filter(listNotEmpty)
+                .map(it -> Pair.of(it, board))
+                .map(applyCandidates)
+                .stream()
+                .flatMap(it -> it);
+    };
     private List<S> shortestPath;
     private List<S> longestPath;
+    protected final Consumer<List<S>> defaultSolutionConsumer = path -> {
+        totalSolutions(totalSolutions() + 1);
+        if (nonNull(path) && isNotEmpty(path)) {
+            checkShortestPath(path);
+            checkLongestPath(path);
+            if (isPrint()) {
+                System.out.printf("%d: %s\n", path.size(), string(path));
+            }
+        }
+    };
 
     public SolveExecutor(T initialBoard) {
         addBoard.accept(initialBoard);
@@ -100,7 +156,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
                 .map(sortBoards)
                 .map(Stream::toList)
                 .filter(listNotEmpty)
-                .ifPresent(addBoards);
+                .ifPresent(addBoards());
     }
 
     public void solveByHSD(T board) {
@@ -123,75 +179,17 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         return !singleSolution() || totalSolutions() == 0;
     }
 
-    private final Function<Stream<T>, Stream<T>> sortBoards = it -> it.sorted(comparingInt(T::score));
-
-    @SuppressWarnings("unchecked")
-    private final Function<Pair<T, U>, T> clone_Update = pair -> (T) clone(pair.getLeft()).updateBoard(pair.getRight());
-
-    private final Predicate<T> isUnsolvedBoard = board -> {
-        if (nonNull(board) && board.isSolved() && isContinuing()) {
-            solutionConsumers.forEach(it -> it.accept(board.path()));
-            return false;
-        }
-        return true;
-    };
-
-    private final Function<Pair<List<U>, T>, Stream<T>> applyCandidates =
-            pair -> pair.getLeft().parallelStream()
-                    .map(it -> Pair.of(pair.getRight(), it))
-                    .map(clone_Update)
-                    .filter(isUnsolvedBoard)
-                    .filter(isNotNull)
-                    .peek(Board::score);
-
     public Function<Pair<List<U>, T>, Stream<T>> applyCandidates() {
         return applyCandidates;
     }
-
-    private final Function<T, Stream<T>> searchBoard = board -> {
-        totalScenarios++;
-        return Optional.of(board)
-                .map(T::findCandidates)
-                .filter(listNotEmpty)
-                .map(it -> Pair.of(it, board))
-                .map(applyCandidates)
-                .stream()
-                .flatMap(it -> it);
-    };
-
-    private final Consumer<Collection<T>> push = boards -> stack().add(new BoardStack<>(boards));
-
-    private final Consumer<Collection<T>> addBoards =
-            boards -> Optional.of(boards)
-                    .filter(listNotEmpty)
-                    .ifPresent(push);
 
     public Consumer<Collection<T>> addBoards() {
         return addBoards;
     }
 
-    private final Consumer<T> addBoard =
-            board -> Optional.ofNullable(board)
-                    .map(List::of)
-                    .ifPresent(addBoards);
-
     public Consumer<T> addBoard() {
         return addBoard;
     }
-
-    private final Function<Stream<T>, T> getBestBoard =
-            boards -> boards.reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
-
-    protected final Consumer<List<S>> defaultSolutionConsumer = path -> {
-        totalSolutions(totalSolutions() + 1);
-        if (nonNull(path) && isNotEmpty(path)) {
-            checkShortestPath(path);
-            checkLongestPath(path);
-            if (isPrint()) {
-                System.out.printf("%d: %s\n", path.size(), string(path));
-            }
-        }
-    };
 
     private void checkLongestPath(List<S> path) {
         if (!singleSolution() && (isNull(longestPath()) || longestPath().size() < path.size())) {
@@ -225,19 +223,11 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         throw new RuntimeException("Maximum score is not supported!");
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public String pathString(List path) {
         return string(path);
     }
-
-    private final Function<BoardStack<T>, T> getBoard = boards -> {
-        var board = boards.pop();
-
-        if (boards.isEmpty()) {
-            stack.pop();
-        }
-        return board;
-    };
 
     protected void checkMaxDepth() {
         if (stack.size() > maxDepth()) {
@@ -246,7 +236,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     public T board() {
-        return stack.peek().peek();
+        return stack.isEmpty() ? null : stack.peek().peek();
     }
 
     public T clone(T board) {

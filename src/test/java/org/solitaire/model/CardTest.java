@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class CardTest {
@@ -24,12 +25,25 @@ class CardTest {
 
     @Test
     void test_isHigherOfSameColor() {
-        var card = buildCard("2d");
+        var card = card("2d");
 
         assertTrue(card.isHigherOfSameColor(buildCard("Ad")));
         assertFalse(card.isHigherOfSameColor(buildCard("Ac")));
         assertFalse(card.isHigherOfSameColor(buildCard("3d")));
         assertTrue(buildCard("3d").isHigherOfSameColor(card));
+
+        assertFalse(card.isHigherOfSameColor(null));
+        assertFalse(card("Ad").isHigherOfSameColor(null));
+    }
+
+    @Test
+    void test_isSameColor() {
+        var card = card("Ts");
+
+        assertTrue(card.isSameColor(card("3c")));
+        assertTrue(card.isSameColor(card("3s")));
+
+        assertFalse(card.isSameColor(null));
     }
 
     @Test

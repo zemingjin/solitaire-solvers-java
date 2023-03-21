@@ -4,6 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
+import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.util.IOHelper;
 
@@ -26,6 +27,7 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
+import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.TWO;
 import static org.solitaire.util.CardHelperTest.ZERO;
@@ -61,8 +63,8 @@ class SpiderBoardTest {
     void test_score() {
         assertEquals(-173, board.score());
 
-        board.columns().get(9).add(board.columns().get(5).pop());
-        board.columns().get(9).add(card("Ah"));
+        board.column(9).add(board.column(5).pop());
+        board.column(9).add(card("Ah"));
         board.score(0);
         assertEquals(-170, board.score());
     }
@@ -72,39 +74,39 @@ class SpiderBoardTest {
         assertEquals(TWO, board.countBlockers(0));
         assertEquals(ZERO, board.countBlockers(1));
 
-        board.columns().get(2).add(card("Js"));
+        board.column(2).add(card("Js"));
         assertEquals(1, board.countBlockers(2));
 
-        board.columns().get(3).remove(3);
+        board.column(3).remove(3);
         assertEquals(TWO, board.countBlockers(4));
 
         var card = card("8s");
-        board.columns().get(4).add(card("8s"));
+        board.column(4).add(card("8s"));
         while (board.deck().contains(card)) board.deck().remove(card);
         assertEquals(ZERO, board.countBlockers(4));
 
-        board.columns().get(3).clear();
+        board.column(3).clear();
         assertEquals(ZERO, board.countBlockers(3));
     }
 
     @Test
     void test_calcSequenceScore() {
-        board.columns().get(9).set(0, card("Kh"));
+        board.column(9).set(0, card("Kh"));
 
-        assertEquals(25, board.calcSequenceScore(Pair.of(9, board.columns().get(9))));
+        assertEquals(25, board.calcSequenceScore(Pair.of(9, board.column(9))));
     }
 
     @Test
     void test_isNotTheWholeColumn() {
-        var source = board.columns().get(1);
-        var candidate = new Candidate(source.subList(1, source.size()), COLUMN, 1, COLUMN, 0);
+        var source = board.column(1);
+        var candidate = new Candidate(source.subList(1, source.size()).toArray(Card[]::new), COLUMN, 1, COLUMN, 0);
 
         assertTrue(board.isMovableToEmptyColumn.test(candidate));
 
-        candidate = new Candidate(source, COLUMN, 1, COLUMN, 0);
+        candidate = new Candidate(source.toArray(Card[]::new), COLUMN, 1, COLUMN, 0);
         assertTrue(board.isMovableToEmptyColumn.test(candidate));
 
-        board.columns().get(0).clear();
+        board.column(0).clear();
         assertFalse(board.isMovableToEmptyColumn.test(candidate));
     }
 
@@ -125,7 +127,7 @@ class SpiderBoardTest {
         assertEquals(7, candidates.get(0).to());
         assertEquals(9, candidates.get(1).to());
 
-        board.columns().get(7).clear();
+        board.column(7).clear();
 
         candidates = board.findCandidates();
 
@@ -151,8 +153,8 @@ class SpiderBoardTest {
         assertEquals(3, candidates.size());
         assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
 
-        board.columns().get(0).clear();
-        board.columns().get(0).openAt(-1);
+        board.column(0).clear();
+        board.column(0).openAt(-1);
         mockColumn(0, 9, 8);
 
         candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
@@ -163,8 +165,8 @@ class SpiderBoardTest {
 
     @Test
     void test_copy() {
-        board.columns().get(9).add(board.columns().get(5).pop());
-        board.columns().get(9).add(card("Ah"));
+        board.column(9).add(board.column(5).pop());
+        board.column(9).add(card("Ah"));
         board.score();
         var copy = new SpiderBoard(board);
 
@@ -195,10 +197,10 @@ class SpiderBoardTest {
     @Test
     void test_isMovable_king() {
         var card = card("Kd");
-        var column = board.columns().get(0);
+        var column = board.column(0);
 
         column.add(card);
-        var candidate = new Candidate(List.of(card), COLUMN, 0, COLUMN, 1);
+        var candidate = new Candidate(toArray(card), COLUMN, 0, COLUMN, 1);
 
         assertTrue(board.isMovable(candidate));
 
@@ -211,7 +213,7 @@ class SpiderBoardTest {
     void test_checkForRuns() {
         var column = mockRun().openAt(0);
         board.columns().set(0, column);
-        var candidate = buildCandidate(0, COLUMN, List.of(column.peek()), 0);
+        var candidate = buildCandidate(0, COLUMN, toArray(column.peek()), 0);
 
         assertEquals(13, column.size());
         assertEquals("0:Kd", column.get(0).toString());
@@ -242,8 +244,8 @@ class SpiderBoardTest {
 
     @Test
     void test_checkForRuns_noRuns() {
-        var column = board.columns().get(0);
-        var candidate = buildCandidate(0, COLUMN, List.of(column.peek()), 0);
+        var column = board.column(0);
+        var candidate = buildCandidate(0, COLUMN, toArray(column.peek()), 0);
         column.addAll(mockRun(10));
 
         assertEquals(16, column.size());
@@ -260,7 +262,7 @@ class SpiderBoardTest {
     void test_appendToTarget() {
         var candidates = board.findCandidates();
         var candidate = candidates.get(1);
-        var column = board.columns().get(candidate.to());
+        var column = board.column(candidate.to());
 
         assertEquals(5, column.size());
         assertEquals("53:3h", column.peek().toString());
@@ -288,14 +290,14 @@ class SpiderBoardTest {
         assertEquals(1, result.path().size());
         assertEquals("^0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
         assertTrue(range(0, board.columns().size())
-                .allMatch(i -> candidate.cards().get(i).equals(board.columns().get(i).peek())));
+                .allMatch(i -> candidate.cards()[i].equals(board.column(i).peek())));
     }
 
     @Test
     void test_isNoEmptyColumn() {
         assertTrue(board.isNoEmptyColumn());
 
-        board.columns().get(0).clear();
+        board.column(0).clear();
         assertFalse(board.isNoEmptyColumn());
     }
 
@@ -303,7 +305,7 @@ class SpiderBoardTest {
     void test_removeFromSource() {
         var candidates = board.findCandidates();
         var candidate = candidates.get(1);
-        var column = board.columns().get(candidate.from());
+        var column = board.column(candidate.from());
 
         assertEquals(5, column.size());
         assertEquals("33:2h", column.peek().toString());
@@ -330,15 +332,15 @@ class SpiderBoardTest {
 
     @Test
     void test_findCandidates_findCandidatesOfDifferentColors() {
-        board.columns().get(1).pop();
-        board.columns().get(9).pop();
-        board.columns().get(2).add(card("Js"));
+        board.column(1).pop();
+        board.column(9).pop();
+        board.column(2).add(card("Js"));
 
         var candidates = board.findCandidates();
 
         assertNotNull(candidates);
         assertEquals(8, candidates.size());
-        assertEquals(8, candidates.stream().filter(it -> it.cards().size() == 1).count());
+        assertEquals(8, candidates.stream().filter(it -> it.cards().length == 1).count());
     }
 
     @Test
@@ -355,7 +357,7 @@ class SpiderBoardTest {
     void test_isNotEmpty() {
         assertTrue(board.isNotEmpty.test(0));
 
-        board.columns().get(0).clear();
+        board.column(0).clear();
         assertFalse(board.isNotEmpty.test(0));
     }
 
@@ -365,8 +367,8 @@ class SpiderBoardTest {
 
         assertTrue(result.isEmpty());
 
-        board.columns().get(1).add(card("Th"));
-        board.columns().get(0).remove(0);
+        board.column(1).add(card("Th"));
+        board.column(0).remove(0);
         result = board.verify();
         assertEquals(2, result.size());
         assertEquals("[Extra card: Th, Missing card: 4h]", result.toString());
@@ -374,7 +376,7 @@ class SpiderBoardTest {
 
     private void mockColumn(int col, int h, int l) {
         for (int i = h; i >= l; i--) {
-            board.columns().get(col).add(card(VALUES.charAt(i) + "h"));
+            board.column(col).add(card(VALUES.charAt(i) + "h"));
         }
     }
 }
