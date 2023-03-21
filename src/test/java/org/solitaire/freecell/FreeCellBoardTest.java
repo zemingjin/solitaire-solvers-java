@@ -463,4 +463,22 @@ public class FreeCellBoardTest {
         board.foundations()[suitCode(card)] = card("Kc");
         assertEquals(4, board.calcBlockerScore());
     }
+
+    @Test
+    void test_calcColumnScore() {
+        assertEquals(-6, board.score());
+        assertEquals(0, board.calcColumnScore());
+
+        board.score(0);
+        board.column(7).clear();
+        board.column(7).addAll(List.of(card("Qd"), card("Jc"), card("Th")));
+        assertEquals(-3, board.score());
+        assertEquals(3, board.calcColumnScore());
+
+        board.score(0);
+        board.column(7).clear();
+        board.column(7).addAll(List.of(card("Ks"), card("Qd"), card("Jc")));
+        assertEquals(0, board.score());
+        assertEquals(6, board.calcColumnScore());
+    }
 }

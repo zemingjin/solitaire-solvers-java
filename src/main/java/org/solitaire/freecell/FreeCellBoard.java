@@ -276,15 +276,13 @@ public class FreeCellBoard extends GameBoard {
     @Override
     public int score() {
         if (super.score() == 0) {
-            var blockerScores = calcBlockerScore();
-            var foundationScore = Stream.of(foundations).mapToInt(CardHelper::rank).sum();
-
-            score(
-                    -blockerScores
-                            + foundationScore
-            );
+            score(calcFoundationScore() - calcBlockerScore() + calcColumnScore());
         }
         return super.score();
+    }
+
+    private int calcFoundationScore() {
+        return Stream.of(foundations).mapToInt(CardHelper::rank).sum();
     }
 
     protected int calcBlockerScore() {
@@ -293,6 +291,24 @@ public class FreeCellBoard extends GameBoard {
                 .filter(isNotNull)
                 .mapToInt(calcBlockers)
                 .sum();
+    }
+
+    protected int calcColumnScore() {
+        return columns().stream()
+                .mapToInt(this::calcColumnScore)
+                .sum();
+    }
+
+    private transient final Predicate<Column> isOrderedColumn = column ->
+        range(0, column.size() - 1)
+                .allMatch(i -> column.get(i).isHigherWithDifferentColor(column.get(i + 1)));
+
+    private int calcColumnScore(Column column) {
+        return Optional.of(column)
+                .filter(listNotEmpty)
+                .filter(isOrderedColumn)
+                .map(it -> it.get(0).isKing() ? it.size() * 2 : it.size())
+                .orElse(0);
     }
 
     @Override
