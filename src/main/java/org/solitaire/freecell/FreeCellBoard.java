@@ -131,8 +131,7 @@ public class FreeCellBoard extends GameBoard {
         var column = columns.get(i);
 
         if (column.isEmpty()) {
-            return isNotAtBottom(candidate);
-//            return !candidate.isFromColumn() || isNotAtBottom(candidate);
+            return !candidate.isFromColumn() || isNotAtBottom(candidate);
         }
         return Optional.of(column)
                 .map(Column::peek)
