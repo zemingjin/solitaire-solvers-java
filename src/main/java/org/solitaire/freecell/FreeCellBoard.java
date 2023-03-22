@@ -299,7 +299,7 @@ public class FreeCellBoard extends GameBoard {
                 .sum();
     }
 
-    private transient final Predicate<Column> isOrderedColumn = column ->
+    protected transient final Predicate<Column> isOrderedColumn = column ->
         range(0, column.size() - 1)
                 .allMatch(i -> column.get(i).isHigherWithDifferentColor(column.get(i + 1)));
 

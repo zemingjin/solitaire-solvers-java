@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 import org.solitaire.util.CardHelper;
 import org.solitaire.util.IOHelper;
 
@@ -480,5 +481,20 @@ public class FreeCellBoardTest {
         board.column(7).addAll(List.of(card("Ks"), card("Qd"), card("Jc")));
         assertEquals(0, board.score());
         assertEquals(6, board.calcColumnScore());
+    }
+
+    @Test
+    void test_isOrderedColumn() {
+        var column = new Column();
+        assertTrue(board.isOrderedColumn.test(column));
+
+        column.add(card("Kc"));
+        assertTrue(board.isOrderedColumn.test(column));
+
+        column.add(card("Qh"));
+        assertTrue(board.isOrderedColumn.test(column));
+
+        column.add(card("Ts"));
+        assertFalse(board.isOrderedColumn.test(column));
     }
 }

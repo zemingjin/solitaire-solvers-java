@@ -1,6 +1,5 @@
 package org.solitaire.spider;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
@@ -93,7 +92,7 @@ class SpiderBoardTest {
     void test_calcSequenceScore() {
         board.column(9).set(0, card("Kh"));
 
-        assertEquals(25, board.calcSequenceScore(Pair.of(9, board.column(9))));
+        assertEquals(25, board.calcSequenceScore(9, board.column(9)));
     }
 
     @Test

@@ -2,7 +2,6 @@ package org.solitaire.spider;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.function.TriFunction;
-import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
@@ -32,8 +31,6 @@ import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
-import static org.solitaire.util.CardHelper.VALUES;
-import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.suitCode;
 import static org.solitaire.util.CardHelper.toArray;
@@ -81,16 +78,15 @@ public class SpiderBoard extends GameBoard {
     protected Stream<Candidate> findCandidates(TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
                 .filter(isNotEmpty)
-                .mapToObj(i -> Pair.of(i, column(i)))
-                .map(it -> Pair.of(it.getLeft(), getOrderedCardsAtColumn(it.getRight())))
-                .flatMap(it -> findCandidates(it, finder))
+                .mapToObj(i -> findCandidates(i, getOrderedCardsAtColumn(column(i)), finder))
+                .flatMap(flattenStream)
                 .filter(this::isMovable);
     }
 
-    private Stream<Candidate> findCandidates(Pair<Integer, List<Card>> pair,
+    private Stream<Candidate> findCandidates(int i, List<Card> cards,
                                              TriFunction<Integer, Integer, List<Card>, Candidate> finder) {
         return range(0, columns().size())
-                .mapToObj(j -> finder.apply(pair.getLeft(), j, pair.getRight()))
+                .mapToObj(j -> finder.apply(i, j, cards))
                 .filter(isNotNull);
     }
 
@@ -289,14 +285,9 @@ public class SpiderBoard extends GameBoard {
         var card = cards.get(0);
 
         if (card.isNotKing()) {
-            var next = card(VALUES.charAt(card.rank()) + card.suit());
-            var value = range(0, columns().size())
-                    .filter(i -> i != col)
-                    .mapToObj(columns()::get)
-                    .filter(listNotEmpty)
-                    .filter(it -> it.contains(next))
-                    .mapToInt(it -> it.size() - it.lastIndexOf(next) - 1)
-                    .reduce(MAX_VALUE, Math::min);
+            var next = card.next();
+            var value = valueFromColumns(col, next);
+
             if (value == MAX_VALUE) {
                 return deck.indexOf(next) / columns().size();
             }
@@ -305,22 +296,30 @@ public class SpiderBoard extends GameBoard {
         return 0;
     }
 
+    private int valueFromColumns(int col, Card next) {
+        return range(0, columns().size())
+                .filter(i -> i != col)
+                .mapToObj(this::column)
+                .filter(listNotEmpty)
+                .filter(it -> it.contains(next))
+                .mapToInt(it -> it.size() - it.lastIndexOf(next) - 1)
+                .reduce(MAX_VALUE, Math::min);
+    }
+
     // The bigger, the better
     protected int calcSequences() {
         return range(0, columns().size())
-                .filter(i -> isNotEmpty(column(i)))
-                .mapToObj(i -> Pair.of(i, getOrderedCardsAtColumn(columns.get(i))))
-                .mapToInt(this::calcSequenceScore)
+                .filter(isNotEmpty)
+                .map(i -> calcSequenceScore(i, getOrderedCardsAtColumn(column(i))))
                 .sum();
     }
 
-    protected int calcSequenceScore(Pair<Integer, List<Card>> pair) {
-        var cards = pair.getRight();
+    protected int calcSequenceScore(int i, List<Card> cards) {
         var size = cards.size();
 
         if (size == 1) {
             return 1;
-        } else if (isBestSequence(cards, pair.getLeft())) {
+        } else if (isBestSequence(cards, i)) {
             return size * size;
         }
         return size * 2;
@@ -329,7 +328,6 @@ public class SpiderBoard extends GameBoard {
     boolean isBestSequence(List<Card> cards, int col) {
         return cards.get(0).isKing() && cards.size() == columns.get(col).size();
     }
-
 
     @Override
     public List<String> verify() {
