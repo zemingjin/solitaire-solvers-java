@@ -3,6 +3,7 @@ package org.solitaire.model;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiPredicate;
@@ -30,19 +31,18 @@ public class GameBoard implements Board<String, Candidate> {
 
     protected transient final Function<Column, Card[]> getOrderedCards = column -> {
         var floor = max(column.openAt(), 0);
+        var collector = new LinkedList<Card>();
 
-        for (int i = column.size() - 1; i >= floor; ) {
+        for (int i = column.size() - 1; i >= floor; i--) {
             var card = column.get(i);
 
-            if (i > floor && isInSequence().test(column.get(i - 1), card)) {
-                i--;
-            } else if (card.isNotKing() || i > 0) {
-                return column.subList(i, column.size()).toArray(Card[]::new);
+            if (collector.isEmpty() || isInSequence().test(card, collector.get(0))) {
+                collector.add(0, card);
             } else {
                 break;
             }
         }
-        return new Card[]{};
+        return collector.toArray(Card[]::new);
     };
 
     private transient BiPredicate<Card, Card> isInSequence;

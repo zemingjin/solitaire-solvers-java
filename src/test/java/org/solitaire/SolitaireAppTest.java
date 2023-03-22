@@ -55,6 +55,7 @@ class SolitaireAppTest {
         isPrint(true);
         main(ARGS);
         assertTrue(outputStream.toString().contains("One Path(47):"));
+        assertTrue(outputStream.toString().contains(TEST_FILE));
 
         assertThrows(RuntimeException.class, () -> main(new String[]{}));
         assertFalse(isPrint());

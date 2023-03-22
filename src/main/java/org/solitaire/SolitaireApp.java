@@ -114,6 +114,7 @@ public class SolitaireApp {
 
         stopWatch().stop();
 
+        System.out.printf("Solving %s\n", args[0]);
         System.out.printf("Found %,d solutions in %,d scenarios - total time: %s with maximum depth of %d.\n",
                 solver().totalSolutions(), solver().totalScenarios(), stopWatch.formatTime(), solver().maxDepth());
         checkPath(solver, singleSolution() ? One : Shortest);

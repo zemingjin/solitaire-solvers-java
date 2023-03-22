@@ -384,7 +384,7 @@ class KlondikeBoardTest {
 
         board.column(0).add(card("Kh"));
         result = board.getOrderedCards().apply(board.column(0));
-        assertEquals(0, result.length);
+        assertEquals(1, result.length);
 
         board.column(0).set(0, card("Qh"));
         result = board.getOrderedCards().apply(board.column(0));
