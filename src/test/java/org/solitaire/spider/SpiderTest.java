@@ -68,10 +68,10 @@ class SpiderTest {
 
         assertEquals(SIX, hsdDepth());
 
-        range(0, 5).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
+        range(0, 2).forEach(i -> spider.solveByHSD(spider.stack().peek().pop()));
         var board = spider.board();
         assertNotNull(board);
-        assertEquals(30, board.path().size());
+        assertEquals(12, board.path().size());
     }
 
     @Test

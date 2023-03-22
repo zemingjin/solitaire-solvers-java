@@ -120,7 +120,7 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
         return !isToFreeCell();
     }
 
-    public boolean isSameSource(Candidate other) {
+    public boolean isSameOrigin(Candidate other) {
         return origin() == other.origin() && from() == other.from();
     }
 

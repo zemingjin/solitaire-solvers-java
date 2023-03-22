@@ -38,14 +38,26 @@ public class Column extends ArrayList<Card> {
         throw new EmptyStackException();
     }
 
-    public int openAt() {
-        if (openAt >= size()) {
-            openAt(size() - 1);
+    @Override
+    public void clear() {
+        openAt(-1);
+        super.clear();
+    }
+
+    @Override
+    public Card remove(int at) {
+        if (at <= openAt()) {
+            openAt(openAt() - 1);
         }
+        return super.remove(at);
+    }
+
+    public int openAt() {
         return openAt;
     }
 
     public Column openAt(int openAt) {
+        assert openAt < size();
         this.openAt = openAt;
         return this;
     }

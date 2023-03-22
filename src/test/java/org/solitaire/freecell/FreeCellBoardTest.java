@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import static java.lang.Integer.MIN_VALUE;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,7 +61,7 @@ public class FreeCellBoardTest {
 
         fillFreeCells(2, card("Ts"));
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(2, result.size());
+        assertEquals(1, result.size());
         assertEquals("61:Ad", result.get(0).notation());
 
         board.column(1).remove(board.column(1).size() - 1);
@@ -402,9 +403,12 @@ public class FreeCellBoardTest {
 
     @Test
     void test_isMovable() {
-        assertTrue(board.isMovable(4, 0));
+        var cards = toArray(card("Ts"), card("9d"), card("8c"), card("7h"));
 
-        assertFalse(board.isMovable(10, 0));
+        assertTrue(board.isMovable(cards, 4, 0));
+
+        cards = toArray(card("Qs"), card("Jh"), card("Ts"), card("9d"), card("8c"), card("7h"));
+        assertFalse(board.isMovable(cards, 3, 0));
     }
 
 
@@ -441,16 +445,16 @@ public class FreeCellBoardTest {
 
         assertEquals(-5, board.score());
 
-        board.score(0);
+        board.score(MIN_VALUE);
         fillFreeCells(0, card("Js"));
         assertEquals(-11, board.score());
 
         board.column(7).clear();
-        board.score(0);
+        board.score(MIN_VALUE);
         assertEquals(-5, board.score());
 
         board.column(1).clear();
-        board.score(0);
+        board.score(MIN_VALUE);
         assertThrows(NoSuchElementException.class, () -> board.score());
     }
 
@@ -470,13 +474,13 @@ public class FreeCellBoardTest {
         assertEquals(-6, board.score());
         assertEquals(0, board.calcColumnScore());
 
-        board.score(0);
+        board.score(MIN_VALUE);
         board.column(7).clear();
         board.column(7).addAll(List.of(card("Qd"), card("Jc"), card("Th")));
         assertEquals(-3, board.score());
         assertEquals(3, board.calcColumnScore());
 
-        board.score(0);
+        board.score(MIN_VALUE);
         board.column(7).clear();
         board.column(7).addAll(List.of(card("Ks"), card("Qd"), card("Jc")));
         assertEquals(0, board.score());

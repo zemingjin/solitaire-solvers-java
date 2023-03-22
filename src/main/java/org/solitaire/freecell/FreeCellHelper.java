@@ -14,6 +14,7 @@ public class FreeCellHelper {
     protected static final int LAST_BOARD = 52;
     protected static final int LEN_LONG = 7;
     protected static final int LEN_SHORT = 6;
+    protected static final int COLUMNS = 8;
 
     public static FreeCell build(String[] cards) {
         return new FreeCell(buildBoard(cards));
@@ -22,8 +23,8 @@ public class FreeCellHelper {
     public static Columns buildBoard(String[] cards) {
         assert cards != null && cards.length == LAST_BOARD : "Invalid source cards: " + Arrays.toString(cards);
 
-        var columns = new Columns(8);
-        range(0, 8).forEach(i -> columns.add(i, new Column()));
+        var columns = new Columns(COLUMNS);
+        range(0, COLUMNS).forEach(i -> columns.add(i, new Column()));
 
         range(0, cards.length)
                 .mapToObj(i -> buildCard(i, cards[i]))

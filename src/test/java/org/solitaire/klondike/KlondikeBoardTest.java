@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
+import static java.lang.Integer.MIN_VALUE;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -452,16 +453,16 @@ class KlondikeBoardTest {
         var card = card("Ac");
         board.foundations().get(suitCode(card)).add(card);
         board.column(6).remove(card);
-        board.score(0);
+        board.score(MIN_VALUE);
 
-        assertEquals(-35, board.score());
+        assertEquals(-36, board.score());
 
         range(0, 7).forEach(i -> drawDeckCards());
-        board.score(0);
-        assertEquals(-35, board.score());
+        board.score(MIN_VALUE);
+        assertEquals(-36, board.score());
 
         board.deckPile().remove(card("2c"));
-        board.score(0);
+        board.score(MIN_VALUE);
         assertThrows(NoSuchElementException.class, () -> board.score());
     }
 

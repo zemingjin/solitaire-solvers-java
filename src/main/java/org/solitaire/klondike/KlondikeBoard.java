@@ -342,7 +342,7 @@ class KlondikeBoard extends GameBoard {
 
     @Override
     public int score() {
-        if (super.score() == 0) {
+        if (isNotScored()) {
             super.score(-calcBlockers() - uncoveredCards());
         }
         return super.score();

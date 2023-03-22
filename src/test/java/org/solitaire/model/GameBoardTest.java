@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.solitaire.util.IOHelper;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
@@ -18,6 +19,9 @@ import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
+import static org.solitaire.util.CardHelperTest.ONE;
+import static org.solitaire.util.CardHelperTest.THREE;
+import static org.solitaire.util.CardHelperTest.ZERO;
 
 public class GameBoardTest {
     protected static final String TEST_FILE = "games/spider/spider-122922-expert.txt";
@@ -86,7 +90,20 @@ public class GameBoardTest {
 
     @Test
     void test_candidateToEmptyColumn() {
-        assertThrows(RuntimeException.class, () -> board.candidateToEmptyColumn(null, 0, 0));
+        assertThrows(RuntimeException.class, () -> board.candidateToEmptyColumn(null, ZERO, ZERO));
+    }
+
+    @Test
+    void test_getOrderedCards() {
+        board.isInSequence(Card::isHigherOfSameSuit);
+        var result = board.getOrderedCards().apply(board.column(ZERO));
+
+        assertEquals(ONE, result.length);
+
+        board.column(ZERO).addAll(List.of(card("9h"), card("8h")));
+        result = board.getOrderedCards().apply(board.column(ZERO));
+
+        assertEquals(THREE, result.length);
     }
 
 }

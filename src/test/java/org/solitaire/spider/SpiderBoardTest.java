@@ -11,8 +11,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
 
+import static java.lang.Integer.MIN_VALUE;
 import static java.util.stream.IntStream.range;
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -25,7 +25,6 @@ import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
-import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.TWO;
@@ -59,13 +58,89 @@ class SpiderBoardTest {
     }
 
     @Test
+    void test_findCandidatesOfSameSuit() {
+        board.isInSequence(Card::isHigherOfSameSuit);
+        var candidates = board.findCandidatesOfSameSuit();
+
+        assertEquals(2, candidates.size());
+        assertEquals("17:5h", candidates.get(0).notation());
+
+        board.column(7).clear();
+
+        candidates = board.findCandidatesOfSameSuit();
+
+        assertEquals(10, candidates.size());
+        assertEquals("07:Th", candidates.get(0).notation());
+        assertEquals("59:2h", candidates.get(9).notation());
+
+        board.column(0).clear();
+        board.column(0).addAll(List.of(card("Ts"), card("9d"), card("8d")));
+        board.column(0).openAt(0);
+
+        candidates = board.findCandidatesOfSameSuit();
+        assertEquals(10, candidates.size());
+        assertEquals("07:[9d, 8d]", candidates.get(0).notation());
+
+        board.column(0).remove(0);
+        candidates = board.findCandidatesOfSameSuit();
+        assertEquals(9, candidates.size());
+        assertEquals("17:5h", candidates.get(0).notation());
+    }
+
+    @Test
+    void test_test_findCandidatesOfSameSuit_merge_sequences() {
+        mockColumn(0, 5, 0);
+        mockColumn(1, 12, 6);
+
+        var candidates = board.findCandidatesOfSameSuit();
+        assertEquals(3, candidates.size());
+        assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
+    }
+
+    @Test
+    void test_test_findCandidatesOfSameSuit_merge_sublist() {
+        mockColumn(0, 8, 0);
+        mockColumn(1, 12, 6);
+
+        var candidates = board.findCandidatesOfSameSuit();
+        assertEquals(3, candidates.size());
+        assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
+
+        board.column(0).clear();
+        board.column(0).openAt(-1);
+        mockColumn(0, 9, 8);
+
+        candidates = board.findCandidatesOfSameSuit();
+        assertEquals(2, candidates.size());
+        assertEquals("71:6h", candidates.get(0).notation());
+    }
+
+    @Test
+    void test_findCandidatesOfDifferentSuit() {
+        var mockCandidates = mockCandidates();
+        var result = board.findCandidatesByRanks(mockCandidates).toList();
+
+        assertEquals(3, result.size());
+
+        board.column(3).add(5, card("Ts"));
+        result = board.findCandidatesByRanks(mockCandidates).toList();
+        assertEquals(1, result.size());
+
+        board.column(3).clear();
+        board.column(4).clear();
+        board.column(3).add(card("9s"));
+        result = board.findCandidatesByRanks(mockCandidates).toList();
+        assertEquals(1, result.size());
+    }
+
+    @Test
     void test_score() {
-        assertEquals(-173, board.score());
+        assertEquals(-105, board.score());
 
         board.column(9).add(board.column(5).pop());
         board.column(9).add(card("Ah"));
-        board.score(0);
-        assertEquals(-170, board.score());
+        board.score(MIN_VALUE);
+        assertEquals(-101, board.score());
     }
 
     @Test
@@ -92,7 +167,7 @@ class SpiderBoardTest {
     void test_calcSequenceScore() {
         board.column(9).set(0, card("Kh"));
 
-        assertEquals(25, board.calcSequenceScore(9, board.column(9)));
+        assertEquals(20, board.calcSequences());
     }
 
     @Test
@@ -107,59 +182,6 @@ class SpiderBoardTest {
 
         board.column(0).clear();
         assertFalse(board.isMovableToEmptyColumn.test(candidate));
-    }
-
-    @Test
-    void test_findCandidatesOfSameSuit() {
-        var candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
-
-        assertEquals(2, candidates.size());
-        assertEquals("17:5h", candidates.get(0).notation());
-    }
-
-    @Test
-    void test_findCandidates_sameSuit() {
-        var candidates = board.findCandidates();
-
-        assertNotNull(candidates);
-        assertEquals(6, candidates.size());
-        assertEquals(7, candidates.get(0).to());
-        assertEquals(9, candidates.get(1).to());
-
-        board.column(7).clear();
-
-        candidates = board.findCandidates();
-
-        assertEquals(23, candidates.size());
-    }
-
-    @Test
-    void test_test_findCandidatesOfSameSuit_merge_sequences() {
-        mockColumn(0, 5, 0);
-        mockColumn(1, 12, 6);
-
-        var candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
-        assertEquals(3, candidates.size());
-        assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
-    }
-
-    @Test
-    void test_test_findCandidatesOfSameSuit_merge_sublist() {
-        mockColumn(0, 8, 0);
-        mockColumn(1, 12, 6);
-
-        var candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
-        assertEquals(3, candidates.size());
-        assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
-
-        board.column(0).clear();
-        board.column(0).openAt(-1);
-        mockColumn(0, 9, 8);
-
-        candidates = board.findCandidates(board::findCandidateOfSameSuit).toList();
-        assertEquals(2, candidates.size());
-        assertEquals("59:2h", candidates.get(0).notation());
-
     }
 
     @Test
@@ -343,16 +365,6 @@ class SpiderBoardTest {
     }
 
     @Test
-    void test_getOrderedCardsAtColumn() {
-        var result = board.getOrderedCardsAtColumn(mockRun().openAt(0));
-
-        assertNotNull(result);
-        assertTrue(isNotEmpty(result));
-        assertEquals(13, result.size());
-        assertEquals("[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", stringOfRaws(result));
-    }
-
-    @Test
     void test_isNotEmpty() {
         assertTrue(board.isNotEmpty.test(0));
 
@@ -378,4 +390,10 @@ class SpiderBoardTest {
             board.column(col).add(card(VALUES.charAt(i) + "h"));
         }
     }
+
+    private List<Candidate> mockCandidates() {
+        return List.of(new Candidate(toArray(card("5h")), COLUMN, 1, COLUMN, 7),
+                new Candidate(toArray(card("2h")), COLUMN, 5, COLUMN, 9));
+    }
+
 }

@@ -28,18 +28,19 @@ import static org.solitaire.SolitaireApp.checkPrint;
 import static org.solitaire.SolitaireApp.checkSingleSolution;
 import static org.solitaire.SolitaireApp.checkUseSuits;
 import static org.solitaire.SolitaireApp.main;
-import static org.solitaire.io.IOHelperTest.TEST_FILE;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.useSuit;
 
 @ExtendWith(MockitoExtension.class)
 class SolitaireAppTest {
+    private static final String TEST_FILE = "games/tripeaks/tripeaks-easy.txt";
+
     private final String[] ARGS = new String[]{TEST_FILE, TRIPEAKS, SINGLE_SOLUTION};
 
     private final SolitaireApp app = app();
-    private ByteArrayOutputStream outputStream;
     @Mock GameSolver gameSolver;
+    private ByteArrayOutputStream outputStream;
 
     @BeforeEach
     void setup() {
@@ -56,6 +57,8 @@ class SolitaireAppTest {
         main(ARGS);
         assertTrue(outputStream.toString().contains("One Path(47):"));
         assertTrue(outputStream.toString().contains(TEST_FILE));
+        assertTrue(outputStream.toString().contains(app.stopWatch().formatTime() + "."));
+        assertFalse(outputStream.toString().contains("with maximum depth of"));
 
         assertThrows(RuntimeException.class, () -> main(new String[]{}));
         assertFalse(isPrint());

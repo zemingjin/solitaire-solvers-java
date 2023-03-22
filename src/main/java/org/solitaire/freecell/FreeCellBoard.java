@@ -42,6 +42,9 @@ import static org.solitaire.util.CardHelper.toArray;
 
 public class FreeCellBoard extends GameBoard {
     protected static final Function<FreeCellBoard, List<Candidate>> findCandidates = FreeCellBoard::findCandidates;
+    protected transient final Predicate<Column> isOrderedColumn = column ->
+            range(0, column.size() - 1)
+                    .allMatch(i -> column.get(i).isHigherWithDifferentColor(column.get(i + 1)));
     private final Card[] freeCells;
     private final Card[] foundations;
     protected final IntPredicate isNotFoundationable = i -> !isFoundationable(peek(i));
@@ -106,10 +109,10 @@ public class FreeCellBoard extends GameBoard {
     private Candidate filterCandidate(int i, List<Candidate> candidates) {
         Predicate<Candidate> removeToFreeCell = candidate ->
                 candidate.isToFreeCell()
-                        && candidates.stream().anyMatch(it -> it.isNotToFreeCell() && it.isSameSource(candidate));
+                        && candidates.stream().anyMatch(it -> it.isNotToFreeCell() && it.isSameOrigin(candidate));
         Predicate<Candidate> removeNotToFoundation = candidate ->
                 candidate.isNotToFoundation()
-                        && candidates.stream().anyMatch(it -> it.isToFoundation() && it.isSameSource(candidate));
+                        && candidates.stream().anyMatch(it -> it.isToFoundation() && it.isSameOrigin(candidate));
         var candidate = candidates.get(i);
 
         return removeToFreeCell.test(candidate) || removeNotToFoundation.test(candidate) ? null : candidate;
@@ -124,8 +127,8 @@ public class FreeCellBoard extends GameBoard {
     }
 
     @Override
-    protected boolean isMovable(int length, int to) {
-        return length <= maxCardsToMove(to);
+    protected boolean isMovable(Card[] cards, int from, int to) {
+        return cards.length <= maxCardsToMove(to);
     }
 
     protected Stream<Candidate> findFreeCellToColumnCandidates() {
@@ -210,11 +213,7 @@ public class FreeCellBoard extends GameBoard {
 
     protected Candidate removeFromOrigin(Candidate candidate) {
         switch (candidate.origin()) {
-            case COLUMN -> {
-                var column = column(candidate.from());
-
-                column.subList(column.size() - candidate.cards().length, column.size()).clear();
-            }
+            case COLUMN -> removeFromColumn(candidate);
             case FREECELL -> freeCells[candidate.from()] = null;
             default -> throw new RuntimeException("Invalid candidate origin: " + candidate);
         }
@@ -275,7 +274,7 @@ public class FreeCellBoard extends GameBoard {
      ****************************************************************************************************************/
     @Override
     public int score() {
-        if (super.score() == 0) {
+        if (isNotScored()) {
             score(calcFoundationScore() - calcBlockerScore() + calcColumnScore());
         }
         return super.score();
@@ -298,10 +297,6 @@ public class FreeCellBoard extends GameBoard {
                 .mapToInt(this::calcColumnScore)
                 .sum();
     }
-
-    protected transient final Predicate<Column> isOrderedColumn = column ->
-        range(0, column.size() - 1)
-                .allMatch(i -> column.get(i).isHigherWithDifferentColor(column.get(i + 1)));
 
     private int calcColumnScore(Column column) {
         return Optional.of(column)
