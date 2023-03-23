@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static java.lang.Integer.MIN_VALUE;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -445,16 +444,16 @@ public class FreeCellBoardTest {
 
         assertEquals(-5, board.score());
 
-        board.score(MIN_VALUE);
+        board.resetScore();
         fillFreeCells(0, card("Js"));
         assertEquals(-11, board.score());
 
         board.column(7).clear();
-        board.score(MIN_VALUE);
+        board.resetScore();
         assertEquals(-5, board.score());
 
         board.column(1).clear();
-        board.score(MIN_VALUE);
+        board.resetScore();
         assertThrows(NoSuchElementException.class, () -> board.score());
     }
 
@@ -474,13 +473,13 @@ public class FreeCellBoardTest {
         assertEquals(-6, board.score());
         assertEquals(0, board.calcColumnScore());
 
-        board.score(MIN_VALUE);
+        board.resetScore();
         board.column(7).clear();
         board.column(7).addAll(List.of(card("Qd"), card("Jc"), card("Th")));
         assertEquals(-3, board.score());
         assertEquals(3, board.calcColumnScore());
 
-        board.score(MIN_VALUE);
+        board.resetScore();
         board.column(7).clear();
         board.column(7).addAll(List.of(card("Ks"), card("Qd"), card("Jc")));
         assertEquals(0, board.score());

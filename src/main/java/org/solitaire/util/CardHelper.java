@@ -157,10 +157,6 @@ public class CardHelper {
                 .orElseGet(() -> Arrays.toString(Stream.of(cards).map(Card::raw).toArray()));
     }
 
-    public static String stringOfRaws(List<Card> cards) {
-        return stringOfRaws(toArray(cards));
-    }
-
     public static void checkDuplicates(String[] cards) {
         assert nonNull(cards);
 

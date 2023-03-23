@@ -30,7 +30,7 @@ import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class SpiderBoardTest {
-    private static final String TEST_FILE = "games/spider/spider-122922-expert.txt";
+    private static final String TEST_FILE = "games/spider/spider-expert-122922.txt";
 
     private static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
@@ -170,19 +170,19 @@ class SpiderBoardTest {
 
     @Test
     void test_score() {
-        assertEquals(-84, board.score());
+        assertEquals(-34, board.score());
 
         board.column(9).add(board.column(5).pop());
         board.column(9).add(card("Ah"));
         board.score(MIN_VALUE);
-        assertEquals(-81, board.score());
+        assertEquals(-31, board.score());
     }
 
     @Test
     void test_calcSequenceScore() {
         board.column(9).set(0, card("Kh"));
 
-        assertEquals(20, board.calcSequences());
+        assertEquals(10, board.calcSequences());
     }
 
     @Test
@@ -205,6 +205,7 @@ class SpiderBoardTest {
         board.column(9).add(board.column(5).pop());
         board.column(9).add(card("Ah"));
         board.score();
+        board.runs(10);
         var copy = new SpiderBoard(board);
 
         assertTrue(reflectionEquals(board, copy));
@@ -273,28 +274,34 @@ class SpiderBoardTest {
         assertEquals("0:Kd", column.get(0).toString());
         assertEquals("0:Ad", column.get(12).toString());
         assertEquals(500, board.totalScore());
+        assertEquals(0, board.runs());
+        board.resetScore();
+        assertEquals(-17, board.score());
 
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
         var savedOne = System.out;
-        var candidate = columnToColumn(column.peek(), 0, 0);
-        var result = board.checkForRun(candidate);
+        var result = board.checkForRun(0);
+
 
         assertNotNull(result);
         assertTrue(column.isEmpty());
-        assertEquals("0$:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", board.path().get(0));
-        assertEquals(600, board.totalScore());
-        assertEquals("Run: [Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]",
+        assertEquals("0$:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", result.path().get(0));
+        assertEquals(600, result.totalScore());
+        assertEquals("0$:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]",
                 outputStream.toString().trim());
+        assertEquals(1, result.runs());
+        result.resetScore();
+        assertEquals(-4, result.score());
         System.setOut(savedOne);
 
         board.path().clear();
         column = mockRun().openAt(0);
         board.columns().set(0, column);
         column.remove(12);
-        result = board.checkForRun(candidate);
+        result = board.checkForRun(0);
         assertNotNull(result);
-        assertTrue(board.path().isEmpty());
+        assertTrue(result.path().isEmpty());
     }
 
     @Test
@@ -305,8 +312,7 @@ class SpiderBoardTest {
         assertEquals(16, column.size());
         assertEquals(500, board.totalScore());
 
-        var candidate = columnToColumn(column.peek(), 0, 1);
-        var result = board.checkForRun(candidate);
+        var result = board.checkForRun(0);
 
         assertNotNull(result);
         assertEquals(16, column.size());

@@ -2,6 +2,7 @@ package org.solitaire.model;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Collection;
 import java.util.function.Function;
 
 import static java.lang.String.format;
@@ -21,15 +22,22 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
 
     public static Candidate candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
         return new Candidate(cards, origin, from, target, to);
-
     }
 
     public static Candidate candidate(Card card, Origin origin, int from, Origin target, int to) {
         return candidate(toArray(card), origin, from, target, to);
     }
 
+    public static Candidate candidate(Collection<Card> cards, Origin origin, int from, Origin target, int to) {
+        return candidate(toArray(cards), origin, from, target, to);
+    }
+
     public static Candidate columnToColumn(Card card, int from, int to) {
-        return candidate(card, COLUMN, from, COLUMN, to);
+        return columnToColumn(toArray(card), from, to);
+    }
+
+    public static Candidate columnToColumn(Card[] cards, int from, int to) {
+        return candidate(cards, COLUMN, from, COLUMN, to);
     }
 
     public static Candidate buildCandidate(Card[] cards, Origin origin, Origin target) {

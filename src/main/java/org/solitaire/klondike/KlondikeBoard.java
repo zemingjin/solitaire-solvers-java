@@ -310,7 +310,7 @@ class KlondikeBoard extends GameBoard {
     protected void addToTargetColumn(Candidate candidate) {
         super.addToTargetColumn(candidate);
         if (isScorable(candidate)) {
-            totalScore += 5;
+            totalScore(totalScore() + 5);
         }
     }
 
@@ -325,7 +325,11 @@ class KlondikeBoard extends GameBoard {
         Optional.of(suitCode(card))
                 .map(foundations::get)
                 .ifPresent(it -> it.push(card));
-        totalScore += isFirstCardToFoundation(candidate) ? 15 : DECKPILE.equals(candidate.origin()) ? 10 : 5;
+        totalScore(totalScore() + (isFirstCardToFoundation(candidate)
+                ? 15
+                : DECKPILE.equals(candidate.origin())
+                ? 10 :
+                5));
     }
 
     private boolean isFirstCardToFoundation(Candidate candidate) {
