@@ -7,7 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Candidate.candidate;
+import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.Origin.BOARD;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
@@ -26,12 +27,12 @@ class CandidateTest {
 
     @Test
     void test_isToDeck() {
-        var candidate = new Candidate(toArray(card("Ad")), DECKPILE, -1, DECKPILE, -1);
+        var candidate = candidate(card("Ad"), DECKPILE, -1, DECKPILE, -1);
 
         assertTrue(candidate.isToDeck());
         assertFalse(candidate.isNotToDeck());
 
-        candidate = new Candidate(toArray(card("Ad")), DECKPILE, -1, COLUMN, 0);
+        candidate = candidate(card("Ad"), DECKPILE, -1, COLUMN, 0);
 
         assertFalse(candidate.isToDeck());
         assertTrue(candidate.isNotToDeck());
@@ -59,28 +60,28 @@ class CandidateTest {
 
     @Test
     void test_isKing() {
-        assertTrue(buildCandidate(0, COLUMN, card("Ks")).isKing());
-        assertFalse(buildCandidate(0, COLUMN, card("Ad")).isKing());
+        assertTrue(columnToColumn(card("Ks"), 1, 0).isKing());
+        assertFalse(columnToColumn(card("Ad"), 0, 1).isKing());
     }
 
     @Test
     void test_isFrom() {
-        var candidate = buildCandidate(0, COLUMN, COLUMN, card("Ks"));
+        var candidate = columnToColumn(card("Ks"), 0, 1);
 
         assertTrue(candidate.isToColumn());
 
-        candidate = buildCandidate(0, FREECELL, FREECELL, card("Ks"));
+        candidate = candidate(card("Ks"), FREECELL, 0, FREECELL, 0);
         assertFalse(candidate.isToFoundation());
 
-        candidate = buildCandidate(0, FREECELL, FOUNDATION, card("Ks"));
+        candidate = candidate(card("Ks"), FREECELL, 0, FOUNDATION, 0);
         assertTrue(candidate.isToFoundation());
         assertFalse(candidate.isToColumn());
     }
 
     @Test
     void test_toString() {
-        assertEquals("Candidate(Ks, COLUMN, 0, COLUMN, -1)",
-                buildCandidate(0, COLUMN, COLUMN, card("Ks")).toString());
+        assertEquals("Candidate(Ks, COLUMN, 0, COLUMN, 1)",
+                columnToColumn(card("Ks"), 0, 1).toString());
 
     }
 

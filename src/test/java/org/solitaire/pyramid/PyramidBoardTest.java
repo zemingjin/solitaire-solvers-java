@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Origin.BOARD;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.REMOVE;
@@ -101,7 +102,7 @@ class PyramidBoardTest {
         assertEquals("50:Kh", requireNonNull(board.path().peek())[0].toString());
 
         card = board.deck().peek();
-        candidate = new Candidate(toArray(card), DECKPILE, 0, REMOVE, 0);
+        candidate = candidate(card, DECKPILE, 0, REMOVE, 0);
         assertEquals(22, board.deck().size());
         board.updateBoard(candidate);
         assertEquals(card, requireNonNull(board.path().peek())[0]);
@@ -109,7 +110,7 @@ class PyramidBoardTest {
         assertFalse(board.flippedDeck().isEmpty());
 
         card = board.flippedDeck().peek();
-        candidate = new Candidate(toArray(card), DECKPILE, 0, REMOVE, 0);
+        candidate = candidate(card, DECKPILE, 0, REMOVE, 0);
         board.updateBoard(candidate);
 
         assertTrue(board.flippedDeck().isEmpty());

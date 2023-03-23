@@ -20,14 +20,15 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
-import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Candidate.buildFoundationToColumn;
+import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
@@ -164,7 +165,7 @@ class KlondikeBoard extends GameBoard {
         return range(0, columns().size())
                 .filter(i -> isNotEmpty(columns.get(i)))
                 .filter(isColumnToFoundationCandidate)
-                .mapToObj(i -> buildCandidate(i, COLUMN, FOUNDATION, columns.get(i).peek()));
+                .mapToObj(i -> candidate(column(i).peek(), COLUMN, i, FOUNDATION, suitCode(column(i).peek())));
     }
 
     protected Stream<Candidate> findDeckToFoundationCandidates() {
@@ -172,7 +173,7 @@ class KlondikeBoard extends GameBoard {
                 .filter(listNotEmpty)
                 .map(Stack::peek)
                 .filter(isFoundationCandidate)
-                .map(it -> buildCandidate(-1, DECKPILE, FOUNDATION, it))
+                .map(it -> candidate(it, DECKPILE, 0, FOUNDATION, suitCode(it)))
                 .stream();
     }
 
@@ -183,7 +184,7 @@ class KlondikeBoard extends GameBoard {
     @Override
     protected Candidate candidateToEmptyColumn(Card[] cards, int from, int to) {
         if (cards[0].isKing() && column(from).size() > cards.length) {
-            return new Candidate(cards, COLUMN, from, COLUMN, to);
+            return candidate(cards, COLUMN, from, COLUMN, to);
         }
         return null;
     }
@@ -200,7 +201,7 @@ class KlondikeBoard extends GameBoard {
         return Stream.of(column(colAt))
                 .map(it -> it.isNotEmpty() ? it.peek() : null)
                 .filter(it -> isDeckToColumnCandidate(card, it))
-                .map(it -> new Candidate(toArray(card), DECKPILE, -1, COLUMN, colAt))
+                .map(it -> candidate(card, DECKPILE, -1, COLUMN, colAt))
                 .findFirst()
                 .orElse(null);
     }
@@ -237,8 +238,8 @@ class KlondikeBoard extends GameBoard {
     protected List<Candidate> drawDeck() {
         if (checkRecycleDeck()) {
             var floor = max(0, deck().size() - drawNumber);
-            var ceiling = Math.min(floor + drawNumber, deck().size());
-            var cards = deck().subList(floor, ceiling).toArray(Card[]::new);
+            var ceiling = min(floor + drawNumber, deck().size());
+            var cards = toArray(deck().subList(floor, ceiling));
 
             return List.of(new Candidate(cards, DECKPILE, 0, DECKPILE, 0));
         }
@@ -314,8 +315,8 @@ class KlondikeBoard extends GameBoard {
     }
 
     protected boolean isScorable(Candidate candidate) {
-        return DECKPILE.equals(candidate.origin()) ||
-                (COLUMN.equals(candidate.origin()) && isNotEmpty(columns.get(candidate.from())));
+        return candidate.isFromDeck() ||
+                (candidate.isFromColumn() && column(candidate.from()).isNotEmpty());
     }
 
     protected void moveToFoundation(Candidate candidate) {
@@ -342,7 +343,7 @@ class KlondikeBoard extends GameBoard {
 
     @Override
     public int score() {
-        if (super.score() == 0) {
+        if (isNotScored()) {
             super.score(-calcBlockers() - uncoveredCards());
         }
         return super.score();

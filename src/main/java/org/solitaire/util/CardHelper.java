@@ -3,6 +3,7 @@ package org.solitaire.util;
 import org.solitaire.model.Card;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,14 +158,13 @@ public class CardHelper {
     }
 
     public static String stringOfRaws(List<Card> cards) {
-        return stringOfRaws(cards.toArray(Card[]::new));
+        return stringOfRaws(toArray(cards));
     }
 
     public static void checkDuplicates(String[] cards) {
         assert nonNull(cards);
 
-        range(0, cards.length)
-                .forEach(i -> checkDuplicates(cards, i));
+        range(0, cards.length).forEach(i -> checkDuplicates(cards, i));
     }
 
     private static void checkDuplicates(String[] cards, int at) {
@@ -179,6 +179,14 @@ public class CardHelper {
     @SafeVarargs
     public static <T> T[] toArray(T... items) {
         return items;
+    }
+
+    public static Card[] toArray(Collection<Card> list) {
+        return list.toArray(Card[]::new);
+    }
+
+    public static Card[] toArray(Stream<Card> stream) {
+        return stream.toArray(Card[]::new);
     }
 
     public static Card higherCardOfSameSuit(Card card) {

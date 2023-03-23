@@ -184,7 +184,9 @@ public class TriPeaksBoard implements Board<Card, Card> {
     }
 
     private Card[] allCards() {
-        return Stream.concat(Stream.of(cards), wastePile.stream()).toArray(Card[]::new);
+        return Optional.of(Stream.concat(Stream.of(cards), wastePile.stream()))
+                .map(CardHelper::toArray)
+                .orElseThrow();
     }
 
     /***************************************************************************************************************

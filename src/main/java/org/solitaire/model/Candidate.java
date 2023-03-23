@@ -14,40 +14,34 @@ import static org.solitaire.util.CardHelper.suitCode;
 import static org.solitaire.util.CardHelper.toArray;
 
 public record Candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
+
     public static final Function<Pair<Integer, Card>, Candidate> buildFoundationToColumn =
-            pair -> new Candidate(toArray(pair.getRight()), FOUNDATION, suitCode(pair.getRight()),
+            pair -> candidate(pair.getRight(), FOUNDATION, suitCode(pair.getRight()),
                     COLUMN, pair.getLeft());
 
-    public static Candidate buildCandidate(int from, Origin origin, Origin target, Card card) {
-        return buildCandidate(from, origin, target, toArray(card));
+    public static Candidate candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
+        return new Candidate(cards, origin, from, target, to);
+
     }
 
-    public static Candidate buildCandidate(int from, Origin origin, Origin target, Card[] cards) {
-        return new Candidate(cards, origin, from, target, -1);
+    public static Candidate candidate(Card card, Origin origin, int from, Origin target, int to) {
+        return candidate(toArray(card), origin, from, target, to);
     }
 
-    public static Candidate buildCandidate(int from, Origin origin, Card card) {
-        return buildCandidate(from, origin, toArray(card));
-    }
-
-    public static Candidate buildCandidate(int from, Origin origin, Card[] cards) {
-        return buildCandidate(from, origin, cards, -1);
+    public static Candidate columnToColumn(Card card, int from, int to) {
+        return candidate(card, COLUMN, from, COLUMN, to);
     }
 
     public static Candidate buildCandidate(Card[] cards, Origin origin, Origin target) {
         return new Candidate(cards, origin, cards[0].at(), target, 0);
     }
 
-    public static Candidate buildCandidate(int from, Origin origin, Card[] cards, int to) {
-        return new Candidate(cards, origin, from, null, to);
-    }
-
-    public static Candidate buildColumnCandidate(Candidate that, int to) {
+    public static Candidate toColumnCandidate(Candidate that, int to) {
         return new Candidate(that.cards, that.origin, that.from, COLUMN, to);
     }
 
-    public static Candidate buildFoundationCandidate(Card card, Origin origin, int from) {
-        return new Candidate(toArray(card), origin, from, FOUNDATION, suitCode(card));
+    public static Candidate toFoundationCandidate(Card card, Origin origin, int from) {
+        return candidate(card, origin, from, FOUNDATION, suitCode(card));
     }
 
     public String notation() {
@@ -104,6 +98,10 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
         return COLUMN == origin();
     }
 
+    public boolean isFromDeck() {
+        return DECKPILE == origin();
+    }
+
     public boolean isToDeck() {
         return DECKPILE == target();
     }
@@ -120,7 +118,7 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
         return !isToFreeCell();
     }
 
-    public boolean isSameSource(Candidate other) {
+    public boolean isSameOrigin(Candidate other) {
         return origin() == other.origin() && from() == other.from();
     }
 

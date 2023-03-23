@@ -27,7 +27,6 @@ import static org.solitaire.model.SolutionType.Shortest;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.BoardHelper.listNotEmpty;
-import static org.solitaire.util.CardHelper.string;
 
 public class SolitaireApp {
     public static final String TRIPEAKS = "-t";
@@ -115,8 +114,13 @@ public class SolitaireApp {
         stopWatch().stop();
 
         System.out.printf("Solving %s\n", args[0]);
-        System.out.printf("Found %,d solutions in %,d scenarios - total time: %s with maximum depth of %d.\n",
-                solver().totalSolutions(), solver().totalScenarios(), stopWatch.formatTime(), solver().maxDepth());
+        System.out.printf("Found %,d solutions in %,d scenarios - total time: %s",
+                solver().totalSolutions(), solver().totalScenarios(), stopWatch.formatTime());
+        if (singleSolution())
+            System.out.println(".");
+        else {
+            System.out.printf(" with maximum depth of %d.\n", solver().maxDepth());
+        }
         checkPath(solver, singleSolution() ? One : Shortest);
         if (!singleSolution()) {
             checkPath(solver, Longest);
@@ -153,7 +157,8 @@ public class SolitaireApp {
         try {
             Optional.of(solver)
                     .map(GameSolver::maxScore)
-                    .ifPresent(it -> System.out.printf("Max Score(%,d): %s\n", it.getLeft(), string(it.getRight())));
+                    .ifPresent(it -> System.out.printf("Max Score(%,d): %s\n",
+                            it.getLeft(), solver().pathString(it.getRight())));
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
+import static java.lang.Integer.MIN_VALUE;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,7 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.klondike.KlondikeBoard.drawNumber;
 import static org.solitaire.klondike.KlondikeHelper.build;
-import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Candidate.candidate;
+import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
@@ -160,28 +162,28 @@ class KlondikeBoardTest {
     void test_isScorable() {
         var card = board.column(1).peek();
 
-        assertTrue(board.isScorable(buildCandidate(1, COLUMN, card)));
-        assertTrue(board.isScorable(buildCandidate(-1, DECKPILE, card)));
+        assertTrue(board.isScorable(columnToColumn(card, 1, 0)));
+        assertTrue(board.isScorable(candidate(card, DECKPILE, 0, COLUMN, 0)));
 
         board.column(1).clear();
-        assertFalse(board.isScorable(buildCandidate(1, COLUMN, card)));
+        assertFalse(board.isScorable(columnToColumn(card, 1, 0)));
     }
 
     @Test
     void test_moveToFoundation() {
         var card = card("Ad");
         var foundation = board.foundations().get(suitCode(card));
-        board.moveToFoundation(buildCandidate(0, COLUMN, card));
+        board.moveToFoundation(candidate(card, COLUMN, 0, FOUNDATION, suitCode(card)));
         assertTrue(foundation.contains(card));
         assertEquals(15, board.totalScore());
 
         card = card("2d");
-        board.moveToFoundation(buildCandidate(0, DECKPILE, card));
+        board.moveToFoundation(candidate(card, DECKPILE, 0, FOUNDATION, suitCode(card)));
         assertEquals(2, foundation.size());
         assertEquals(25, board.totalScore());
 
         card = card("3d");
-        board.moveToFoundation(buildCandidate(0, COLUMN, card));
+        board.moveToFoundation(candidate(card, COLUMN, 0, FOUNDATION, suitCode(card)));
         assertEquals(3, foundation.size());
         assertEquals(30, board.totalScore());
     }
@@ -231,7 +233,7 @@ class KlondikeBoardTest {
         assertEquals(6, board.deckPile().size());
         assertTrue(board.stateChanged());
 
-        candidate = buildCandidate(-1, DECKPILE, COLUMN, new Card[]{});
+        candidate = candidate(new Card[]{}, DECKPILE, -1, COLUMN, 0);
 
         board.removeFromSource(candidate);
 
@@ -248,7 +250,7 @@ class KlondikeBoardTest {
         board.foundations().get(suitCode).add(card);
         assertEquals(card.toString(), board.foundations().get(suitCode).peek().toString());
 
-        var result = board.removeFromSource(buildCandidate(suitCode, FOUNDATION, card));
+        var result = board.removeFromSource(candidate(card, FOUNDATION, suitCode, COLUMN, 0));
 
         assertTrue(board.foundations().get(suitCode).isEmpty());
         assertSame(board, result);
@@ -452,16 +454,16 @@ class KlondikeBoardTest {
         var card = card("Ac");
         board.foundations().get(suitCode(card)).add(card);
         board.column(6).remove(card);
-        board.score(0);
+        board.score(MIN_VALUE);
 
-        assertEquals(-35, board.score());
+        assertEquals(-36, board.score());
 
         range(0, 7).forEach(i -> drawDeckCards());
-        board.score(0);
-        assertEquals(-35, board.score());
+        board.score(MIN_VALUE);
+        assertEquals(-36, board.score());
 
         board.deckPile().remove(card("2c"));
-        board.score(0);
+        board.score(MIN_VALUE);
         assertThrows(NoSuchElementException.class, () -> board.score());
     }
 

@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.card;
 
 class ColumnTest {
     private Column column;
@@ -18,8 +18,8 @@ class ColumnTest {
     @BeforeEach
     void setup() {
         column = new Column();
-        column.add(buildCard(0, "Ad"));
-        column.add(buildCard(1, "2c"));
+        column.add(card("Ad"));
+        column.add(card("2c"));
         column.openAt(column.size() - 1);
     }
 
@@ -36,9 +36,27 @@ class ColumnTest {
 
     @Test
     void test_remove() {
+        column.add(card("Ts"));
+        column.openAt(2);
         column.remove(1);
-        assertEquals(1, column.size());
+        assertEquals(2, column.size());
+        assertEquals(1, column.openAt());
+
+        column.add(card("2c"));
+        column.openAt(1);
+
+        column.remove(0);
+        assertEquals(2, column.size());
         assertEquals(0, column.openAt());
+    }
+
+    @Test
+    void test_pop() {
+        column.add(card("Ad"));
+        column.openAt(column.size() - 1);
+        column.pop();
+        assertEquals(2, column.size());
+        assertEquals(1, column.openAt());
     }
 
     @Test
