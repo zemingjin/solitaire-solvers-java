@@ -46,7 +46,7 @@ public class GameBoard implements Board<String, Candidate> {
                 break;
             }
         }
-        return column.subList(at, column.size()).toArray(Card[]::new);
+        return toArray(column.subList(at, column.size()));
     };
     private transient int score = MIN_VALUE;
 
@@ -106,7 +106,7 @@ public class GameBoard implements Board<String, Candidate> {
                 .filter(this::isLongerTargetSequence);
     }
 
-    protected boolean isLongerTargetSequence(Candidate candidate) {
+    public boolean isLongerTargetSequence(Candidate candidate) {
         var column = column(candidate.to());
 
         if (column.isNotEmpty()) {

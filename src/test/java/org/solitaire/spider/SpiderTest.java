@@ -22,7 +22,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Candidate.candidate;
+import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.GameBoardTest.cards;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.SolveExecutor.isPrint;
@@ -30,9 +31,7 @@ import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.spider.Spider.SOLUTION_LIMIT;
 import static org.solitaire.spider.Spider.hsdDepth;
 import static org.solitaire.spider.SpiderHelper.build;
-import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
-import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.FIVE;
 import static org.solitaire.util.CardHelperTest.ONE;
@@ -163,12 +162,12 @@ class SpiderTest {
     }
 
     private Candidate mockCandidate() {
-        return buildCandidate(0, COLUMN, buildCard(0, "Ad"));
+        return columnToColumn(card("Ad"), 0, 1);
     }
 
     private Path<String> mockPath() {
         var path = new Path<String>();
-        path.add(new Candidate(toArray(card("Ah")), COLUMN, 0, COLUMN, 5).notation());
+        path.add(candidate(card("Ah"), COLUMN, 0, COLUMN, 5).notation());
         return path;
     }
 

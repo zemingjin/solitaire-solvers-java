@@ -6,6 +6,7 @@ import org.solitaire.model.Column;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -33,11 +34,18 @@ public class BoardHelper {
 
     @SafeVarargs
     public static List<String> verifyBoard(List<Column> columns, List<Card>... decks) {
-        return verifyBoard(concat(toStream(columns), toStream(decks)).toArray(Card[]::new));
+        return Optional.of(concat(toStream(columns), toStream(decks)))
+                .map(CardHelper::toArray)
+                .map(BoardHelper::verifyBoard)
+                .orElseThrow();
     }
 
     public static List<String> verifyBoard(List<Column> columns) {
-        return verifyBoard(toStream(columns).toArray(Card[]::new));
+        return Optional.of(columns)
+                .map(BoardHelper::toStream)
+                .map(CardHelper::toArray)
+                .map(BoardHelper::verifyBoard)
+                .orElseThrow();
     }
 
     public static List<String> verifyBoard(Card[] cards) {

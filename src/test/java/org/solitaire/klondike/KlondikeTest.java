@@ -26,11 +26,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.solitaire.klondike.Klondike.SOLUTION_LIMIT;
 import static org.solitaire.klondike.KlondikeHelper.build;
-import static org.solitaire.model.Candidate.buildCandidate;
-import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
-import static org.solitaire.util.CardHelper.buildCard;
+import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.TWO;
@@ -73,8 +72,8 @@ class KlondikeTest {
     @Test
     void test_solve_uncleared() {
         var candidates = List.of(
-                buildCandidate(4, COLUMN, buildCard(0, "Ac")),
-                buildCandidate(3, COLUMN, buildCard(1, "3d")));
+                columnToColumn(card("Ac"), 0, 1),
+                columnToColumn(card("3d"), 0, 2));
         when(board.isSolved()).thenReturn(false);
         when(board.findCandidates()).thenReturn(candidates);
         when(board.updateBoard(any())).thenReturn(null);

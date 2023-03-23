@@ -12,7 +12,6 @@ import static java.util.Objects.nonNull;
 import static org.solitaire.pyramid.Pyramid.ACE;
 import static org.solitaire.pyramid.Pyramid.KING;
 import static org.solitaire.util.CardHelper.VALUES;
-import static org.solitaire.util.CardHelper.card;
 
 public record Card(int at, String value, String suit, String raw) {
     private static Color getColor(String suit) {
@@ -106,9 +105,5 @@ public record Card(int at, String value, String suit, String raw) {
 
     public boolean isDifferentColor(Card other) {
         return !isSameColor(other);
-    }
-
-    public Card next() {
-        return card(VALUES.charAt(rank()) + suit());
     }
 }

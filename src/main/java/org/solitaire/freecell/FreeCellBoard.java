@@ -25,7 +25,8 @@ import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
-import static org.solitaire.model.Candidate.buildFoundationCandidate;
+import static org.solitaire.model.Candidate.candidate;
+import static org.solitaire.model.Candidate.toFoundationCandidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.FREECELL;
 import static org.solitaire.util.BoardHelper.isNotNull;
@@ -38,7 +39,6 @@ import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
-import static org.solitaire.util.CardHelper.toArray;
 
 public class FreeCellBoard extends GameBoard {
     protected static final Function<FreeCellBoard, List<Candidate>> findCandidates = FreeCellBoard::findCandidates;
@@ -148,7 +148,7 @@ public class FreeCellBoard extends GameBoard {
         var column = column(to);
 
         if (column.isEmpty() || column.peek().isHigherWithDifferentColor(freeCells()[from])) {
-            return new Candidate(toArray(freeCells()[from]), FREECELL, from, COLUMN, to);
+            return candidate(freeCells()[from], FREECELL, from, COLUMN, to);
         }
         return null;
     }
@@ -157,7 +157,7 @@ public class FreeCellBoard extends GameBoard {
         return range(0, freeCells().length)
                 .filter(i -> nonNull(freeCells()[i]))
                 .filter(i -> isFoundationable(freeCells()[i]))
-                .mapToObj(from -> buildFoundationCandidate(freeCells()[from], FREECELL, from));
+                .mapToObj(from -> toFoundationCandidate(freeCells()[from], FREECELL, from));
     }
 
     protected Stream<Candidate> findColumnToFoundationCandidates() {
@@ -171,7 +171,7 @@ public class FreeCellBoard extends GameBoard {
                 .filter(listNotEmpty)
                 .map(Column::peek)
                 .filter(this::isFoundationable)
-                .map(it -> buildFoundationCandidate(it, COLUMN, from))
+                .map(it -> toFoundationCandidate(it, COLUMN, from))
                 .orElse(null);
 
     }
@@ -182,7 +182,7 @@ public class FreeCellBoard extends GameBoard {
         if (freeCellAt >= 0) {
             return range(0, columns.size())
                     .filter(hasMultipleCards.and(isNotInSequence).and(isNotFoundationable))
-                    .mapToObj(i -> new Candidate(toArray(peek(i)), COLUMN, i, FREECELL, freeCellAt()));
+                    .mapToObj(i -> candidate(peek(i), COLUMN, i, FREECELL, freeCellAt()));
         }
         return Stream.empty();
     }

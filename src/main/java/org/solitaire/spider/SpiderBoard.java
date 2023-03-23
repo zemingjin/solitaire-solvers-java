@@ -17,13 +17,13 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.lang.Integer.MAX_VALUE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
@@ -38,15 +38,16 @@ import static org.solitaire.util.CardHelper.toArray;
 @Slf4j
 public class SpiderBoard extends GameBoard {
     protected final Deck deck;
-    private transient final IntPredicate isThereARun = i -> isThereARun(column(i));
-    private transient final Predicate<Candidate> isNotFromSequenceOfSameSuit = candidate -> {
+    protected transient final Predicate<Candidate> isNotFromSequenceOfSameSuit = candidate -> {
         var column = column(candidate.from());
         return column.size() >= 2 && !column.get(column.size() - 2).isHigherOfSameSuit(candidate.peek());
     };
+    private transient final IntPredicate isThereARun = i -> isThereARun(column(i));
 
     public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
         this.deck = deck;
+        isInSequence(Card::isHigherOfSameSuit);
     }
 
     public SpiderBoard(SpiderBoard that) {
@@ -72,14 +73,13 @@ public class SpiderBoard extends GameBoard {
     }
 
     protected List<Candidate> findCandidatesOfSameSuit() {
-        isInSequence(Card::isHigherOfSameSuit);
         return Optional.of(findColumnToColumnCandidates())
                 .map(Stream::toList)
                 .map(this::optimizeCandidatesOfSameSuit)
                 .orElseGet(Collections::emptyList);
     }
 
-    private List<Candidate> optimizeCandidatesOfSameSuit(List<Candidate> candidates) {
+    protected List<Candidate> optimizeCandidatesOfSameSuit(List<Candidate> candidates) {
         return range(0, candidates.size())
                 .filter(i -> isLongerTargetSequence(candidates.get(i)))
                 .mapToObj(i -> checkForLongerTargets(candidates.get(i), candidates))
@@ -130,7 +130,7 @@ public class SpiderBoard extends GameBoard {
         var origin = peek(from);
 
         if (isNull(target) || target.isHigherRank(origin)) {
-            return new Candidate(toArray(origin), COLUMN, from, COLUMN, to);
+            return columnToColumn(origin, from, to);
         }
         return null;
     }
@@ -140,13 +140,12 @@ public class SpiderBoard extends GameBoard {
                 .filter(isNotFromSequenceOfSameSuit)
                 .filter(isNotRepeatingCandidate)
                 .filter(isMovableToEmptyColumn)
-                .map(it -> !(column(it.to()).isEmpty() && isAtTop(it)))
-                .orElse(false);
+                .filter(isFromPartialColumn)
+                .isPresent();
     }
 
-    private boolean isAtTop(Candidate candidate) {
-        return column(candidate.from()).indexOf(candidate.peek()) == 0;
-    }
+    protected transient final Predicate<Candidate> isFromPartialColumn = candidate ->
+            column(candidate.from()).size() > candidate.cards().length;
 
     /**************************************************************************************************************
      * Update Board
@@ -190,7 +189,7 @@ public class SpiderBoard extends GameBoard {
         return this;
     }
 
-    private boolean isThereARun(Column column) {
+    protected boolean isThereARun(Column column) {
         if (nonNull(column) && 13 <= column.size()) {
             for (int i = column.size() - 1, floor = column.size() - 13; i > floor; i--) {
                 if (!column.get(i - 1).isHigherOfSameColor(column.get(i))) {
@@ -207,7 +206,7 @@ public class SpiderBoard extends GameBoard {
         assert nonNull(column) && 13 <= column.size();
 
         var run = column.subList(column.size() - 13, column.size());
-        var candidate = new Candidate(run.toArray(Card[]::new), COLUMN, i, FOUNDATION, suitCode(run.get(0)));
+        var candidate = new Candidate(toArray(run), COLUMN, i, FOUNDATION, suitCode(run.get(0)));
 
         path().add(candidate.notation());
         if (isPrint()) {
@@ -219,7 +218,7 @@ public class SpiderBoard extends GameBoard {
 
     protected List<Candidate> drawDeck() {
         if (isNoEmptyColumn() && isNotEmpty(deck)) {
-            var cards = deck().subList(0, columns.size()).toArray(Card[]::new);
+            var cards = toArray(deck().subList(0, columns.size()));
 
             return List.of(new Candidate(cards, DECKPILE, 0, COLUMN, 0));
         }
@@ -237,49 +236,12 @@ public class SpiderBoard extends GameBoard {
     public int score() {
         if (isNotScored()) {
             // The smaller, the better.
-            var blockerCount = countBlockers();
             var boardScore = columns().stream().mapToInt(Column::size).sum() + deck().size();
             // The larger, the better.
-            var sequences = calcSequences();
-            super.score(sequences - blockerCount - boardScore);
+            var sequenceScore = calcSequences();
+            super.score(sequenceScore - boardScore);
         }
         return super.score();
-    }
-
-    private int countBlockers() {
-        return range(0, columns().size()).map(this::countBlockers).sum();
-    }
-
-    protected int countBlockers(int col) {
-        var column = column(col);
-
-        if (column.isEmpty()) {
-            return 0;
-        }
-        isInSequence(Card::isHigherOfSameSuit);
-        var cards = getOrderedCards().apply(column);
-        var card = cards[0];
-
-        if (card.isNotKing()) {
-            var next = card.next();
-            var value = valueFromColumns(col, next);
-
-            if (value == MAX_VALUE) {
-                return deck.indexOf(next) / columns().size();
-            }
-            return value;
-        }
-        return 0;
-    }
-
-    private int valueFromColumns(int col, Card next) {
-        return range(0, columns().size())
-                .filter(i -> i != col)
-                .mapToObj(this::column)
-                .filter(listNotEmpty)
-                .filter(it -> it.contains(next))
-                .mapToInt(it -> it.size() - it.lastIndexOf(next) - 1)
-                .reduce(MAX_VALUE, Math::min);
     }
 
     // The bigger, the better

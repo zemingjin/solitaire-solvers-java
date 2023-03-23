@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.freecell.FreeCellHelper.build;
-import static org.solitaire.model.Candidate.buildCandidate;
+import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
@@ -231,9 +231,9 @@ public class FreeCellBoardTest {
 
     @Test
     void test_findCandidates_cascades() {
-        board.updateBoard(new Candidate(toArray(board.peek(6)), COLUMN, 6, FOUNDATION, 0));
-        board.updateBoard(new Candidate(toArray(board.peek(5)), COLUMN, 5, COLUMN, 6));
-        board.updateBoard(new Candidate(toArray(board.peek(2)), COLUMN, 2, COLUMN, 5));
+        board.updateBoard(candidate(board.peek(6), COLUMN, 6, FOUNDATION, 0));
+        board.updateBoard(candidate(board.peek(5), COLUMN, 5, COLUMN, 6));
+        board.updateBoard(candidate(board.peek(2), COLUMN, 2, COLUMN, 5));
 
         var column = board.column(0);
         while (column.size() > 1) column.remove(0);
@@ -318,14 +318,14 @@ public class FreeCellBoardTest {
         assertEquals("6$:Ad", board.path().get(0));
         assertTrue(Arrays.stream(board.freeCells()).allMatch(isNull));
 
-        result = board.updateBoard(Candidate.buildColumnCandidate(candidate, 0));
+        result = board.updateBoard(Candidate.toColumnCandidate(candidate, 0));
         assertEquals(8, result.column(0).size());
         assertEquals("45:Ad", result.column(0).peek().toString());
         assertEquals(2, board.path().size());
 
         var card = board.column(0).peek();
         var ex = assertThrows(RuntimeException.class,
-                () -> board.moveToTarget(new Candidate(toArray(card), COLUMN, 0, DECKPILE, -1)));
+                () -> board.moveToTarget(candidate(card, COLUMN, 0, DECKPILE, -1)));
         assertEquals("Invalid candidate target: 0^:Ad", ex.getMessage());
     }
 
@@ -358,7 +358,7 @@ public class FreeCellBoardTest {
 
     @Test
     void test_moveToTarget_freeCell_fail() {
-        var candidate = new Candidate(toArray(board.column(0).peek()), COLUMN, 0, FREECELL, 0);
+        var candidate = candidate(board.column(0).peek(), COLUMN, 0, FREECELL, 0);
 
         fillFreeCells(0, card("Ad"));
 
@@ -369,25 +369,25 @@ public class FreeCellBoardTest {
     void test_updateBoard() {
         var card = board.column(0).peek();
 
-        var result = board.updateBoard(buildCandidate(0, COLUMN, FREECELL, card));
+        var result = board.updateBoard(candidate(card, COLUMN, 0, FREECELL, suitCode(card)));
 
         assertNotNull(result);
         assertFalse(board.column(0).contains(card));
         assertSame(card, board.freeCells()[0]);
 
-        result = board.updateBoard(new Candidate(toArray(card), FREECELL, 0, COLUMN, 0));
+        result = board.updateBoard(candidate(card, FREECELL, 0, COLUMN, 0));
         assertNotNull(result);
         assertTrue(board.column(0).contains(card));
         assertNull(board.freeCells()[0]);
 
-        result = board.updateBoard(new Candidate(toArray(card), COLUMN, 0, FOUNDATION, -1));
+        result = board.updateBoard(candidate(card, COLUMN, 0, FOUNDATION, suitCode(card)));
         assertNotNull(result);
         assertFalse(board.column(0).contains(card));
         assertSame(card, board.foundations()[suitCode(card)]);
 
         var crd = board.column(0).peek();
         assertThrows(RuntimeException.class,
-                () -> board.updateBoard(new Candidate(toArray(crd), DECKPILE, 0, COLUMN, -1)));
+                () -> board.updateBoard(candidate(crd, DECKPILE, 0, COLUMN, suitCode(card))));
     }
 
     @Test
@@ -441,7 +441,7 @@ public class FreeCellBoardTest {
     @Test
     void test_score() {
         var card = board.column(6).peek();
-        board.updateBoard(buildCandidate(6, COLUMN, FOUNDATION, card));
+        board.updateBoard(candidate(card, COLUMN, 6, FOUNDATION, suitCode(card)));
 
         assertEquals(-5, board.score());
 
