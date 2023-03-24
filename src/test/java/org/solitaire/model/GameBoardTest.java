@@ -25,13 +25,13 @@ import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.ZERO;
 
 public class GameBoardTest {
-    protected static final String TEST_FILE = "games/spider/spider-122922-expert.txt";
+    protected static final String TEST_FILE = "games/spider/spider-expert-122922.txt";
     public static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
     private GameBoard board;
 
     private static GameBoard mockState(GameBoard board) {
-        var mock = new GameBoard(new Columns(board.columns), new Path<>(board.path), board.totalScore);
+        var mock = new GameBoard(new Columns(board.columns), new Path<>(board.path), board.totalScore());
 
         mock.isInSequence(board.isInSequence());
         return mock;

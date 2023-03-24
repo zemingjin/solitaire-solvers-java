@@ -32,7 +32,7 @@ public class GameBoard implements Board<String, Candidate> {
     public transient final IntPredicate isNotEmpty = i -> column(i).isNotEmpty();
     public transient final Predicate<Candidate> isMovableToEmptyColumn = c ->
             !c.isFromColumn() || (c.cards().length < column(c.from()).size() || isNotEmpty.test(c.to()));
-    protected int totalScore;
+    private int totalScore;
     private transient BiPredicate<Card, Card> isInSequence;
     protected transient final Function<Column, Card[]> getOrderedCards = column -> {
         if (column.isEmpty()) {
@@ -68,12 +68,16 @@ public class GameBoard implements Board<String, Candidate> {
     }
 
     private void removeFromColumn(Candidate candidate, Column column) {
-        var colSize = column.size();
-
         Optional.of(candidate)
                 .map(Candidate::cards)
                 .filter(it -> column.contains(it[0]))
-                .ifPresent(it -> column.subList(colSize - it.length, colSize).clear());
+                .ifPresent(it -> removeIt(candidate, column));
+    }
+
+    protected void removeIt(Candidate candidate, Column column) {
+        var colSize = column.size();
+
+        column.subList(colSize - candidate.cards().length, colSize).clear();
         column.openAt(min(column.openAt(), column.size() - 1));
     }
 
@@ -173,6 +177,10 @@ public class GameBoard implements Board<String, Candidate> {
         return totalScore;
     }
 
+    public void totalScore(int totalScore) {
+        this.totalScore = totalScore;
+    }
+
     @Override
     public List<String> verify() {
         throw new RuntimeException("'verify' not implemented");
@@ -185,6 +193,10 @@ public class GameBoard implements Board<String, Candidate> {
 
     public boolean isNotScored() {
         return score == MIN_VALUE;
+    }
+
+    public void resetScore() {
+        score(MIN_VALUE);
     }
 
     @Override
