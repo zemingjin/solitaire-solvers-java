@@ -51,16 +51,16 @@ class SolveExecutorTest {
     @Test
     void test_defaultSolutionConsumer() {
         singleSolution(false);
-        executor.defaultSolutionConsumer.accept(List.of("1"));
+        executor.defaultSolutionConsumer(List.of("1"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(1, executor.longestPath().size());
 
-        executor.defaultSolutionConsumer.accept(List.of("1", "2"));
+        executor.defaultSolutionConsumer(List.of("1", "2"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(2, executor.longestPath().size());
         assertEquals("[1, 2]", executor.longestPath().toString());
 
-        executor.defaultSolutionConsumer.accept(List.of("2", "3"));
+        executor.defaultSolutionConsumer(List.of("2", "3"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(2, executor.longestPath().size());
         assertEquals("[1, 2]", executor.longestPath().toString());
@@ -68,7 +68,7 @@ class SolveExecutorTest {
         assertEquals("", outputStream.toString());
 
         isPrint(true);
-        executor.defaultSolutionConsumer.accept(List.of("2", "3"));
+        executor.defaultSolutionConsumer(List.of("2", "3"));
         assertTrue(outputStream.toString().contains("2: 2, 3"));
 
     }
@@ -77,7 +77,7 @@ class SolveExecutorTest {
     void test_defaultSolutionConsumer_singleSolution() {
         singleSolution(true);
 
-        executor.defaultSolutionConsumer.accept(List.of("1"));
+        executor.defaultSolutionConsumer(List.of("1"));
 
         assertEquals(1, executor.shortestPath().size());
         assertNull(executor.longestPath());
@@ -133,14 +133,14 @@ class SolveExecutorTest {
     @Test
     void test_addBoard() {
         assertEquals(ONE, executor.stack().size());
-        executor.addBoard().accept(board);
+        executor.addBoard(board);
         assertEquals(TWO, executor.stack().size());
-        executor.addBoard().accept(null);
+        executor.addBoard(null);
     }
 
     @Test
     void test_addBoards() {
-        executor.addBoards().accept(List.of(board, board));
+        executor.addBoards(List.of(board, board));
         assertEquals(TWO, executor.stack().size());
         assertEquals(TWO, executor.stack().peek().size());
     }

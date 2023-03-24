@@ -20,10 +20,4 @@ public class FreeCell extends SolveExecutor<String, Candidate, FreeCellBoard> {
     public FreeCell(Columns columns) {
         super(new FreeCellBoard(columns, new Path<>(), new Card[4], new Card[4]), FreeCellBoard::new);
     }
-
-    @Override
-    public boolean isContinuing() {
-        return super.isContinuing() && totalSolutions() < SOLUTION_LIMIT;
-    }
-
 }

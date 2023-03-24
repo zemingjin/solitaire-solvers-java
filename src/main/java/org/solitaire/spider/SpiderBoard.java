@@ -8,6 +8,7 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
+import org.solitaire.util.BoardHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +32,6 @@ import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.util.BoardHelper.isNotNull;
-import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.suitCode;
 
@@ -64,7 +64,7 @@ public class SpiderBoard extends GameBoard {
     @Override
     public List<Candidate> findCandidates() {
         return Optional.of(findBoardCandidates())
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .orElseGet(this::drawDeck);
     }
 
@@ -72,7 +72,7 @@ public class SpiderBoard extends GameBoard {
         return Optional.of(findCandidatesOfSameSuit())
                 .map(it -> concat(it.stream(), findCandidatesByRanks(it)))
                 .map(Stream::toList)
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .orElseGet(Collections::emptyList);
     }
 
@@ -241,7 +241,7 @@ public class SpiderBoard extends GameBoard {
     public int score() {
         if (isNotScored()) {
             // The smaller, the better.
-            var coveredCards = columns().stream().filter(listNotEmpty).mapToInt(Column::openAt).sum();
+            var coveredCards = columns().stream().filter(BoardHelper.isNotEmpty).mapToInt(Column::openAt).sum();
             // The larger, the better.
             var sequenceScore = calcSequences();
             var runScore = runs() * 26;

@@ -26,7 +26,7 @@ import static org.solitaire.model.SolutionType.One;
 import static org.solitaire.model.SolutionType.Shortest;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.model.SolveExecutor.singleSolution;
-import static org.solitaire.util.BoardHelper.listNotEmpty;
+import static org.solitaire.util.BoardHelper.isNotEmpty;
 
 public class SolitaireApp {
     public static final String TRIPEAKS = "-t";
@@ -149,7 +149,7 @@ public class SolitaireApp {
         Optional.of(type)
                 .map(pathSupplier)
                 .map(Supplier::get)
-                .filter(listNotEmpty)
+                .filter(isNotEmpty)
                 .ifPresent(it -> System.out.printf("%s Path(%d): %s\n", type, it.size(), solver.pathString(it)));
     }
 

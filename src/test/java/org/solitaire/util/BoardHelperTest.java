@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Column;
 
+import java.rmi.AccessException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,8 +28,8 @@ class BoardHelperTest {
     }
 
     @Test
-    void test_of() {
-        assertNotNull(BoardHelper.of());
+    void test_constructor() {
+        assertThrows(AccessException.class, BoardHelper::new);
     }
 
     @Test

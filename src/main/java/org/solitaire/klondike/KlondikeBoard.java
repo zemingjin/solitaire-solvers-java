@@ -8,6 +8,7 @@ import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
+import org.solitaire.util.BoardHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +34,6 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.util.BoardHelper.isNotNull;
-import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneStack;
 import static org.solitaire.util.CardHelper.cloneStacks;
@@ -147,7 +147,7 @@ class KlondikeBoard extends GameBoard {
 
     protected List<Candidate> findFoundationToColumnCandidates() {
         return foundations().stream()
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
                 .map(fromFoundationToColumn)
                 .filter(isNotNull)
@@ -170,7 +170,7 @@ class KlondikeBoard extends GameBoard {
 
     protected Stream<Candidate> findDeckToFoundationCandidates() {
         return Optional.of(deckPile)
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
                 .filter(isFoundationCandidate)
                 .map(it -> candidate(it, DECKPILE, 0, FOUNDATION, suitCode(it)))
@@ -191,7 +191,7 @@ class KlondikeBoard extends GameBoard {
 
     protected Stream<Candidate> findDeckToColumnCandidates() {
         return Optional.of(deckPile)
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
                 .map(deckToColumnCandidates)
                 .orElseGet(Stream::empty);
@@ -373,7 +373,7 @@ class KlondikeBoard extends GameBoard {
             return calcBlocker(deckPile, card);
         }
         return columns.stream()
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .filter(it -> it.contains(card))
                 .map(it -> calcBlocker(it, card))
                 .findFirst()
@@ -432,7 +432,7 @@ class KlondikeBoard extends GameBoard {
     public Card foundationCard(int suitCode) {
         return Optional.of(suitCode)
                 .map(foundations()::get)
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
                 .orElse(null);
     }

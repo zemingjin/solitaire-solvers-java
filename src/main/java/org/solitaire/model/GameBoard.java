@@ -2,6 +2,7 @@ package org.solitaire.model;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.solitaire.util.BoardHelper;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +21,6 @@ import static java.util.Objects.isNull;
 import static java.util.stream.IntStream.range;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.util.BoardHelper.isNotNull;
-import static org.solitaire.util.BoardHelper.listNotEmpty;
 import static org.solitaire.util.CardHelper.toArray;
 
 @Slf4j
@@ -132,7 +132,7 @@ public class GameBoard implements Board<String, Candidate> {
                 .filter(it -> it != to)
                 .map(this::column)
                 .map(getOrderedCards)
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .map(it -> toColumnCandidate(it, from, to, card))
                 .orElse(null);
     }
@@ -220,7 +220,7 @@ public class GameBoard implements Board<String, Candidate> {
     public Card peek(int colId) {
         return Optional.of(colId)
                 .map(this::column)
-                .filter(listNotEmpty)
+                .filter(BoardHelper.isNotEmpty)
                 .map(Column::peek)
                 .orElse(null);
     }

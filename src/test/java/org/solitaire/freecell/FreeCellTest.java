@@ -6,13 +6,11 @@ import org.solitaire.model.Columns;
 import org.solitaire.util.IOHelper;
 
 import java.util.Collection;
-import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.freecell.FreeCell.SOLUTION_LIMIT;
 import static org.solitaire.freecell.FreeCellHelper.buildBoard;
 import static org.solitaire.model.SolveExecutor.hsdDepth;
 import static org.solitaire.model.SolveExecutor.isPrint;
@@ -56,17 +54,6 @@ class FreeCellTest {
     }
 
     @Test
-    void test_isContinuing() {
-        singleSolution(false);
-        assertTrue(freeCell.isContinuing());
-
-        freeCell.totalSolutions(SOLUTION_LIMIT - 1);
-        assertTrue(freeCell.isContinuing());
-        freeCell.totalSolutions(SOLUTION_LIMIT);
-        assertFalse(freeCell.isContinuing());
-    }
-
-    @Test
     void test_solve_verify_dfs() {
         freeCell.board().column(0).pop();
         var result = assertThrows(RuntimeException.class, () -> freeCell.solve());
@@ -87,13 +74,9 @@ class FreeCellTest {
         }
 
         @Override
-        public Consumer<Collection<FreeCellBoard>> addBoards() {
-            return this::addBoards;
-        }
-
         public void addBoards(Collection<FreeCellBoard> boards) {
             if (add) {
-                super.addBoards().accept(boards);
+                super.addBoards(boards);
                 add(false);
             }
         }
