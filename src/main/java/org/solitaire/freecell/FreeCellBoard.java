@@ -13,12 +13,11 @@ import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
-import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
@@ -42,9 +41,6 @@ import static org.solitaire.util.CardHelper.suitCode;
 
 public class FreeCellBoard extends GameBoard {
     protected static final Function<FreeCellBoard, List<Candidate>> findCandidates = FreeCellBoard::findCandidates;
-    protected transient final Predicate<Column> isOrderedColumn = column ->
-            range(0, column.size() - 1)
-                    .allMatch(i -> column.get(i).isHigherWithDifferentColor(column.get(i + 1)));
     private final Card[] freeCells;
     private final Card[] foundations;
     protected final IntPredicate isNotFoundationable = i -> !isFoundationable(peek(i));
@@ -52,23 +48,6 @@ public class FreeCellBoard extends GameBoard {
     private final IntPredicate isNotInSequence = i -> {
         var column = column(i);
         return !column.get(column.size() - 2).isHigherWithDifferentColor(column.peek());
-    };
-    private transient final IntFunction<Card> nextFoundationCard = i ->
-            Optional.of(rank(foundations()[i]) + 1)
-                    .filter(rank -> rank <= 13)
-                    .map(rank -> card(VALUES.charAt(rank - 1) + suit(i).toLowerCase()))
-                    .orElse(null);
-    private transient final ToIntFunction<Card> calcBlockers = card -> {
-        if (Arrays.asList(freeCells()).contains(card)) {
-            return 0;
-        }
-        return columns.stream()
-                .filter(listNotEmpty)
-                .filter(it -> it.contains(card))
-                .map(it -> it.size() - it.indexOf(card) - 1)
-                .map(i -> (countFreeCells() > 0 || countEmptyColumns() > 0) ? i : i * 2)
-                .findFirst()
-                .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
     };
 
     public FreeCellBoard(Columns columns, Path<String> path, Card[] freeCells, Card[] foundations) {
@@ -107,15 +86,15 @@ public class FreeCellBoard extends GameBoard {
     }
 
     private Candidate filterCandidate(int i, List<Candidate> candidates) {
-        Predicate<Candidate> removeToFreeCell = candidate ->
-                candidate.isToFreeCell()
-                        && candidates.stream().anyMatch(it -> it.isNotToFreeCell() && it.isSameOrigin(candidate));
-        Predicate<Candidate> removeNotToFoundation = candidate ->
-                candidate.isNotToFoundation()
-                        && candidates.stream().anyMatch(it -> it.isToFoundation() && it.isSameOrigin(candidate));
-        var candidate = candidates.get(i);
+        var it = candidates.get(i);
 
-        return removeToFreeCell.test(candidate) || removeNotToFoundation.test(candidate) ? null : candidate;
+        return test(it, candidates, Candidate::isToFreeCell) ||
+                test(it, candidates, Candidate::isNotToFoundation) ? null : it;
+    }
+
+    private boolean test(Candidate candidate, List<Candidate> candidates, Predicate<Candidate> predicate) {
+        return predicate.test(candidate)
+                && candidates.stream().anyMatch(it -> !predicate.test(it) && it.isSameOrigin(candidate));
     }
 
     @Override
@@ -281,15 +260,35 @@ public class FreeCellBoard extends GameBoard {
     }
 
     private int calcFoundationScore() {
-        return Stream.of(foundations).mapToInt(CardHelper::rank).sum();
+        return Stream.of(foundations).mapToInt(CardHelper::rank).sum() * 2;
     }
 
     protected int calcBlockerScore() {
         return range(0, foundations().length)
-                .mapToObj(nextFoundationCard)
+                .mapToObj(this::nextFoundationCard)
                 .filter(isNotNull)
-                .mapToInt(calcBlockers)
+                .mapToInt(this::calcBlockers)
                 .sum();
+    }
+
+    private Card nextFoundationCard(int i) {
+        return Optional.of(rank(foundations()[i]) + 1)
+                .filter(rank -> rank <= 13)
+                .map(rank -> card(VALUES.charAt(rank - 1) + suit(i).toLowerCase()))
+                .orElse(null);
+    }
+
+    protected int calcBlockers(Card card) {
+        if (Arrays.asList(freeCells()).contains(card)) {
+            return 0;
+        }
+        return columns.stream()
+                .filter(listNotEmpty)
+                .filter(it -> it.contains(card))
+                .map(it -> it.size() - it.indexOf(card) - 1)
+                .map(i -> (noAvailableFreeCells() && noEmptyColumns() && emptyFoundations()) ? i * 2 : i)
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Failed to find next card: " + card));
     }
 
     protected int calcColumnScore() {
@@ -301,13 +300,30 @@ public class FreeCellBoard extends GameBoard {
     private int calcColumnScore(Column column) {
         return Optional.of(column)
                 .filter(listNotEmpty)
-                .filter(isOrderedColumn)
+                .filter(this::isOrderedColumn)
                 .map(it -> it.get(0).isKing() ? it.size() * 2 : it.size())
                 .orElse(0);
+    }
+
+    protected boolean isOrderedColumn(Column column) {
+        return range(0, column.size() - 1)
+                .allMatch(i -> column.get(i).isHigherWithDifferentColor(column.get(i + 1)));
     }
 
     @Override
     public List<String> verify() {
         return verifyBoard(columns());
+    }
+
+    protected boolean emptyFoundations() {
+        return Stream.of(foundations()).anyMatch(Objects::isNull);
+    }
+
+    protected boolean noAvailableFreeCells() {
+        return Stream.of(freeCells()).allMatch(Objects::nonNull);
+    }
+
+    protected boolean noEmptyColumns() {
+        return columns().stream().allMatch(listNotEmpty);
     }
 }
