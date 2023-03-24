@@ -442,19 +442,40 @@ public class FreeCellBoardTest {
         var card = board.column(6).peek();
         board.updateBoard(candidate(card, COLUMN, 6, FOUNDATION, suitCode(card)));
 
-        assertEquals(-5, board.score());
+        assertEquals(-4, board.score());
 
         board.resetScore();
         fillFreeCells(0, card("Js"));
-        assertEquals(-11, board.score());
+        assertEquals(-10, board.score());
 
         board.column(7).clear();
         board.resetScore();
-        assertEquals(-5, board.score());
+        assertEquals(-4, board.score());
 
         board.column(1).clear();
         board.resetScore();
         assertThrows(NoSuchElementException.class, () -> board.score());
+    }
+
+    @Test
+    void test_calcBlockers() {
+        var card = card("Qc");
+
+        assertEquals(1, board.calcBlockers(card));
+
+        fillFreeCells(0, card("Js"));
+        assertEquals(2, board.calcBlockers(card));
+        assertTrue(board.emptyFoundations());
+
+        range(0, board.foundations().length).forEach(i -> board.foundations()[i] = card("Js"));
+        assertFalse(board.emptyFoundations());
+        assertEquals(1, board.calcBlockers(card));
+
+        board.foundations()[0] = null;
+        assertEquals(2, board.calcBlockers(card));
+
+        board.column(0).clear();
+        assertEquals(1, board.calcBlockers(card));
     }
 
     @Test
@@ -489,15 +510,15 @@ public class FreeCellBoardTest {
     @Test
     void test_isOrderedColumn() {
         var column = new Column();
-        assertTrue(board.isOrderedColumn.test(column));
+        assertTrue(board.isOrderedColumn(column));
 
         column.add(card("Kc"));
-        assertTrue(board.isOrderedColumn.test(column));
+        assertTrue(board.isOrderedColumn(column));
 
         column.add(card("Qh"));
-        assertTrue(board.isOrderedColumn.test(column));
+        assertTrue(board.isOrderedColumn(column));
 
         column.add(card("Ts"));
-        assertFalse(board.isOrderedColumn.test(column));
+        assertFalse(board.isOrderedColumn(column));
     }
 }
