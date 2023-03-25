@@ -273,7 +273,7 @@ class SpiderBoardTest {
         assertEquals(500, board.totalScore());
         assertEquals(0, board.runs());
         board.resetScore();
-        assertEquals(-17, board.score());
+        assertEquals(-4, board.score());
 
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
@@ -289,7 +289,7 @@ class SpiderBoardTest {
                 outputStream.toString().trim());
         assertEquals(1, result.runs());
         result.resetScore();
-        assertEquals(-4, result.score());
+        assertEquals(9, result.score());
         System.setOut(savedOne);
 
         board.path().clear();

@@ -248,7 +248,7 @@ public class SpiderBoard extends GameBoard {
             var coveredCards = columns().stream().filter(BoardHelper.isNotEmpty).mapToInt(Column::openAt).sum();
             // The larger, the better.
             var sequenceScore = calcSequences();
-            var runScore = runs() * 26;
+            var runScore = runs() * 39;
 
             super.score(sequenceScore - coveredCards + runScore);
         }
@@ -259,8 +259,15 @@ public class SpiderBoard extends GameBoard {
     protected int calcSequences() {
         return range(0, columns().size())
                 .filter(isNotEmpty)
-                .map(i -> getOrderedCards(column(i)).length)
+                .map(this::calcSequenceScore)
                 .sum();
+    }
+
+    private int calcSequenceScore(int i) {
+        var column = column(i);
+        var score = getOrderedCards(column).length;
+
+        return column.size() == score && column.get(0).isKing() ? score * 2 : score;
     }
 
     @Override

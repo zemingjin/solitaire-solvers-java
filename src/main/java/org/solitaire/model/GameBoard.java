@@ -26,13 +26,12 @@ import static org.solitaire.util.CardHelper.toArray;
 public class GameBoard implements Board<String, Candidate> {
     public static final Function<Stream<Candidate>, Stream<Candidate>> flattenStream = it -> it;
 
-    protected final Path<String> path;
-    protected final Columns columns;
-    private int totalScore;
     private transient BiPredicate<Card, Card> isInSequence;
-    private transient int score = MIN_VALUE;
-
     public transient final IntPredicate isNotEmpty = i -> column(i).isNotEmpty();
+    private transient int score = MIN_VALUE;
+    private int totalScore;
+    protected final Columns columns;
+    protected final Path<String> path;
 
     public GameBoard(Columns columns, Path<String> path) {
         this(columns, path, 0);
