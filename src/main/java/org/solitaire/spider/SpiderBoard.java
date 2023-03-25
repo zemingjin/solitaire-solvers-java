@@ -13,9 +13,6 @@ import org.solitaire.util.BoardHelper;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.IntFunction;
-import java.util.function.IntPredicate;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -37,14 +34,7 @@ import static org.solitaire.util.CardHelper.suitCode;
 
 @Slf4j
 public class SpiderBoard extends GameBoard {
-    protected final Deck deck;
-    protected transient final Predicate<Candidate> isNotFromSequenceOfSameSuit = candidate -> {
-        var column = column(candidate.from());
-        return column.size() >= 2 && !column.get(column.size() - 2).isHigherOfSameSuit(candidate.peek());
-    };
-    protected transient final Predicate<Candidate> isFromPartialColumn = candidate ->
-            column(candidate.from()).size() > candidate.cards().length;
-    private transient final IntPredicate isThereARun = i -> isThereARun(column(i));
+    protected Deck deck;
     private int runs = 0;
 
     public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
@@ -54,7 +44,7 @@ public class SpiderBoard extends GameBoard {
     }
 
     public SpiderBoard(SpiderBoard that) {
-        this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore(), new Deck(that.deck()));
+        this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore(), that.deck());
         runs(that.runs());
     }
 
@@ -69,24 +59,21 @@ public class SpiderBoard extends GameBoard {
     }
 
     private List<Candidate> findBoardCandidates() {
-        return Optional.of(findCandidatesOfSameSuit())
-                .map(it -> concat(it.stream(), findCandidatesByRanks(it)))
-                .map(Stream::toList)
+        return Optional.of(findCandidatesBySuit())
+                .map(it -> concat(it.stream(), findCandidatesByRanks(it)).toList())
                 .filter(BoardHelper.isNotEmpty)
                 .orElseGet(Collections::emptyList);
     }
 
-    protected List<Candidate> findCandidatesOfSameSuit() {
-        return Optional.of(findColumnToColumnCandidates())
-                .map(Stream::toList)
-                .map(this::optimizeCandidatesOfSameSuit)
+    protected List<Candidate> findCandidatesBySuit() {
+        return Optional.of(findColumnToColumnCandidates().toList())
+                .map(this::optimizeCandidatesBySuit)
                 .orElseGet(Collections::emptyList);
     }
 
-    protected List<Candidate> optimizeCandidatesOfSameSuit(List<Candidate> candidates) {
-        return range(0, candidates.size())
-                .filter(i -> isLongerTargetSequence(candidates.get(i)))
-                .mapToObj(i -> checkForLongerTargets(candidates.get(i), candidates))
+    protected List<Candidate> optimizeCandidatesBySuit(List<Candidate> candidates) {
+        return candidates.stream()
+                .map(candidate -> checkForLongerTargets(candidate, candidates))
                 .filter(isNotNull)
                 .toList();
     }
@@ -100,8 +87,8 @@ public class SpiderBoard extends GameBoard {
     }
 
     private boolean hasLongerTargetSequence(Candidate a, Candidate b) {
-        return a.cards().length + getOrderedCards().apply(column(a.to())).length >=
-                b.cards().length + getOrderedCards().apply(column(b.to())).length;
+        return a.cards().length + getOrderedCards(column(a.to())).length >=
+                b.cards().length + getOrderedCards(column(b.to())).length;
     }
 
     @Override
@@ -132,7 +119,7 @@ public class SpiderBoard extends GameBoard {
 
     private Candidate findCandidatesByRanks(int to, int from) {
         var target = peek(to);
-        var cards = getOrderedCards.apply(column(from));
+        var cards = getOrderedCards(column(from));
 
         if (isNull(target) || target.isHigherRank(cards[0])) {
             return columnToColumn(cards, from, to);
@@ -142,11 +129,22 @@ public class SpiderBoard extends GameBoard {
 
     protected boolean isMovable(Candidate candidate) {
         return Optional.of(candidate)
-                .filter(isNotFromSequenceOfSameSuit)
-                .filter(isNotRepeatingCandidate)
-                .filter(isMovableToEmptyColumn)
-                .filter(isFromPartialColumn)
+                .filter(this::isNotFromSequenceOfSameSuit)
+                .filter(this::isNotRepeatingCandidate)
+                .filter(this::isMovableToEmptyColumn)
+                .filter(this::isFromPartialColumn)
                 .isPresent();
+    }
+
+    protected boolean isFromPartialColumn(Candidate candidate) {
+        return column(candidate.from()).size() > candidate.cards().length;
+    }
+
+    protected boolean isNotFromSequenceOfSameSuit(Candidate candidate) {
+        var column = column(candidate.from());
+        var cards = candidate.cards();
+        return column.size() > cards.length
+                && !column.get(column.size() - cards.length - 1).isHigherOfSameSuit(candidate.peek());
     }
 
     protected List<Candidate> drawDeck() {
@@ -177,7 +175,8 @@ public class SpiderBoard extends GameBoard {
     }
 
     private void removeFromDeck(Candidate candidate) {
-        Stream.of(candidate.cards()).forEach(it -> deck().remove(it));
+        cloneDeck();
+        Stream.of(candidate.cards()).forEach(it -> deck.remove(it));
     }
 
     protected SpiderBoard appendToTarget(Candidate candidate) {
@@ -204,8 +203,8 @@ public class SpiderBoard extends GameBoard {
 
     protected SpiderBoard checkForRun(int colAt) {
         IntStream.of(colAt)
-                .filter(isThereARun)
-                .mapToObj(getCandidateForTheRun)
+                .filter(i -> isThereARun(column(i)))
+                .mapToObj(this::getCandidateForTheRun)
                 .findFirst()
                 .ifPresent(it -> removeFromSource(it).appendToTarget(it));
         return this;
@@ -223,15 +222,20 @@ public class SpiderBoard extends GameBoard {
         return false;
     }
 
-    private transient final IntFunction<Candidate> getCandidateForTheRun = colAt ->
-            Optional.of(colAt)
-                    .map(this::column)
-                    .map(it -> it.subList(it.size() - 13, it.size()))
-                    .map(it -> candidate(it, COLUMN, colAt, FOUNDATION, suitCode(it.get(0))))
-                    .orElseThrow();
+    private Candidate getCandidateForTheRun(int colAt) {
+        return Optional.of(colAt)
+                .map(this::column)
+                .map(it -> it.subList(it.size() - 13, it.size()))
+                .map(it -> candidate(it, COLUMN, colAt, FOUNDATION, suitCode(it.get(0))))
+                .orElseThrow();
+    }
 
     protected boolean isNoEmptyColumn() {
         return columns().stream().allMatch(Column::isNotEmpty);
+    }
+
+    private void cloneDeck() {
+        deck = new Deck(deck);
     }
 
     /*****************************************************************************************************************
@@ -255,7 +259,7 @@ public class SpiderBoard extends GameBoard {
     protected int calcSequences() {
         return range(0, columns().size())
                 .filter(isNotEmpty)
-                .map(i -> getOrderedCards().apply(column(i)).length)
+                .map(i -> getOrderedCards(column(i)).length)
                 .sum();
     }
 

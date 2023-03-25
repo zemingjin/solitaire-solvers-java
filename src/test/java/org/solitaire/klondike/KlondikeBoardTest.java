@@ -360,35 +360,35 @@ class KlondikeBoardTest {
 
     @Test
     void test_getOrderedCards() {
-        var result = board.getOrderedCards().apply(board.column(0));
+        var result = board.getOrderedCards(board.column(0));
 
         assertEquals(1, result.length);
         assertEquals("24:Th", result[0].toString());
 
-        result = board.getOrderedCards().apply(board.column(6));
+        result = board.getOrderedCards(board.column(6));
         assertEquals(1, result.length);
         assertEquals("51:Tc", result[0].toString());
 
         board.column(5).add(board.column(4).peek());
-        result = board.getOrderedCards().apply(board.column(5));
+        result = board.getOrderedCards(board.column(5));
 
         assertEquals(2, result.length);
 
         board.column(0).add(board.column(1).pop());
         board.column(0).add(board.column(1).pop());
-        result = board.getOrderedCards().apply(board.column(0));
+        result = board.getOrderedCards(board.column(0));
 
         assertEquals(3, result.length);
 
         board.column(0).clear();
-        assertEquals(0, board.getOrderedCards().apply(board.column(0)).length);
+        assertEquals(0, board.getOrderedCards(board.column(0)).length);
 
         board.column(0).add(card("Kh"));
-        result = board.getOrderedCards().apply(board.column(0));
+        result = board.getOrderedCards(board.column(0));
         assertEquals(1, result.length);
 
         board.column(0).set(0, card("Qh"));
-        result = board.getOrderedCards().apply(board.column(0));
+        result = board.getOrderedCards(board.column(0));
         assertNotEquals(0, result.length);
         assertEquals("0:Qh", result[0].toString());
     }

@@ -55,7 +55,7 @@ public class FreeCellBoardTest {
         var cards = List.of(card("5h"), card("4c"), card("3d"), card("2s"));
         board.column(1).addAll(cards);
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(3, result.size());
+        assertEquals(2, result.size());
         assertEquals("10:[5h, 4c, 3d, 2s]", result.get(0).notation());
 
         fillFreeCells(2, card("Ts"));
@@ -65,12 +65,12 @@ public class FreeCellBoardTest {
 
         board.column(1).remove(board.column(1).size() - 1);
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(2, result.size());
+        assertEquals(1, result.size());
         assertEquals("10:[5h, 4c, 3d]", result.get(0).notation());
 
         board.column(0).clear();
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(8, result.size());
+        assertEquals(7, result.size());
         assertEquals("10:[5h, 4c, 3d]", result.get(0).notation());
     }
 

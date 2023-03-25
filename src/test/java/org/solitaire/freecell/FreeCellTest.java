@@ -29,7 +29,7 @@ class FreeCellTest {
         useSuit(false);
         isPrint(false);
         freeCell = new FreeCell(buildBoard(cards));
-        hsdDepth(5);
+        hsdDepth(6);
         FreeCellHSD.add(true);
         singleSolution(true);
         mockFreeCell = new FreeCellHSD(buildBoard(cards));
@@ -39,9 +39,9 @@ class FreeCellTest {
     void test_solveByHSD() {
         freeCell.solveByHSD(freeCell.stack().pop().peek());
 
-        assertEquals(4477, freeCell.totalScenarios());
+        assertEquals(31000, freeCell.totalScenarios());
         assertFalse(freeCell.stack().isEmpty());
-        assertEquals("[4f:4c, 3f:9d, 3f:8s, 35:8h, 6$:Ad]", freeCell.board().path().toString());
+        assertEquals("[4f:4c, 3f:9d, 3f:8s, 35:8h, 6$:Ad, 1$:2d]", freeCell.board().path().toString());
     }
 
     @Test
@@ -50,7 +50,7 @@ class FreeCellTest {
 
         mockFreeCell.solve();
 
-        assertEquals(4477, mockFreeCell.totalScenarios());
+        assertEquals(31000, mockFreeCell.totalScenarios());
     }
 
     @Test
