@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Column;
-import org.solitaire.util.IOHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -19,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Candidate.columnToColumn;
@@ -29,26 +29,15 @@ import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
+import static org.solitaire.util.IOHelper.loadFile;
 
 class SpiderBoardTest {
     private static final String TEST_FILE = "games/spider/spider-expert-122922.txt";
+    private static final String EASY_SPIDER_FILE = "games/spider/spider-easy-120322.txt";
 
-    private static final String[] cards = IOHelper.loadFile(TEST_FILE);
+    private static final String[] cards = loadFile(TEST_FILE);
 
     private SpiderBoard board;
-
-    private static Column mockRun() {
-        return mockRun(VALUES.length());
-    }
-
-    private static Column mockRun(int length) {
-        var column = new Column();
-
-        for (int i = length; i-- > 0; ) {
-            column.add(card(VALUES.charAt(i) + "d"));
-        }
-        return column;
-    }
 
     @BeforeEach
     void setup() {
@@ -87,7 +76,7 @@ class SpiderBoardTest {
     }
 
     @Test
-    void test_test_findCandidatesOfSameSuit_merge_sequences() {
+    void test_findCandidatesOfSameSuit_merge_sequences() {
         mockColumn(0, 5, 0);
         mockColumn(1, 12, 6);
 
@@ -97,7 +86,7 @@ class SpiderBoardTest {
     }
 
     @Test
-    void test_test_findCandidatesOfSameSuit_merge_sublist() {
+    void test_findCandidatesOfSameSuit_merge_sublist() {
         mockColumn(0, 8, 0);
         mockColumn(1, 12, 6);
 
@@ -198,14 +187,18 @@ class SpiderBoardTest {
     }
 
     @Test
-    void test_copy() {
+    void test_clone() {
         board.column(9).add(board.column(5).pop());
         board.column(9).add(card("Ah"));
         board.score();
         board.runs(10);
+        board.singleSuit(true);
+        board.isInSequence((a, b) -> true);
         var copy = new SpiderBoard(board);
 
+        assertNotSame(board, copy);
         assertTrue(reflectionEquals(board, copy));
+        assertTrue(copy.isInSequence().test(null, null));
     }
 
     @Test
@@ -353,10 +346,10 @@ class SpiderBoardTest {
 
     @Test
     void test_isNoEmptyColumn() {
-        assertTrue(board.isNoEmptyColumn());
+        assertTrue(board.noEmptyColumns());
 
         board.column(0).clear();
-        assertFalse(board.isNoEmptyColumn());
+        assertFalse(board.noEmptyColumns());
     }
 
     @Test
@@ -383,6 +376,9 @@ class SpiderBoardTest {
         var candidates = board.drawDeck();
         assertEquals(1, candidates.size());
         assertEquals("^0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
+
+        board.column(0).clear();
+        assertThrows(RuntimeException.class, () -> board.drawDeck());
 
         board.deck().clear();
         assertTrue(board.drawDeck().isEmpty());
@@ -424,12 +420,21 @@ class SpiderBoardTest {
         var result = board.verify();
 
         assertTrue(result.isEmpty());
+        assertFalse(board.singleSuit());
 
         board.column(1).add(card("Th"));
         board.column(0).remove(0);
         result = board.verify();
         assertEquals(2, result.size());
         assertEquals("[Extra card: Th, Missing card: 4h]", result.toString());
+    }
+
+    @Test
+    void test_singleSuit() {
+        var board = build(loadFile(EASY_SPIDER_FILE)).board();
+
+        assertEquals(0, board.verify().size());
+        assertTrue(board.singleSuit());
     }
 
     private void mockColumn(int col, int h, int l) {
@@ -443,4 +448,16 @@ class SpiderBoardTest {
                 candidate(card("2h"), COLUMN, 5, COLUMN, 9));
     }
 
+    private static Column mockRun() {
+        return mockRun(VALUES.length());
+    }
+
+    private static Column mockRun(int length) {
+        var column = new Column();
+
+        for (int i = length; i-- > 0; ) {
+            column.add(card(VALUES.charAt(i) + "d"));
+        }
+        return column;
+    }
 }

@@ -5,6 +5,7 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 
 import java.rmi.AccessException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,6 +29,14 @@ public class BoardHelper {
 
     BoardHelper() throws AccessException {
         throw new AccessException("Instantiating an utility class.");
+    }
+
+    public static boolean isSingleSuit(List<Column> columns, List<Card> deck) {
+        var suitSet = new HashSet<String>();
+        concat(toStream(columns), deck.stream())
+                .map(Card::suit)
+                .forEach(suitSet::add);
+        return suitSet.size() == 1;
     }
 
     @SafeVarargs

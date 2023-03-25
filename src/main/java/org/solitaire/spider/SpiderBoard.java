@@ -29,6 +29,7 @@ import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.util.BoardHelper.isNotNull;
+import static org.solitaire.util.BoardHelper.isSingleSuit;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.suitCode;
 
@@ -36,6 +37,7 @@ import static org.solitaire.util.CardHelper.suitCode;
 public class SpiderBoard extends GameBoard {
     protected Deck deck;
     private int runs = 0;
+    private boolean singleSuit;
 
     public SpiderBoard(Columns columns, Path<String> path, int totalScore, Deck deck) {
         super(columns, path, totalScore);
@@ -46,6 +48,8 @@ public class SpiderBoard extends GameBoard {
     public SpiderBoard(SpiderBoard that) {
         this(new Columns(that.columns()), new Path<>(that.path()), that.totalScore(), that.deck());
         runs(that.runs());
+        isInSequence(that.isInSequence());
+        singleSuit(that.singleSuit);
     }
 
     /**************************************************************************************************************
@@ -60,7 +64,7 @@ public class SpiderBoard extends GameBoard {
 
     private List<Candidate> findBoardCandidates() {
         return Optional.of(findCandidatesBySuit())
-                .map(it -> concat(it.stream(), findCandidatesByRanks(it)).toList())
+                .map(it -> singleSuit() ? it : concat(it.stream(), findCandidatesByRanks(it)).toList())
                 .filter(BoardHelper.isNotEmpty)
                 .orElseGet(Collections::emptyList);
     }
@@ -93,7 +97,7 @@ public class SpiderBoard extends GameBoard {
 
     @Override
     protected Candidate candidateToEmptyColumn(Card[] cards, int from, int to) {
-        return new Candidate(cards, COLUMN, from, COLUMN, to);
+        return columnToColumn(cards, from, to);
     }
 
     protected Stream<Candidate> findCandidatesByRanks(List<Candidate> candidates) {
@@ -148,10 +152,13 @@ public class SpiderBoard extends GameBoard {
     }
 
     protected List<Candidate> drawDeck() {
-        if (isNoEmptyColumn() && isNotEmpty(deck)) {
+        if (ableToDealCards()) {
             var cards = deck().subList(0, columns.size());
 
             return List.of(candidate(cards, DECKPILE, 0, COLUMN, 0));
+        }
+        if (emptyColumns() && !deck().isEmpty()) {
+            throw new RuntimeException("Can't deal a new row with empty columns or deck!");
         }
         return emptyList();
     }
@@ -230,14 +237,6 @@ public class SpiderBoard extends GameBoard {
                 .orElseThrow();
     }
 
-    protected boolean isNoEmptyColumn() {
-        return columns().stream().allMatch(Column::isNotEmpty);
-    }
-
-    private void cloneDeck() {
-        deck = new Deck(deck);
-    }
-
     /*****************************************************************************************************************
      * Scoring board
      ****************************************************************************************************************/
@@ -270,11 +269,34 @@ public class SpiderBoard extends GameBoard {
         return column.size() == score && column.get(0).isKing() ? score * 2 : score;
     }
 
+    /***********************************************************************************************************
+     * Helpers
+     **********************************************************************************************************/
     @Override
     public List<String> verify() {
+        singleSuit(isSingleSuit(columns(), deck()));
         return verifyBoard(columns(), deck());
     }
 
+    protected boolean noEmptyColumns() {
+        return !emptyColumns();
+    }
+
+    private boolean emptyColumns() {
+        return columns().stream().anyMatch(Column::isEmpty);
+    }
+
+    private void cloneDeck() {
+        deck = new Deck(deck);
+    }
+
+    private boolean ableToDealCards() {
+        return noEmptyColumns() && isNotEmpty(deck);
+    }
+
+    /***********************************************************************************************************
+     * Accessors
+     **********************************************************************************************************/
     public Deck deck() {
         return deck;
     }
@@ -290,6 +312,14 @@ public class SpiderBoard extends GameBoard {
 
     public void runs(int runs) {
         this.runs = runs;
+    }
+
+    public boolean singleSuit() {
+        return singleSuit;
+    }
+
+    public void singleSuit(boolean singleSuit) {
+        this.singleSuit = singleSuit;
     }
 
 }

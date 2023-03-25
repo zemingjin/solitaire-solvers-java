@@ -134,6 +134,10 @@ public class GameBoard implements Board<String, Candidate> {
         return null;
     }
 
+    protected boolean isMovable(Card[] cards, int from, int to) {
+        return cards.length < column(from).size() || column(to).isNotEmpty();
+    }
+
     public Card[] getOrderedCards(Column column) {
         if (column.isEmpty()) {
             return toArray();
@@ -147,10 +151,6 @@ public class GameBoard implements Board<String, Candidate> {
             }
         }
         return toArray(column.subList(at, column.size()));
-    }
-
-    protected boolean isMovable(Card[] cards, int from, int to) {
-        return cards.length < column(from).size() || column(to).isNotEmpty();
     }
 
     protected Candidate candidateToEmptyColumn(Card[] cards, int from, int to) {
@@ -231,7 +231,7 @@ public class GameBoard implements Board<String, Candidate> {
         return columns().get(colId);
     }
 
-    protected BiPredicate<Card, Card> isInSequence() {
+    public BiPredicate<Card, Card> isInSequence() {
         return isInSequence;
     }
 
