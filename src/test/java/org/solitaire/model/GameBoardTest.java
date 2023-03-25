@@ -98,12 +98,12 @@ public class GameBoardTest {
 
     @Test
     void test_getOrderedCards() {
-        var result = board.getOrderedCards().apply(board.column(ZERO));
+        var result = board.getOrderedCards(board.column(ZERO));
 
         assertEquals(ONE, result.length);
 
         board.column(ZERO).addAll(List.of(card("9h"), card("8h")));
-        result = board.getOrderedCards().apply(board.column(ZERO));
+        result = board.getOrderedCards(board.column(ZERO));
 
         assertEquals(THREE, result.length);
     }

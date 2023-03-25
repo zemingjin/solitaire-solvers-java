@@ -4,6 +4,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 
+import java.rmi.AccessException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,13 +24,10 @@ import static org.solitaire.util.CardHelper.suitCode;
 public class BoardHelper {
     public static final Predicate<Object> isNull = Objects::isNull;
     public static final Predicate<Object> isNotNull = Objects::nonNull;
-    public static final Predicate<Object> listNotEmpty = ObjectUtils::isNotEmpty;
+    public static final Predicate<Object> isNotEmpty = ObjectUtils::isNotEmpty;
 
-    private BoardHelper() {
-    }
-
-    public static BoardHelper of() {
-        return new BoardHelper();
+    BoardHelper() throws AccessException {
+        throw new AccessException("Instantiating an utility class.");
     }
 
     @SafeVarargs

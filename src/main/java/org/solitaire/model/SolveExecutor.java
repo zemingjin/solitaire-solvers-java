@@ -9,7 +9,6 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.util.Comparator.comparingInt;
@@ -18,7 +17,7 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.util.BoardHelper.isNotNull;
-import static org.solitaire.util.BoardHelper.listNotEmpty;
+import static org.solitaire.util.BoardHelper.isNotEmpty;
 import static org.solitaire.util.CardHelper.string;
 
 public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
@@ -28,72 +27,16 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     private final Stack<BoardStack<T>> stack = new Stack<>();
     private final List<Consumer<List<S>>> solutionConsumers = new LinkedList<>();
-    private final Function<Stream<T>, Stream<T>> sortBoards = it -> it.sorted(comparingInt(T::score));
-    private final Consumer<Collection<T>> push = boards -> stack().add(new BoardStack<>(boards));
-    private final Consumer<Collection<T>> addBoards =
-            boards -> Optional.of(boards)
-                    .filter(listNotEmpty)
-                    .ifPresent(push);
-    private final Consumer<T> addBoard =
-            board -> Optional.ofNullable(board)
-                    .map(List::of)
-                    .ifPresent(addBoards());
-    private final Function<Stream<T>, T> getBestBoard =
-            boards -> boards.reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
-    private final Function<BoardStack<T>, T> getBoard = boards -> {
-        var board = boards.pop();
-
-        if (boards.isEmpty()) {
-            stack.pop();
-        }
-        return board;
-    };
     private int totalScenarios = 0;
     private int totalSolutions = 0;
-    private final Predicate<T> isUnsolvedBoard = board -> {
-        if (nonNull(board) && board.isSolved() && isContinuing()) {
-            solutionConsumers.forEach(it -> it.accept(board.path()));
-            return false;
-        }
-        return true;
-    };
     private Integer maxDepth = 0;
     private Function<T, T> cloner;
-    @SuppressWarnings("unchecked")
-    private final Function<Pair<T, U>, T> clone_Update = pair -> (T) clone(pair.getLeft()).updateBoard(pair.getRight());
-    private final Function<Pair<List<U>, T>, Stream<T>> applyCandidates =
-            pair -> pair.getLeft().parallelStream()
-                    .map(it -> Pair.of(pair.getRight(), it))
-                    .map(clone_Update)
-                    .filter(isUnsolvedBoard)
-                    .filter(isNotNull)
-                    .peek(Board::score);
-    private final Function<T, Stream<T>> searchBoard = board -> {
-        totalScenarios++;
-        return Optional.of(board)
-                .map(T::findCandidates)
-                .filter(listNotEmpty)
-                .map(it -> Pair.of(it, board))
-                .map(applyCandidates)
-                .stream()
-                .flatMap(it -> it);
-    };
     private List<S> shortestPath;
     private List<S> longestPath;
-    protected final Consumer<List<S>> defaultSolutionConsumer = path -> {
-        totalSolutions(totalSolutions() + 1);
-        if (nonNull(path) && isNotEmpty(path)) {
-            checkShortestPath(path);
-            checkLongestPath(path);
-            if (isPrint()) {
-                System.out.printf("%d: %s\n", path.size(), string(path));
-            }
-        }
-    };
 
     public SolveExecutor(T initialBoard) {
-        addBoard.accept(initialBoard);
-        addSolutionConsumer(defaultSolutionConsumer);
+        addBoard(initialBoard);
+        addSolutionConsumer(this::defaultSolutionConsumer);
     }
 
     public SolveExecutor(T initialBoard, Function<T, T> cloner) {
@@ -102,93 +45,100 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     /**************************************************************************************************************
-     * Accessors
-     *************************************************************************************************************/
-    public static boolean singleSolution() {
-        return singleSolution;
-    }
-
-    public static void singleSolution(boolean singleSolution) {
-        SolveExecutor.singleSolution = singleSolution;
-    }
-
-    public static int hsdDepth() {
-        return hsdDepth;
-    }
-
-    public static void hsdDepth(int hsdDepth) {
-        SolveExecutor.hsdDepth = hsdDepth;
-    }
-
-    public static boolean isPrint() {
-        return isPrint;
-    }
-
-    public static void isPrint(boolean isPrint) {
-        SolveExecutor.isPrint = isPrint;
-    }
-
-    /**************************************************************************************************************
      * Execution routines
      *************************************************************************************************************/
     @Override
     public void solve() {
-        var verify = board().verify();
+        verifyBoard();
 
-        if (verify.isEmpty()) {
-            while (isContinuing() && !stack.isEmpty()) {
-                checkMaxDepth();
+        while (isContinuing() && !stack.isEmpty()) {
+            checkMaxDepth();
 
-                Optional.ofNullable(stack.peek())
-                        .filter(listNotEmpty)
-                        .map(getBoard)
-                        .filter(isUnsolvedBoard)
-                        .ifPresent(solveBoard());
-            }
-        } else {
-            throw new RuntimeException(verify.toString());
+            Optional.ofNullable(stack.peek())
+                    .filter(isNotEmpty)
+                    .map(this::getBoard)
+                    .filter(this::isUnsolvedBoard)
+                    .ifPresent(solveBoard());
         }
     }
 
     public void solveByDFS(T board) {
         Optional.of(board)
-                .map(searchBoard)
-                .map(sortBoards)
-                .map(Stream::toList)
-                .filter(listNotEmpty)
-                .ifPresent(addBoards());
+                .map(this::searchBoard)
+                .map(it -> it.sorted(comparingInt(T::score)).toList())
+                .filter(isNotEmpty)
+                .ifPresent(this::addBoards);
     }
 
     public void solveByHSD(T board) {
         var boards = List.of(board);
 
         for (int i = 1; i <= hsdDepth() && isNotEmpty(boards); i++) {
-            boards = boards.stream().flatMap(searchBoard).toList();
+            boards = boards.stream().flatMap(this::searchBoard).toList();
         }
         Optional.of(boards)
-                .filter(listNotEmpty)
+                .filter(isNotEmpty)
                 .map(List::stream)
-                .map(getBestBoard)
-                .ifPresent(addBoard);
+                .map(this::getBestBoard)
+                .ifPresent(this::addBoard);
+    }
+
+    private T getBestBoard(Stream<T> boards) {
+        return boards.reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
+    }
+
+    private Stream<T> searchBoard(T board) {
+        totalScenarios++;
+        return Optional.of(board)
+                .map(T::findCandidates)
+                .filter(isNotEmpty)
+                .map(it -> applyCandidates(it, board))
+                .stream()
+                .flatMap(it -> it);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Stream<T> applyCandidates(List<U> list, T board) {
+        return list.parallelStream()
+                .map(it -> (T) clone(board).updateBoard(it))
+                .filter(this::isUnsolvedBoard)
+                .filter(isNotNull)
+                .peek(Board::score);
+    }
+
+    private boolean isUnsolvedBoard(T board) {
+        if (nonNull(board) && board.isSolved() && isContinuing()) {
+            solutionConsumers.forEach(it -> it.accept(board.path()));
+            return false;
+        }
+        return true;
+    }
+
+    protected void defaultSolutionConsumer(List<S> path) {
+        totalSolutions(totalSolutions() + 1);
+        if (nonNull(path) && isNotEmpty(path)) {
+            checkShortestPath(path);
+            checkLongestPath(path);
+            if (isPrint()) {
+                System.out.printf("%d: %s\n", path.size(), string(path));
+            }
+        }
     }
 
     /**************************************************************************************************************
      * Helper routines
      *************************************************************************************************************/
+    private T getBoard(BoardStack<T> boards) {
+        var board = boards.pop();
+
+        if (boards.isEmpty()) {
+            stack.pop();
+        }
+        return board;
+    }
+
     public boolean isContinuing() {
         return !singleSolution() || totalSolutions() == 0;
-    }
-
-    public Function<Pair<List<U>, T>, Stream<T>> applyCandidates() {
-        return applyCandidates;
-    }
-
-    public Consumer<Collection<T>> addBoards() {
-        return addBoards;
-    }
-
-    public Consumer<T> addBoard() {
-        return addBoard;
     }
 
     private void checkLongestPath(List<S> path) {
@@ -203,6 +153,29 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         }
     }
 
+    public void addBoards(Collection<T> boards) {
+        Optional.of(boards)
+                .filter(isNotEmpty)
+                .ifPresent(it -> stack.add(new BoardStack<>(it)));
+    }
+
+    public void addBoard(T board) {
+        Optional.ofNullable(board)
+                .map(List::of)
+                .ifPresent(this::addBoards);
+    }
+
+    private void verifyBoard() {
+        var verify = board().verify();
+
+        if (!verify.isEmpty()) {
+            throw new RuntimeException(verify.toString());
+        }
+    }
+
+    /**************************************************************************************************************
+     * Accessors
+     *************************************************************************************************************/
     @Override
     public int totalScenarios() {
         return this.totalScenarios;
@@ -292,6 +265,30 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     public void totalSolutions(int totalSolutions) {
         this.totalSolutions = totalSolutions;
+    }
+
+    public static boolean singleSolution() {
+        return singleSolution;
+    }
+
+    public static void singleSolution(boolean singleSolution) {
+        SolveExecutor.singleSolution = singleSolution;
+    }
+
+    public static int hsdDepth() {
+        return hsdDepth;
+    }
+
+    public static void hsdDepth(int hsdDepth) {
+        SolveExecutor.hsdDepth = hsdDepth;
+    }
+
+    public static boolean isPrint() {
+        return isPrint;
+    }
+
+    public static void isPrint(boolean isPrint) {
+        SolveExecutor.isPrint = isPrint;
     }
 
 }
