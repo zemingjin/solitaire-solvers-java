@@ -26,6 +26,8 @@ import static org.solitaire.util.CardHelper.toArray;
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
     public static final Function<Stream<Candidate>, Stream<Candidate>> flattenStream = it -> it;
+
+    private transient BiPredicate<Card, Card> isInSequence;
     public transient final IntPredicate isNotEmpty = i -> column(i).isNotEmpty();
     private transient BiPredicate<Card, Card> isInSequence;
     private transient int score = MIN_VALUE;
@@ -46,6 +48,7 @@ public class GameBoard implements Board<String, Candidate> {
     }
 
     protected void removeFromColumn(Candidate candidate) {
+        resetOrderedCards(candidate.from());
         Optional.of(candidate)
                 .map(Candidate::from)
                 .map(columns::get)
@@ -73,6 +76,7 @@ public class GameBoard implements Board<String, Candidate> {
 
         column(candidate.to()).addAll(List.of(cards));
         column.openAt(openAt);
+        resetOrderedCards(candidate.to());
     }
 
     @Override
@@ -238,6 +242,10 @@ public class GameBoard implements Board<String, Candidate> {
 
     public Card[] orderedCards(int colAt) {
         return orderedCards[colAt];
+    }
+
+    public void resetOrderedCards(int colAt) {
+        orderedCards[colAt] = null;
     }
 
     public void resetCache() {

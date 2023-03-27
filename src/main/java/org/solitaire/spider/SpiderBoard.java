@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 import static java.lang.Integer.compare;
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
@@ -176,31 +175,21 @@ public class SpiderBoard extends GameBoard {
 
     protected SpiderBoard checkForRun(int colAt) {
         IntStream.of(colAt)
-                .filter(i -> isThereARun(column(i)))
-                .mapToObj(this::getCandidateForTheRun)
+                .mapToObj(this::getRunCandidate)
+                .filter(isNotNull)
                 .findFirst()
                 .ifPresent(it -> removeFromSource(it).appendToTarget(it));
         return this;
     }
 
-    protected boolean isThereARun(Column column) {
-        if (nonNull(column) && 13 <= column.size()) {
-            for (int i = column.size() - 1, floor = column.size() - 13; i > floor; i--) {
-                if (!column.get(i - 1).isHigherOfSameColor(column.get(i))) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private Candidate getCandidateForTheRun(int colAt) {
+    protected Candidate getRunCandidate(int colAt) {
         return Optional.of(colAt)
                 .map(this::column)
-                .map(it -> it.subList(it.size() - 13, it.size()))
-                .map(it -> candidate(it, COLUMN, colAt, FOUNDATION, suitCode(it.get(0))))
-                .orElseThrow();
+                .filter(it -> 13 <= it.size())
+                .map(it -> getOrderedCards(colAt))
+                .filter(it -> 13 == it.length)
+                .map(it -> candidate(it, COLUMN, colAt, FOUNDATION, suitCode(it[0])))
+                .orElse(null);
     }
 
     /*****************************************************************************************************************
@@ -256,16 +245,16 @@ public class SpiderBoard extends GameBoard {
         deck = new Deck(deck);
     }
 
+    @Override
+    public boolean isSolved() {
+        return super.isSolved() && deck.isEmpty();
+    }
+
     /***********************************************************************************************************
      * Accessors
      **********************************************************************************************************/
     public Deck deck() {
         return deck;
-    }
-
-    @Override
-    public boolean isSolved() {
-        return super.isSolved() && deck.isEmpty();
     }
 
     public int runs() {
