@@ -8,9 +8,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.Integer.MIN_VALUE;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -114,6 +116,17 @@ public class GameBoardTest {
 
         board.score(0);
         assertFalse(board.isNotScored());
+    }
+
+    @Test
+    void test_resetCache() {
+        assertEquals(1, board.getOrderedCards(0).length);
+        assertNotNull(board.orderedCards(0));
+        board.score(123);
+
+        board.resetCache();
+        assertNull(board.orderedCards(0));
+        assertEquals(MIN_VALUE, board.score());
     }
 
 }

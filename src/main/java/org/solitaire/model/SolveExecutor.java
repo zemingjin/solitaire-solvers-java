@@ -16,8 +16,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
-import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.isNotEmpty;
+import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.CardHelper.string;
 
 public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
@@ -42,6 +42,30 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     public SolveExecutor(T initialBoard, Function<T, T> cloner) {
         this(initialBoard);
         cloner(cloner);
+    }
+
+    public static boolean singleSolution() {
+        return singleSolution;
+    }
+
+    public static void singleSolution(boolean singleSolution) {
+        SolveExecutor.singleSolution = singleSolution;
+    }
+
+    public static int hsdDepth() {
+        return hsdDepth;
+    }
+
+    public static void hsdDepth(int hsdDepth) {
+        SolveExecutor.hsdDepth = hsdDepth;
+    }
+
+    public static boolean isPrint() {
+        return isPrint;
+    }
+
+    public static void isPrint(boolean isPrint) {
+        SolveExecutor.isPrint = isPrint;
     }
 
     /**************************************************************************************************************
@@ -128,6 +152,10 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     /**************************************************************************************************************
      * Helper routines
      *************************************************************************************************************/
+    public T getBoard() {
+        return getBoard(stack.peek());
+    }
+
     private T getBoard(BoardStack<T> boards) {
         var board = boards.pop();
 
@@ -265,30 +293,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     public void totalSolutions(int totalSolutions) {
         this.totalSolutions = totalSolutions;
-    }
-
-    public static boolean singleSolution() {
-        return singleSolution;
-    }
-
-    public static void singleSolution(boolean singleSolution) {
-        SolveExecutor.singleSolution = singleSolution;
-    }
-
-    public static int hsdDepth() {
-        return hsdDepth;
-    }
-
-    public static void hsdDepth(int hsdDepth) {
-        SolveExecutor.hsdDepth = hsdDepth;
-    }
-
-    public static boolean isPrint() {
-        return isPrint;
-    }
-
-    public static void isPrint(boolean isPrint) {
-        SolveExecutor.isPrint = isPrint;
     }
 
 }

@@ -106,7 +106,7 @@ public class FreeCellBoard extends GameBoard {
     }
 
     @Override
-    protected boolean isMovable(Card[] cards, int from, int to) {
+    public boolean isMovable(Card[] cards, int from, int to) {
         return cards.length <= maxCardsToMove(to);
     }
 

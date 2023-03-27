@@ -43,6 +43,7 @@ public class FreeCellBoardTest {
     void setup() {
         CardHelper.useSuit(false);
         board = build(IOHelper.loadFile(TEST_FILE)).board();
+        board.isInSequence(Card::isHigherWithDifferentColor);
     }
 
     @Test
@@ -54,23 +55,27 @@ public class FreeCellBoardTest {
 
         var cards = List.of(card("5h"), card("4c"), card("3d"), card("2s"));
         board.column(1).addAll(cards);
+        board.resetCache();
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(2, result.size());
+        assertEquals(3, result.size());
         assertEquals("10:[5h, 4c, 3d, 2s]", result.get(0).notation());
 
         fillFreeCells(2, card("Ts"));
+        board.resetCache();
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
         assertEquals("61:Ad", result.get(0).notation());
 
         board.column(1).remove(board.column(1).size() - 1);
+        board.resetCache();
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
         assertEquals("10:[5h, 4c, 3d]", result.get(0).notation());
 
         board.column(0).clear();
+        board.resetCache();
         result = board.findColumnToColumnCandidates().toList();
-        assertEquals(7, result.size());
+        assertEquals(8, result.size());
         assertEquals("10:[5h, 4c, 3d]", result.get(0).notation());
     }
 
@@ -220,6 +225,7 @@ public class FreeCellBoardTest {
 
         fillFreeCells(TWO, card("Kd"));
         board.column(1).clear();
+        board.resetCache();
         result = board.findCandidates();
 
         assertNotNull(result);

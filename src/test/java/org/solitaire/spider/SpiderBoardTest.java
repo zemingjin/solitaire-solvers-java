@@ -9,8 +9,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
-import static java.lang.Integer.MIN_VALUE;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.builder.EqualsBuilder.reflectionEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,111 +47,116 @@ class SpiderBoardTest {
     }
 
     @Test
-    void test_findCandidatesOfSameSuit() {
-        var candidates = board.findCandidatesBySuit();
+    void test_findColumnToColumnCandidates() {
+        var result = board.findColumnToColumnCandidates().toList();
 
-        assertEquals(2, candidates.size());
+        assertEquals(6, result.size());
+        assertEquals("17:5h", result.get(3).notation());
+        assertEquals("59:2h", result.get(result.size() - 1).notation());
+    }
+
+    @Test
+    void test_findColumnToColumnCandidates_singleSuit() {
+        board.singleSuit(true);
+
+        var result = board.findColumnToColumnCandidates().toList();
+
+        assertEquals(6, result.size());
+        assertEquals("30:9s", result.get(0).notation());
+        assertEquals("59:2h", result.get(5).notation());
+    }
+
+    @Test
+    void test_findColumnToColumnCandidates_withSequence() {
+        board.column(2).add(card("Js"));
+        board.column(5).pop();
+        board.resetCache();
+
+        var result = board.findColumnToColumnCandidates().toList();
+        assertEquals(6, result.size());
+        assertEquals("25:[Qs, Js]", result.get(3).notation());
+    }
+
+    @Test
+    void test_findCandidates_emptyColumns() {
+        IntStream.of(0, 1, 2, 3, 4, 5, 7, 8, 9).forEach(i -> board.column(i).clear());
+        board.columns().set(0, mockRun(13));
+        board.column(0).pop();
+        board.resetCache();
+
+        var result = board.findCandidates();
+
+        assertEquals(8, result.size());
+        assertEquals("60:As", result.get(0).notation());
+    }
+
+    @Test
+    void test_findCandidates() {
+        var candidates = board.findCandidates();
+
+        assertEquals(4, candidates.size());
         assertEquals("17:5h", candidates.get(0).notation());
+    }
 
+    @Test
+    void test_findCandidates_emptyColumn() {
         board.column(7).clear();
 
-        candidates = board.findCandidatesBySuit();
+        var candidates = board.findCandidates();
 
-        assertEquals(10, candidates.size());
+        assertEquals(12, candidates.size());
         assertEquals("07:Th", candidates.get(0).notation());
-        assertEquals("59:2h", candidates.get(9).notation());
+        assertEquals("97:3h", candidates.get(candidates.size() - 1).notation());
+    }
 
+    @Test
+    void test_findCandidates_sequence() {
+        board.column(6).clear();
+        board.column(7).clear();
         board.column(0).clear();
         board.column(0).addAll(List.of(card("Ts"), card("9d"), card("8d")));
         board.column(0).openAt(0);
 
-        candidates = board.findCandidatesBySuit();
-        assertEquals(10, candidates.size());
-        assertEquals("07:[9d, 8d]", candidates.get(0).notation());
+        var candidates = board.findCandidates();
+        assertEquals(16, candidates.size());
+        assertEquals("06:[9d, 8d]", candidates.get(0).notation());
+        assertEquals("07:[9d, 8d]", candidates.get(1).notation());
 
+        board.resetCache();
         board.column(0).remove(0);
-        candidates = board.findCandidatesBySuit();
-        assertEquals(9, candidates.size());
-        assertEquals("17:5h", candidates.get(0).notation());
+        candidates = board.findCandidates();
+        assertEquals(16, candidates.size());
+        assertEquals("08:[9d, 8d]", candidates.get(1).notation());
     }
 
     @Test
-    void test_findCandidatesOfSameSuit_merge_sequences() {
-        mockColumn(0, 5, 0);
-        mockColumn(1, 12, 6);
-
-        var candidates = board.findCandidatesBySuit();
-        assertEquals(3, candidates.size());
-        assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
-    }
-
-    @Test
-    void test_findCandidatesOfSameSuit_merge_sublist() {
-        mockColumn(0, 8, 0);
-        mockColumn(1, 12, 6);
-
-        var candidates = board.findCandidatesBySuit();
-        assertEquals(3, candidates.size());
-        assertEquals("01:[6h, 5h, 4h, 3h, 2h, Ah]", candidates.get(0).notation());
-
-        board.column(0).clear();
-        board.column(0).openAt(-1);
-        mockColumn(0, 9, 8);
-
-        candidates = board.findCandidatesBySuit();
-        assertEquals(2, candidates.size());
-        assertEquals("71:6h", candidates.get(0).notation());
-    }
-
-    @Test
-    void test_findCandidatesOfDifferentSuit() {
-        var mockCandidates = mockCandidates();
-        var result = board.findCandidatesByRanks(mockCandidates).toList();
-
-        assertEquals(3, result.size());
-
-        board.column(3).add(5, card("Ts"));
-        result = board.findCandidatesByRanks(mockCandidates).toList();
-        assertEquals(1, result.size());
-
-        board.column(3).clear();
-        board.column(4).clear();
-        board.column(3).add(card("9s"));
-        result = board.findCandidatesByRanks(mockCandidates).toList();
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void test_isNotFromSequenceOfSameSuit() {
-        var candidate = columnToColumn(board.peek(0), 0, 1);
-
-        assertTrue(board.isNotFromSequenceOfSameSuit(candidate));
-
-        board.column(0).add(card("9h"));
-        candidate = columnToColumn(board.peek(0), 0, 1);
-        assertFalse(board.isNotFromSequenceOfSameSuit(candidate));
-
-        board.column(0).clear();
-        board.column(0).addAll(List.of(card("Th"), card("9h")));
-        candidate = columnToColumn(board.peek(0), 0, 1);
-        assertFalse(board.isNotFromSequenceOfSameSuit(candidate));
-
-        board.column(0).clear();
-        board.column(0).addAll(List.of(card("Th"), card("9d")));
-        candidate = columnToColumn(board.peek(0), 0, 1);
-        assertTrue(board.isNotFromSequenceOfSameSuit(candidate));
-
+    void test_optimizeCandidates() {
+        board.deck().clear();
+        range(0, board.columns().size()).forEach(i -> board.column(i).clear());
+        board.columns().set(0, mockRun(13));
         board.column(0).pop();
-        candidate = columnToColumn(board.peek(0), 0, 1);
-        assertFalse(board.isNotFromSequenceOfSameSuit(candidate));
+        board.columns().set(4, mockRun(4));
+        board.columns().set(3, mockRun(3));
+        board.columns().set(2, mockRun(2));
+        board.columns().set(1, mockRun(1));
+        range(2, 5).forEach(i -> board.column(i).pop());
+        var result = board.findCandidates();
+
+        assertEquals(1, result.size());
+        assertEquals("10:As", result.get(0).notation());
     }
 
     @Test
-    void test_optimizeCandidatesOfSameSuit() {
-        var candidate = List.of(columnToColumn(board.peek(5), 5, 9));
-        var result = board.optimizeCandidatesBySuit(candidate);
+    void test_findCandidates_emptyDeck() {
+        board.deck().clear();
+        IntStream.of(0, 1, 2, 3, 4, 5, 7, 8, 9).forEach(i -> board.column(i).clear());
+        board.columns().set(0, mockRun(13));
+        board.column(0).pop();
+
+        var result = board.findCandidates();
 
         assertEquals(1, result.size());
+        assertEquals("60:As", result.get(0).notation());
     }
 
     @Test
@@ -160,7 +165,7 @@ class SpiderBoardTest {
 
         board.column(9).add(board.column(5).pop());
         board.column(9).add(card("Ah"));
-        board.score(MIN_VALUE);
+        board.resetCache();
         assertEquals(-31, board.score());
     }
 
@@ -212,39 +217,6 @@ class SpiderBoardTest {
     }
 
     @Test
-    void test_isMovable() {
-        var candidate = board.findCandidates().get(0);
-
-        assertTrue(board.isMovable(candidate));
-
-        board.path().add(candidate.notation());
-
-        assertFalse(board.isMovable(candidate));
-
-        board.path().pop();
-        board.column(candidate.to()).clear();
-        board.column(candidate.to()).openAt(-1);
-        assertTrue(board.isMovable(candidate));
-
-        board.column(candidate.from()).clear();
-        board.column(candidate.from()).add(candidate.peek());
-        board.column(candidate.from()).openAt(0);
-        assertFalse(board.isMovable(candidate));
-    }
-
-    @Test
-    void test_isFromPartialColumn() {
-        var candidate = board.findCandidates().get(0);
-
-        assertTrue(board.isFromPartialColumn(candidate));
-
-        board.column(candidate.from()).clear();
-        board.column(candidate.from()).add(candidate.peek());
-        board.column(candidate.from()).openAt(0);
-        assertFalse(board.isFromPartialColumn(candidate));
-    }
-
-    @Test
     void test_isThereARun() {
         var cards = Arrays.asList(card("Js"), card("Ts"), card("9s"), card("8s"), card("7s"),
                 card("6s"), card("5s"), card("4s"), card("3s"), card("2s"), card("As"));
@@ -261,8 +233,8 @@ class SpiderBoardTest {
         board.columns().set(0, column);
 
         assertEquals(13, column.size());
-        assertEquals("0:Kd", column.get(0).toString());
-        assertEquals("0:Ad", column.get(12).toString());
+        assertEquals("0:Ks", column.get(0).toString());
+        assertEquals("0:As", column.get(12).toString());
         assertEquals(500, board.totalScore());
         assertEquals(0, board.runs());
         board.resetScore();
@@ -276,9 +248,9 @@ class SpiderBoardTest {
 
         assertNotNull(result);
         assertTrue(column.isEmpty());
-        assertEquals("0$:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]", result.path().get(0));
+        assertEquals("0$:[Ks, Qs, Js, Ts, 9s, 8s, 7s, 6s, 5s, 4s, 3s, 2s, As]", result.path().get(0));
         assertEquals(600, result.totalScore());
-        assertEquals("0$:[Kd, Qd, Jd, Td, 9d, 8d, 7d, 6d, 5d, 4d, 3d, 2d, Ad]",
+        assertEquals("0$:[Ks, Qs, Js, Ts, 9s, 8s, 7s, 6s, 5s, 4s, 3s, 2s, As]",
                 outputStream.toString().trim());
         assertEquals(1, result.runs());
         result.resetScore();
@@ -312,19 +284,18 @@ class SpiderBoardTest {
     @Test
     void test_appendToTarget() {
         var candidates = board.findCandidates();
-        var candidate = candidates.get(1);
+        var candidate = candidates.get(2);
         var column = board.column(candidate.to());
 
+        assertEquals("59:2h", candidate.notation());
         assertEquals(5, column.size());
-        assertEquals("53:3h", column.peek().toString());
+        assertEquals("53:3h", board.peek(candidate.to()).toString());
         assertTrue(board.path().isEmpty());
         assertEquals(500, board.totalScore());
 
         board.appendToTarget(candidate);
 
-        assertEquals(6, column.size());
-        assertNotEquals("53:3h", column.peek().toString());
-        assertEquals("33:2h", column.peek().toString());
+        assertEquals("33:2h", board.peek(candidate.to()).toString());
 
         assertFalse(board.path().isEmpty());
         assertEquals(1, board.path().size());
@@ -339,7 +310,7 @@ class SpiderBoardTest {
         assertEquals(0, board.path().size());
         var result = board.appendToTarget(candidate);
         assertEquals(1, result.path().size());
-        assertEquals("^0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
+        assertEquals("^^:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", result.path().peek());
         assertTrue(range(0, board.columns().size())
                 .allMatch(i -> candidate.cards()[i].equals(board.column(i).peek())));
     }
@@ -355,7 +326,7 @@ class SpiderBoardTest {
     @Test
     void test_removeFromSource() {
         var candidates = board.findCandidates();
-        var candidate = candidates.get(1);
+        var candidate = candidates.get(2);
         var column = board.column(candidate.from());
 
         assertEquals(5, column.size());
@@ -375,13 +346,42 @@ class SpiderBoardTest {
     void test_drawDeck() {
         var candidates = board.drawDeck();
         assertEquals(1, candidates.size());
-        assertEquals("^0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
+        assertEquals("^^:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
 
         board.column(0).clear();
         assertThrows(RuntimeException.class, () -> board.drawDeck());
 
         board.deck().clear();
         assertTrue(board.drawDeck().isEmpty());
+    }
+
+    @Test
+    void test_reduceCandidates() {
+        var candidates = List.of(columnToColumn(board.peek(3), 3, 0),
+                columnToColumn(toArray(board.peek(3), card("8s")), 3, 0),
+                columnToColumn(toArray(card("9h"), card("8h"), card("7h")), 3, 0));
+
+        var result = board.optimizedCandidates(candidates.stream());
+
+        assertEquals(1, result.size());
+        assertEquals("30:[9h, 8h, 7h]", result.get(0).notation());
+
+        board.column(9).clear();
+        result = board.optimizedCandidates(candidates.stream());
+
+        assertEquals(1, result.size());
+        assertEquals("30:[9h, 8h, 7h]", result.get(0).notation());
+
+        board.column(8).clear();
+        result = board.optimizedCandidates(candidates.stream());
+
+        assertEquals(2, result.size());
+        assertEquals("30:[9h, 8h, 7h]", result.get(0).notation());
+        assertEquals("30:[9s, 8s]", result.get(1).notation());
+
+        board.column(7).clear();
+        result = board.optimizedCandidates(candidates.stream());
+        assertEquals(3, result.size());
     }
 
     @Test
@@ -392,19 +392,6 @@ class SpiderBoardTest {
         assertNotNull(board.updateBoard(candidates.get(0)));
 
         assertNotSame(deck, board.deck);
-    }
-
-    @Test
-    void test_findCandidates_findCandidatesOfDifferentColors() {
-        board.column(1).pop();
-        board.column(9).pop();
-        board.column(2).add(card("Js"));
-
-        var candidates = board.findCandidates();
-
-        assertNotNull(candidates);
-        assertEquals(8, candidates.size());
-        assertEquals(8, candidates.stream().filter(it -> it.cards().length == 1).count());
     }
 
     @Test
@@ -437,17 +424,6 @@ class SpiderBoardTest {
         assertTrue(board.singleSuit());
     }
 
-    private void mockColumn(int col, int h, int l) {
-        for (int i = h; i >= l; i--) {
-            board.column(col).add(card(VALUES.charAt(i) + "h"));
-        }
-    }
-
-    private List<Candidate> mockCandidates() {
-        return List.of(candidate(card("5h"), COLUMN, 1, COLUMN, 7),
-                candidate(card("2h"), COLUMN, 5, COLUMN, 9));
-    }
-
     private static Column mockRun() {
         return mockRun(VALUES.length());
     }
@@ -456,8 +432,9 @@ class SpiderBoardTest {
         var column = new Column();
 
         for (int i = length; i-- > 0; ) {
-            column.add(card(VALUES.charAt(i) + "d"));
+            column.add(card(VALUES.charAt(i) + "s"));
         }
         return column;
     }
+
 }

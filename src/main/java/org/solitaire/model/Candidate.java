@@ -56,7 +56,7 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
         return originNotation() + targetNotation() + ":" + valueNotation();
     }
 
-    private String originNotation() {
+    public String originNotation() {
         return switch (origin) {
             case COLUMN -> Integer.toString(from);
             case FREECELL -> "f";
