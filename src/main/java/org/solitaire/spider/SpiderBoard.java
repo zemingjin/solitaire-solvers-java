@@ -23,14 +23,12 @@ import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Candidate.columnToColumn;
-import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.Candidate.columnToFoundation;
 import static org.solitaire.model.Origin.DECKPILE;
-import static org.solitaire.model.Origin.FOUNDATION;
 import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.isSingleSuit;
 import static org.solitaire.util.BoardHelper.verifyBoard;
-import static org.solitaire.util.CardHelper.suitCode;
 
 @Slf4j
 public class SpiderBoard extends GameBoard {
@@ -75,6 +73,7 @@ public class SpiderBoard extends GameBoard {
                 .findFirst()
                 .orElse(null);
     }
+
     @Override
     public Candidate toColumnCandidate(Card[] cards, int from, int to, Card card) {
         if (singleSuit()) {
@@ -159,8 +158,8 @@ public class SpiderBoard extends GameBoard {
         switch (candidate.target()) {
             case DECKPILE -> range(0, columns().size()).forEach(i -> column(i).add(candidate.cards()[i]));
             case COLUMN -> {
-                    addToTargetColumn(candidate);
-                    totalScore(totalScore() - 1);
+                addToTargetColumn(candidate);
+                totalScore(totalScore() - 1);
             }
             case FOUNDATION -> {
                 totalScore(totalScore() + 100);
@@ -188,7 +187,7 @@ public class SpiderBoard extends GameBoard {
                 .filter(it -> 13 <= it.size())
                 .map(it -> getOrderedCards(colAt))
                 .filter(it -> 13 == it.length)
-                .map(it -> candidate(it, COLUMN, colAt, FOUNDATION, suitCode(it[0])))
+                .map(it -> columnToFoundation(it, colAt))
                 .orElse(null);
     }
 
@@ -211,7 +210,7 @@ public class SpiderBoard extends GameBoard {
 
     // The bigger, the better
     protected int calcSequences() {
-       return range(0, columns().size())
+        return range(0, columns().size())
                 .filter(isNotEmpty)
                 .map(this::calcSequenceScore)
                 .sum();
