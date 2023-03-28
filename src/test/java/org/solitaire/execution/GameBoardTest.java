@@ -1,7 +1,9 @@
-package org.solitaire.model;
+package org.solitaire.execution;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.solitaire.model.Columns;
+import org.solitaire.model.Path;
 import org.solitaire.util.IOHelper;
 
 import java.util.LinkedList;

@@ -4,7 +4,7 @@ import org.solitaire.model.Candidate;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
-import org.solitaire.model.SolveExecutor;
+import org.solitaire.execution.SolveExecutor;
 
 public class Spider extends SolveExecutor<String, Candidate, SpiderBoard> {
     protected static final int SOLUTION_LIMIT = 1000;

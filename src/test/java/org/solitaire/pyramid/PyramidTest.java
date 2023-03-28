@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.solitaire.util.IOHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.solitaire.model.SolveExecutor.isPrint;
-import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.execution.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.util.CardHelper.useSuit;
 

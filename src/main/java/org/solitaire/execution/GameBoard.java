@@ -1,7 +1,13 @@
-package org.solitaire.model;
+package org.solitaire.execution;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.solitaire.model.Board;
+import org.solitaire.model.Candidate;
+import org.solitaire.model.Card;
+import org.solitaire.model.Column;
+import org.solitaire.model.Columns;
+import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
 import java.util.Arrays;

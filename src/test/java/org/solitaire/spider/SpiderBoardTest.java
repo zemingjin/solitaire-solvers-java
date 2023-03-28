@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.Origin.COLUMN;
-import static org.solitaire.model.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.isPrint;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;

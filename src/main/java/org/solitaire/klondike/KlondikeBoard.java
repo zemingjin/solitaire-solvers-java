@@ -5,7 +5,7 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.model.GameBoard;
+import org.solitaire.execution.GameBoard;
 import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
@@ -380,7 +380,7 @@ class KlondikeBoard extends GameBoard {
             return calcBlocker(deckPile, card);
         }
         return columns.stream()
-                .filter(BoardHelper.isNotEmpty)
+                .filter(listIsNotEmpty)
                 .filter(it -> it.contains(card))
                 .map(it -> calcBlocker(it, card))
                 .findFirst()

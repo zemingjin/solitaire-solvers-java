@@ -4,7 +4,7 @@ import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Path;
-import org.solitaire.model.SolveExecutor;
+import org.solitaire.execution.SolveExecutor;
 
 /**
  * G. Heineman’s Staged Deepening (HSD)

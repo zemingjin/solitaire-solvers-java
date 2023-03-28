@@ -7,7 +7,7 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
-import org.solitaire.model.SolveExecutor;
+import org.solitaire.execution.SolveExecutor;
 
 import java.util.List;
 import java.util.Optional;

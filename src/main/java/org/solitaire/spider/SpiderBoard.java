@@ -6,7 +6,7 @@ import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.model.GameBoard;
+import org.solitaire.execution.GameBoard;
 import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
@@ -25,7 +25,7 @@ import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.Candidate.columnToFoundation;
 import static org.solitaire.model.Origin.DECKPILE;
-import static org.solitaire.model.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.isPrint;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.isSingleSuit;
 import static org.solitaire.util.BoardHelper.verifyBoard;

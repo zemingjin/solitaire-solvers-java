@@ -430,17 +430,33 @@ class KlondikeBoardTest {
     void test_score() {
         assertEquals(-29, board.score());
 
-        var card = card("Ac");
+        board.column(2).add(0, board.column(2).pop());
+        board.column(2).openAt(board.column(2).size() - 1);
+        board.resetCache();
+        assertEquals(-28, board.score());
+
+        var card = board.column(6).remove(0);
         board.foundations().get(suitCode(card)).add(card);
-        board.column(6).remove(card);
         board.resetCache();
-        assertEquals(-29, board.score());
+        assertEquals(-24, board.score());
 
-        range(0, 7).forEach(i -> drawDeckCards());
+        range(0, 3).forEach(i -> drawDeckCards());
         board.resetCache();
-        assertEquals(-29, board.score());
+        assertEquals(-24, board.score());
 
-        board.deckPile().remove(card("2c"));
+        board.column(1).addAll(board.column(0));
+        board.column(0).clear();
+        board.column(0).add(board.column(6).remove(4));
+        board.column(0).add(board.column(5).remove(4));
+        board.resetCache();
+        assertEquals(-18, board.score());
+
+        board.column(6).add(board.column(0).remove(0));
+        board.column(0).add(board.column(6).remove(4));
+        board.resetCache();
+        assertEquals(-17, board.score());
+
+        board.column(5).remove(card("2s"));
         board.resetCache();
         assertThrows(NoSuchElementException.class, () -> board.score());
     }
@@ -459,7 +475,6 @@ class KlondikeBoardTest {
         board.column(0).add(board.column(6).remove(4));
         board.resetCache();
         assertEquals(8, board.calcSequenceScore());
-
     }
 
     @Test
@@ -467,8 +482,19 @@ class KlondikeBoardTest {
         assertEquals(15, board.calcBlockers());
 
         var card = card("Ks");
-        board.foundations().get(suitCode(card)).add(card);
+        board.foundation(suitCode(card)).add(card);
         assertEquals(9, board.calcBlockers());
+
+        board.foundation(suitCode(card)).pop();
+
+        card = board.column(6).remove(3);
+        board.foundation(suitCode(card)).add(card);
+        board.resetCache();
+        assertEquals(15, board.calcBlockers());
+
+        while (board.deck().size() > 3) board.updateBoard(board.drawDeck().get(0));
+        board.resetCache();
+        assertEquals(12, board.calcBlockers());
     }
 
     @Test
