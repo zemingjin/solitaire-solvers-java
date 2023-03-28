@@ -83,12 +83,6 @@ public class CardHelper {
         return buf;
     }
 
-    public static <R> List<Stack<R>> cloneStacks(List<Stack<R>> stacks) {
-        return stacks.stream()
-                .map(CardHelper::cloneStack)
-                .toList();
-    }
-
     public static <R> Stack<R> cloneStack(Stack<R> stack) {
         var clone = new Stack<R>();
 

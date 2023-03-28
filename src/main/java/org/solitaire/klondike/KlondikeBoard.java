@@ -1,11 +1,11 @@
 package org.solitaire.klondike;
 
+import org.solitaire.execution.GameBoard;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.execution.GameBoard;
 import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
@@ -30,8 +30,6 @@ import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
-import static org.solitaire.util.CardHelper.cloneStack;
-import static org.solitaire.util.CardHelper.cloneStacks;
 import static org.solitaire.util.CardHelper.nextCard;
 import static org.solitaire.util.CardHelper.rankDifference;
 import static org.solitaire.util.CardHelper.suitCode;
@@ -46,17 +44,17 @@ import static org.solitaire.util.CardHelper.toArray;
 class KlondikeBoard extends GameBoard {
     private static int drawNumber = 3;
 
-    protected boolean stateChanged;
+    private boolean stateChanged;
     private Deck deck;
-    private Stack<Card> deckPile;
-    private List<Stack<Card>> foundations;
+    private Deck deckPile;
+    private Columns foundations;
 
     KlondikeBoard(Columns columns,
                   Path<String> path,
                   int totalScore,
                   Deck deck,
-                  Stack<Card> deckPile,
-                  List<Stack<Card>> foundations,
+                  Deck deckPile,
+                  Columns foundations,
                   boolean stateChanged) {
         super(columns, path, totalScore);
         deck(deck);
@@ -72,8 +70,8 @@ class KlondikeBoard extends GameBoard {
                 new Path<>(that.path()),
                 that.totalScore(),
                 new Deck(that.deck()),
-                cloneStack(that.deckPile()),
-                cloneStacks(that.foundations()),
+                new Deck(that.deckPile()),
+                new Columns(that.foundations()),
                 that.stateChanged);
     }
 
@@ -100,7 +98,7 @@ class KlondikeBoard extends GameBoard {
     protected Stream<Candidate> findFoundationToColumnCandidates() {
         return foundations().stream()
                 .filter(BoardHelper.isNotEmpty)
-                .map(Stack::peek)
+                .map(Column::peek)
                 .map(this::fromFoundationToColumn)
                 .filter(isNotNull)
                 .findFirst().stream();
@@ -115,14 +113,16 @@ class KlondikeBoard extends GameBoard {
 
     private boolean isOneToUncover(Card card) {
         return range(0, columns().size())
-                .filter(isNotEmpty.and(this::isNotImmediateFoundationable))
+                .filter(isNotEmpty.and(this::isNotFoundationable))
                 .filter(i -> card.isHigherWithDifferentColor(peek(i)))
                 .findFirst()
                 .isPresent();
     }
 
-    protected boolean isNotImmediateFoundationable(int i) {
-        return !peek(i).isHigherOfSameSuit(foundationCard(peek(i)));
+    protected boolean isNotFoundationable(int i) {
+        var card = peek(i);
+
+        return !card.isHigherOfSameSuit(foundationCard(card));
     }
 
     private Candidate findOneToReceive(Card card) {
@@ -154,7 +154,7 @@ class KlondikeBoard extends GameBoard {
         var foundationCards = foundation(suitCode(card));
 
         return Optional.of(foundationCards)
-                .filter(Stack::isEmpty)
+                .filter(Column::isEmpty)
                 .map(it -> card.isAce())
                 .orElseGet(() -> foundationCards.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
     }
@@ -308,7 +308,7 @@ class KlondikeBoard extends GameBoard {
 
         Optional.of(suitCode(card))
                 .map(foundations::get)
-                .ifPresent(it -> it.push(card));
+                .ifPresent(it -> it.add(card));
         totalScore(totalScore() + (isFirstCardToFoundation(candidate)
                 ? 15
                 : DECKPILE.equals(candidate.origin())
@@ -428,23 +428,23 @@ class KlondikeBoard extends GameBoard {
         return columns;
     }
 
-    public Stack<Card> deckPile() {
+    public Deck deckPile() {
         return deckPile;
     }
 
-    public void deckPile(Stack<Card> deckPile) {
+    public void deckPile(Deck deckPile) {
         this.deckPile = deckPile;
     }
 
-    public List<Stack<Card>> foundations() {
+    public Columns foundations() {
         return foundations;
     }
 
-    public void foundations(List<Stack<Card>> foundations) {
+    public void foundations(Columns foundations) {
         this.foundations = foundations;
     }
 
-    protected Stack<Card> foundation(int i) {
+    protected Column foundation(int i) {
         return foundations.get(i);
     }
 
@@ -456,7 +456,7 @@ class KlondikeBoard extends GameBoard {
         return Optional.of(suitCode)
                 .map(foundations()::get)
                 .filter(BoardHelper.isNotEmpty)
-                .map(Stack::peek)
+                .map(Column::peek)
                 .orElse(null);
     }
 

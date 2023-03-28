@@ -3,11 +3,10 @@ package org.solitaire.klondike;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
+import org.solitaire.model.Columns;
 import org.solitaire.util.IOHelper;
 
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Stack;
 
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,15 +60,15 @@ class KlondikeBoardTest {
 
     @Test
     void test_isNotImmediateFoundationable() {
-        assertTrue(board.isNotImmediateFoundationable(0));
+        assertTrue(board.isNotFoundationable(0));
 
         var card = card("9h");
-        board.foundations().get(suitCode(card)).add(card);
-        assertFalse(board.isNotImmediateFoundationable(0));
+        board.foundation(suitCode(card)).add(card);
+        assertFalse(board.isNotFoundationable(0));
 
         card = card("Jh");
-        board.foundations().get(suitCode(card)).add(card);
-        assertTrue(board.isNotImmediateFoundationable(0));
+        board.foundation(suitCode(card)).add(card);
+        assertTrue(board.isNotFoundationable(0));
     }
 
     @Test
@@ -97,7 +96,7 @@ class KlondikeBoardTest {
         assertEquals(0, result.size());
 
         var card = card("5d");
-        board.foundations().get(suitCode(card)).add(card);
+        board.foundation(suitCode(card)).add(card);
 
         result = board.findFoundationToColumnCandidates().toList();
         assertEquals(0, result.size());
@@ -114,7 +113,7 @@ class KlondikeBoardTest {
     @Test
     void test_findFoundationToColumnCandidates_non_found() {
         var card = card("Th");
-        board.foundations().get(suitCode(card)).add(card);
+        board.foundation(suitCode(card)).add(card);
 
         assertEquals(0, board.findFoundationToColumnCandidates().toList().size());
 
@@ -124,7 +123,7 @@ class KlondikeBoardTest {
         assertEquals("$2:Th", board.findFoundationToColumnCandidates().toList().get(0).notation());
 
         card = card("9h");
-        board.foundations().get(suitCode(card)).add(card);
+        board.foundation(suitCode(card)).add(card);
         board.column(1).add(card("8c"));
 
         assertEquals("$6:9h", board.findFoundationToColumnCandidates().toList().get(0).notation());
@@ -184,7 +183,7 @@ class KlondikeBoardTest {
     @Test
     void test_moveToFoundation() {
         var card = card("Ad");
-        var foundation = board.foundations().get(suitCode(card));
+        var foundation = board.foundation(suitCode(card));
         board.moveToFoundation(candidate(card, COLUMN, 0, FOUNDATION, suitCode(card)));
         assertTrue(foundation.contains(card));
         assertEquals(15, board.totalScore());
@@ -203,7 +202,7 @@ class KlondikeBoardTest {
     @Test
     void test_checkColumnsForFoundation() {
         var column = board.column(5);
-        var foundation = board.foundations().get(0);
+        var foundation = board.foundation(0);
 
         column.set(5, buildCard(11, "Ad"));
 
@@ -258,13 +257,13 @@ class KlondikeBoardTest {
         var card = card("Ad");
         var suitCode = suitCode(card);
 
-        assertTrue(board.foundations().get(suitCode).isEmpty());
-        board.foundations().get(suitCode).add(card);
-        assertEquals(card.toString(), board.foundations().get(suitCode).peek().toString());
+        assertTrue(board.foundation(suitCode).isEmpty());
+        board.foundation(suitCode).add(card);
+        assertEquals(card.toString(), board.foundation(suitCode).peek().toString());
 
         var result = board.removeFromSource(candidate(card, FOUNDATION, suitCode, COLUMN, 0));
 
-        assertTrue(board.foundations().get(suitCode).isEmpty());
+        assertTrue(board.foundation(suitCode).isEmpty());
         assertSame(board, result);
     }
 
@@ -289,7 +288,7 @@ class KlondikeBoardTest {
         assertTrue(board.isFoundationCandidate(a));
         assertFalse(board.isFoundationCandidate(b));
 
-        board.foundations().get(suitCode(a)).push(a);
+        board.foundation(suitCode(a)).add(a);
 
         assertTrue(board.isFoundationCandidate(b));
         assertFalse(board.isFoundationCandidate(card("3d")));
@@ -380,7 +379,7 @@ class KlondikeBoardTest {
         assertTrue(board.isImmediateToFoundation(card));
         assertFalse(board.isImmediateToFoundation(card("2d")));
 
-        var foundation = board.foundations().get(suitCode(card));
+        var foundation = board.foundation(suitCode(card));
         foundation.add(card);
         card = card("2d");
 
@@ -436,7 +435,7 @@ class KlondikeBoardTest {
         assertEquals(-28, board.score());
 
         var card = board.column(6).remove(0);
-        board.foundations().get(suitCode(card)).add(card);
+        board.foundation(suitCode(card)).push(card);
         board.resetCache();
         assertEquals(-24, board.score());
 
@@ -482,13 +481,13 @@ class KlondikeBoardTest {
         assertEquals(15, board.calcBlockers());
 
         var card = card("Ks");
-        board.foundation(suitCode(card)).add(card);
+        board.foundation(suitCode(card)).push(card);
         assertEquals(9, board.calcBlockers());
 
         board.foundation(suitCode(card)).pop();
 
         card = board.column(6).remove(3);
-        board.foundation(suitCode(card)).add(card);
+        board.foundation(suitCode(card)).push(card);
         board.resetCache();
         assertEquals(15, board.calcBlockers());
 
@@ -534,7 +533,7 @@ class KlondikeBoardTest {
         assertEquals("[Extra card: Kd, Missing card: Th]", result.toString());
     }
 
-    private void mockFullFoundations(List<Stack<Card>> foundations) {
+    private void mockFullFoundations(Columns foundations) {
         range(0, 4)
                 .forEach(i -> range(0, 13)
                         .forEach(j -> foundations.get(i).add(card(VALUES.charAt(i) + suit(i)))));

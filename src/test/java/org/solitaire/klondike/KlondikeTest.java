@@ -10,7 +10,6 @@ import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
 import org.solitaire.util.IOHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -24,11 +23,11 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.solitaire.execution.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.klondike.Klondike.SOLUTION_LIMIT;
 import static org.solitaire.klondike.KlondikeHelper.build;
 import static org.solitaire.model.Candidate.columnToColumn;
-import static org.solitaire.execution.SolveExecutor.isPrint;
-import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.useSuit;
 import static org.solitaire.util.CardHelperTest.ONE;
@@ -121,7 +120,7 @@ class KlondikeTest {
     }
 
     private Klondike mockKlondike() {
-        var klondike = new Klondike(new Columns(), new Deck(), new ArrayList<>());
+        var klondike = new Klondike(new Columns(), new Deck(), new Columns());
 
         klondike.stack().clear();
         klondike.addBoard(board);
