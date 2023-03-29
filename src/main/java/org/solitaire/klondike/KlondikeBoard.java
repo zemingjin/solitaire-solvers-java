@@ -9,7 +9,6 @@ import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -83,12 +82,9 @@ class KlondikeBoard extends GameBoard {
         var candidates = candidatesToFoundationAndColumn();
 
         if (candidates.isEmpty()) {
-            candidates = findDeckToColumnCandidates();
+            candidates = drawDeck();
             if (candidates.isEmpty()) {
-                candidates = drawDeck();
-                if (candidates.isEmpty()) {
-                    candidates = findFoundationToColumnCandidates();
-                }
+                candidates = findFoundationToColumnCandidates();
             }
         }
         return candidates;
@@ -98,7 +94,8 @@ class KlondikeBoard extends GameBoard {
         return Stream.of(
                         findColumnToFoundationCandidates(),
                         findDeckToFoundationCandidates(),
-                        findColumnToColumnCandidates())
+                        findColumnToColumnCandidates(),
+                        findDeckToColumnCandidates())
                 .flatMap(flattenStream)
                 .toList();
     }
@@ -176,13 +173,12 @@ class KlondikeBoard extends GameBoard {
                 .orElse(null);
     }
 
-    protected List<Candidate> findDeckToColumnCandidates() {
+    protected Stream<Candidate> findDeckToColumnCandidates() {
         return Optional.of(deckPile)
                 .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
                 .map(this::deckToColumnCandidates)
-                .map(Stream::toList)
-                .orElseGet(Collections::emptyList);
+                .orElseGet(Stream::empty);
     }
 
     private Stream<Candidate> deckToColumnCandidates(Card card) {

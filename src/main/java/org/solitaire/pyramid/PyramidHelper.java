@@ -1,6 +1,5 @@
 package org.solitaire.pyramid;
 
-import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
@@ -44,24 +43,25 @@ public class PyramidHelper {
     }
 
     protected static int row(int at) {
-        assert 0 <= at && at < LAST_BOARD : "Invalid board card index: " + at;
-
-        final var rowMax = new RowMax(LAST_BOARD);
-
-        return rangeClosed(1, 7)
-                .map(i -> 7 - i + 1)
-                .peek(i -> rowMax.rowMax(rowMax.rowMax - i))
-                .filter(i -> rowMax.rowMax() <= at)
-                .findFirst()
-                .orElseThrow();
+        return switch (at) {
+            case 21, 22, 23, 24, 25, 26, 27 -> 7;
+            case 15, 16, 17, 18, 19, 20 -> 6;
+            case 10, 11, 12, 13, 14 -> 5;
+            case 6, 7, 8, 9 -> 4;
+            case 3, 4, 5 -> 3;
+            case 1, 2 -> 2;
+            case 0 -> 1;
+            default -> throw new RuntimeException("Invalid board card index: " + at);
+        };
     }
 
     @SuppressWarnings("rawtypes")
     protected static Pair<Integer, List> getScore(List<?> list) {
+        var scoringOnly = scoringOnly(list);
         return Pair.of(
-                range(0, list.size())
-                        .map(i -> getClickScore(i, list))
-                        .reduce(0, Integer::sum),
+                range(0, scoringOnly.size())
+                        .map(i -> getClickScore(i, scoringOnly))
+                        .sum(),
                 list);
     }
 
@@ -76,19 +76,20 @@ public class PyramidHelper {
      * - 250 for row 2
      * - 500 for clear board
      */
-    @SuppressWarnings("unchecked")
-    protected static int getClickScore(int at, List<?> list) {
+    protected static int getClickScore(int at, List<Card[]> list) {
         var item = list.get(at);
         return Optional.of(item)
-                .map(it -> (Card[]) it)
                 .filter(it -> it.length == 1)
-                .map(it -> it[0])
-                .map(it -> it.isKing() ? 5 : 0)
-                .orElseGet(() -> getRowClearingScore(at, (List<Card[]>) list));
+                .map(it -> scoreForSingleCard(it[0], at, list))
+                .orElseGet(() -> scoreForPair(at, list));
     }
 
-    protected static int getRowClearingScore(int at, List<Card[]> list) {
-        return Optional.ofNullable(cardAt(list.get(at)))
+    private static int scoreForSingleCard(Card card, int at, List<Card[]> list) {
+        return isBoardCard(card.at()) ? getScore(row(card.at()), at, list) : card.isKing() ? 5 : 0;
+    }
+
+    protected static int scoreForPair(int at, List<Card[]> list) {
+        return Optional.of(cardAt(list.get(at)))
                 .filter(PyramidHelper::isBoardCard)
                 .map(it -> row(it.at()))
                 .map(row -> getScore(row, at, list))
@@ -125,25 +126,23 @@ public class PyramidHelper {
     }
 
     protected static boolean isRowCleared(int row, int at, List<Card[]> list) {
-        return rangeClosed(0, at)
+        return countCardsCleared(row, at, list) == row;
+    }
+
+    protected static int countCardsCleared(int row, int at, List<Card[]> list) {
+        return (int) rangeClosed(0, at)
                 .mapToObj(list::get)
                 .flatMap(Stream::of)
                 .filter(PyramidHelper::isBoardCard)
                 .filter(it -> row(it.at()) == row)
-                .count() == row;
+                .count();
     }
 
-    @AllArgsConstructor
-    static class RowMax {
-        private int rowMax;
-
-        int rowMax() {
-            return rowMax;
-        }
-
-        void rowMax(int rowMax) {
-            this.rowMax = rowMax;
-        }
+    @SuppressWarnings("rawtypes unchecked")
+    protected static List<Card[]> scoringOnly(List list) {
+        return ((List<Card[]>) list).stream()
+                .filter(it -> it.length > 1 || it[0].isKing())
+                .toList();
     }
 
 }

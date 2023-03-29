@@ -21,13 +21,14 @@ import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.REMOVE;
 import static org.solitaire.pyramid.PyramidHelper.LAST_BOARD;
 import static org.solitaire.pyramid.PyramidHelper.build;
+import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.card;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidBoardTest {
-    protected static final String TEST_FILE = "games/pyramid/pyramid-121122-expert.txt";
+    protected static final String TEST_FILE = "games/pyramid/pyramid-expert-121122-2.txt";
     static final String[] cards = IOHelper.loadFile(TEST_FILE);
 
     private PyramidBoard board;
@@ -71,8 +72,18 @@ class PyramidBoardTest {
         assertEquals(4, result.size());
         assertEquals("[9s, 4c]", stringOfRaws(result.get(0).cards()));
 
-        assertEquals(-28, board.score());
+        assertEquals(4, board.score());
         assertFalse(board.notScored());
+    }
+
+    @Test
+    void test_isOpen() {
+        assertFalse(board.isOpen(board.cards()[0]));
+        board.cards()[1] = null;
+        board.cards()[2] = null;
+        assertTrue(board.isOpen(board.cards()[0]));
+
+        assertFalse(board.isOpen(buildCard(LAST_BOARD, "Ad")));
     }
 
     @Test
@@ -85,7 +96,7 @@ class PyramidBoardTest {
         assertFalse(board.isOpen(card));
         assertEquals(1, board.flippedDeck().size());
         assertEquals("[9s, 4c]", stringOfRaws(board.path().peek()));
-        assertEquals(1, board.path().size());
+        assertEquals(2, board.path().size());
         assert board.path().peek() != null;
         assertEquals("27:9s", requireNonNull(board.path().peek())[0].toString());
 
@@ -96,7 +107,7 @@ class PyramidBoardTest {
         assertFalse(board.isOpen(card));
         assertEquals(22, board.deck().size());
         assertEquals("49:6c", board.deck().peek().toString());
-        assertEquals(2, board.path().size());
+        assertEquals(3, board.path().size());
         assert board.path().peek() != null;
         assertEquals("50:Kh", requireNonNull(board.path().peek())[0].toString());
 
@@ -159,21 +170,6 @@ class PyramidBoardTest {
 
         assertNotNull(cards);
         assertEquals(9, cards.size());
-    }
-
-    @Test
-    void test_isOpenDeckCard() {
-        assertTrue(board.isOpenDeckCard(board.deck().peek()));
-        assertFalse(board.isOpenDeckCard(board.deck().get(0)));
-    }
-
-    @Test
-    void test_isOpenBoardCard() {
-        assertTrue(board.isOpenBoardCard(27));
-        assertTrue(board.isOpenBoardCard(22));
-        assertFalse(board.isOpenBoardCard(20));
-        assertFalse(board.isOpenBoardCard(28));
-        assertFalse(board.isOpenBoardCard(-1));
     }
 
     @Test

@@ -57,6 +57,9 @@ class SolveExecutorTest {
         assertEquals(1, executor.shortestPath().size());
         assertEquals(1, executor.longestPath().size());
 
+        executor.defaultSolutionConsumer(List.of("2"));
+        assertEquals("[1]", executor.shortestPath().toString());
+
         executor.defaultSolutionConsumer(List.of("1", "2"));
         assertEquals(1, executor.shortestPath().size());
         assertEquals(2, executor.longestPath().size());
@@ -72,7 +75,6 @@ class SolveExecutorTest {
         isPrint(true);
         executor.defaultSolutionConsumer(List.of("2", "3"));
         assertTrue(outputStream.toString().contains("2: 2, 3"));
-
     }
 
     @Test

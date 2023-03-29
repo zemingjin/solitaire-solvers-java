@@ -104,7 +104,7 @@ class SolitaireAppTest {
 
     @Test
     void test_run_pyramid() {
-        ARGS[0] = "games/pyramid/pyramid-121122-expert.txt";
+        ARGS[0] = "games/pyramid/pyramid-expert-121122-2.txt";
         ARGS[1] = PYRAMID;
         ARGS[2] = null;
         app.run(ARGS);
@@ -112,7 +112,7 @@ class SolitaireAppTest {
 
         assertNotNull(app.solver());
         assertEquals(1536, app.solver().totalSolutions());
-        assertEquals(11, app.solver().maxDepth());
+        assertEquals(16, app.solver().maxDepth());
     }
 
     @Test

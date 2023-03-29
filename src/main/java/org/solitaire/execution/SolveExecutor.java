@@ -179,7 +179,7 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
     }
 
     private void checkShortestPath(List<S> path) {
-        if (isNull(shortestPath()) || shortestPath().size() > path.size()) {
+        if (isNull(shortestPath()) || path.size() < shortestPath().size()) {
             shortestPath(path);
         }
     }

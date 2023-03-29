@@ -7,10 +7,10 @@ import org.solitaire.model.Column;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.MIN_VALUE;
@@ -18,6 +18,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.BOARD;
@@ -30,6 +31,7 @@ import static org.solitaire.pyramid.PyramidHelper.row;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
+import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.toArray;
 
 public class PyramidBoard implements Board<Card[], Candidate> {
@@ -39,6 +41,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     private final Path<Card[]> path;
     private int recycleCount;
     private transient int score;
+    private transient List<Candidate> candidates;
 
     public PyramidBoard(Card[] cards, Column deck, Column flippedDeck, Path<Card[]> path, int recycleCount) {
         this.cards = cards;
@@ -62,16 +65,24 @@ public class PyramidBoard implements Board<Card[], Candidate> {
      **************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        return Optional.of(findOpenCards())
+        return Optional.ofNullable(candidates())
                 .filter(listIsNotEmpty)
-                .map(this::findCardsOf13s)
-                .filter(listIsNotEmpty)
-                .orElseGet(this::drawDeckCards);
+                .map(it -> candidates(null))
+                .orElseGet(() -> Optional.of(findCandidatesOf13s())
+                        .filter(listIsNotEmpty)
+                        .orElseGet(this::drawDeckCards));
     }
 
     private List<Candidate> drawDeckCards() {
         return Optional.ofNullable(drawDeckCard())
                 .map(List::of)
+                .orElseGet(Collections::emptyList);
+    }
+
+    private List<Candidate> findCandidatesOf13s() {
+        return Optional.of(findOpenCards())
+                .filter(listIsNotEmpty)
+                .map(this::findCardsOf13s)
                 .orElseGet(Collections::emptyList);
     }
 
@@ -96,7 +107,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     }
 
     protected List<Card> findOpenCards() {
-        return Stream.concat(getBoardOpenCards(), getDeckCards()).toList();
+        return concat(getBoardOpenCards(), getDeckCards()).toList();
     }
 
     private Stream<Card> getDeckCards() {
@@ -114,14 +125,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     }
 
     protected boolean isOpen(Card card) {
-        return isOpenBoardCard(card.at()) || isOpenDeckCard(card);
-    }
-
-    protected boolean isOpenDeckCard(@Nonnull Card card) {
-        return !deck.isEmpty() && card.equals(deck.peek());
-    }
-
-    protected boolean isOpenBoardCard(int at) {
+        var at = card.at();
         return 0 <= at && at < LAST_BOARD && nonNull(cards[at]) && isOpenAt(at);
     }
 
@@ -160,10 +164,9 @@ public class PyramidBoard implements Board<Card[], Candidate> {
 
     private void updateTargets(Candidate candidate) {
         var cards = candidate.cards();
+        path.add(cards);
         if (candidate.target() == DECKPILE) {
             flippedDeck.push(cards[0]);
-        } else {
-            path.add(cards);
         }
     }
 
@@ -193,13 +196,10 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     @Override
     public int score() {
         if (notScored()) {
-            score(-calcBlockers());
+            candidates(findCandidatesOf13s());
+            score(candidates().size());
         }
         return score;
-    }
-
-    private int calcBlockers() {
-        return (int) Stream.of(cards).filter(isNotNull).count();
     }
 
     protected void score(int score) {
@@ -254,4 +254,20 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         return CardHelper.isCleared(cards);
     }
 
+    public List<Candidate> candidates() {
+        return candidates;
+    }
+
+    public List<Candidate> candidates(List<Candidate> candidates) {
+        var old = this.candidates;
+
+        this.candidates = candidates;
+        return old;
+    }
+
+    public static String toString(List<Card[]> path) {
+        return path.stream()
+                .map(it -> it.length == 1 && it[0].isNotKing() ? '^'+it[0].raw() : stringOfRaws(it))
+                .collect(Collectors.joining(", "));
+    }
 }
