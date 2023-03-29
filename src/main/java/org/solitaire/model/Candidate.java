@@ -1,9 +1,6 @@
 package org.solitaire.model;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.Collection;
-import java.util.function.Function;
 
 import static java.lang.String.format;
 import static org.solitaire.model.Origin.COLUMN;
@@ -16,9 +13,9 @@ import static org.solitaire.util.CardHelper.toArray;
 
 public record Candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
 
-    public static final Function<Pair<Integer, Card>, Candidate> buildFoundationToColumn =
-            pair -> candidate(pair.getRight(), FOUNDATION, suitCode(pair.getRight()),
-                    COLUMN, pair.getLeft());
+    public static Candidate foundationToColumn(Card card, int to) {
+        return candidate(card, FOUNDATION, suitCode(card), COLUMN, to);
+    }
 
     public static Candidate candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
         return new Candidate(cards, origin, from, target, to);
@@ -38,6 +35,10 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
 
     public static Candidate columnToColumn(Card[] cards, int from, int to) {
         return candidate(cards, COLUMN, from, COLUMN, to);
+    }
+
+    public static Candidate deckToColumn(Card card, int to) {
+        return candidate(card, DECKPILE, 0, COLUMN, to);
     }
 
     public static Candidate buildCandidate(Card[] cards, Origin origin, Origin target) {
