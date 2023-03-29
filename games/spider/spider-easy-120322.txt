@@ -1,0 +1,15 @@
+2s 3s 2s 3s 6s 2s
+As 9s 7s 7s Js 7s
+6s 4s 8s 7s 5s 6s
+4s Js 8s Ts Js 6s
+3s Ks 7s 5s As
+Qs 8s 4s Js 6s
+Ts Qs 3s 8s As
+8s Ks Ks 2s Ts
+6s Js 7s Qs 3s
+4s 9s Qs Ts 4s
+Js 7s Ks 3s 5s Ks 9s 8s 4s 5s
+Js 8s 6s 9s 5s Qs 5s 4s 6s 9s
+Ts Ks Qs 3s 9s As Js 5s 4s 8s
+Ks Ts As 2s As As Qs 7s 9s 2s
+2s 9s Qs 2s Ts 3s 5s Ks As Ts

@@ -15,9 +15,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.function.Function;
-import java.util.function.IntPredicate;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.lang.Math.max;
@@ -28,8 +25,9 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
-import static org.solitaire.model.Candidate.buildFoundationToColumn;
 import static org.solitaire.model.Candidate.candidate;
+import static org.solitaire.model.Candidate.deckToColumn;
+import static org.solitaire.model.Candidate.foundationToColumn;
 import static org.solitaire.model.Origin.COLUMN;
 import static org.solitaire.model.Origin.DECKPILE;
 import static org.solitaire.model.Origin.FOUNDATION;
@@ -51,43 +49,10 @@ import static org.solitaire.util.CardHelper.toArray;
 class KlondikeBoard extends GameBoard {
     private static int drawNumber = 3;
 
-    private transient final Function<Card, Pair<Integer, Card>> findOneToReceive =
-            card -> range(0, columns().size())
-                    .filter(isNotEmpty)
-                    .filter(i -> peek(i).isHigherWithDifferentColor(card))
-                    .mapToObj(i -> Pair.of(i, card))
-                    .findFirst()
-                    .orElse(null);
-    private transient final Function<Card, Stream<Candidate>> deckToColumnCandidates = card ->
-            range(0, columns().size())
-                    .mapToObj(i -> deckToColumnCandidate(i, card))
-                    .filter(isNotNull);
     protected boolean stateChanged;
     private Deck deck;
     private Stack<Card> deckPile;
     private List<Stack<Card>> foundations;
-    protected transient final IntPredicate isNotImmediateFoundationable =
-            i -> !peek(i).isHigherOfSameColor(foundationCard(peek(i)));
-    private transient final Predicate<Card> isOneToUncover =
-            card -> range(0, columns().size())
-                    .filter(isNotEmpty.and(isNotImmediateFoundationable))
-                    .filter(i -> card.isHigherWithDifferentColor(peek(i)))
-                    .findFirst()
-                    .isPresent();
-    protected transient final Function<Card, Pair<Integer, Card>> fromFoundationToColumn =
-            card -> Optional.of(card)
-                    .filter(isOneToUncover)
-                    .map(findOneToReceive)
-                    .orElse(null);
-    protected transient final Predicate<Card> isFoundationCandidate = card -> {
-        var foundationCards = foundations.get(suitCode(card));
-
-        return Optional.of(foundationCards)
-                .filter(Stack::isEmpty)
-                .map(it -> card.isAce())
-                .orElseGet(() -> foundationCards.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
-    };
-    private transient final IntPredicate isColumnToFoundationCandidate = i -> isFoundationCandidate.test(peek(i));
 
     KlondikeBoard(Columns columns,
                   Path<String> path,
@@ -115,18 +80,6 @@ class KlondikeBoard extends GameBoard {
                 that.stateChanged);
     }
 
-    private static int calcBlocker(List<Card> cards, Card target) {
-        return cards.size() - cards.lastIndexOf(target) - 1;
-    }
-
-    public static int drawNumber() {
-        return drawNumber;
-    }
-
-    public static void drawNumber(int drawNumber) {
-        KlondikeBoard.drawNumber = drawNumber;
-    }
-
     /***************************************************************************************************************
      * Search
      **************************************************************************************************************/
@@ -149,12 +102,40 @@ class KlondikeBoard extends GameBoard {
         return foundations().stream()
                 .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
-                .map(fromFoundationToColumn)
+                .map(this::fromFoundationToColumn)
                 .filter(isNotNull)
-                .map(buildFoundationToColumn)
+                .map(it -> foundationToColumn(it.getRight(), it.getLeft()))
                 .findFirst()
                 .map(List::of)
                 .orElseGet(Collections::emptyList);
+    }
+
+    protected Pair<Integer, Card> fromFoundationToColumn(Card card) {
+        return Optional.of(card)
+                .filter(this::isOneToUncover)
+                .map(this::findOneToReceive)
+                .orElse(null);
+    }
+
+    private boolean isOneToUncover(Card card) {
+        return range(0, columns().size())
+                .filter(isNotEmpty.and(this::isNotImmediateFoundationable))
+                .filter(i -> card.isHigherWithDifferentColor(peek(i)))
+                .findFirst()
+                .isPresent();
+    }
+
+    protected boolean isNotImmediateFoundationable(int i) {
+        return !peek(i).isHigherOfSameColor(foundationCard(peek(i)));
+    }
+
+    private Pair<Integer, Card> findOneToReceive(Card card) {
+        return range(0, columns().size())
+                .filter(isNotEmpty)
+                .filter(i -> peek(i).isHigherWithDifferentColor(card))
+                .mapToObj(i -> Pair.of(i, card))
+                .findFirst()
+                .orElse(null);
     }
 
     protected Stream<Candidate> findToFoundationCandidate() {
@@ -164,7 +145,7 @@ class KlondikeBoard extends GameBoard {
     private Stream<Candidate> findColumnToFoundationCandidates() {
         return range(0, columns().size())
                 .filter(i -> isNotEmpty(columns.get(i)))
-                .filter(isColumnToFoundationCandidate)
+                .filter(i -> isFoundationCandidate(peek(i)))
                 .mapToObj(i -> candidate(column(i).peek(), COLUMN, i, FOUNDATION, suitCode(column(i).peek())));
     }
 
@@ -172,9 +153,18 @@ class KlondikeBoard extends GameBoard {
         return Optional.of(deckPile)
                 .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
-                .filter(isFoundationCandidate)
+                .filter(this::isFoundationCandidate)
                 .map(it -> candidate(it, DECKPILE, 0, FOUNDATION, suitCode(it)))
                 .stream();
+    }
+
+    protected boolean isFoundationCandidate(Card card) {
+        var foundationCards = foundations.get(suitCode(card));
+
+        return Optional.of(foundationCards)
+                .filter(Stack::isEmpty)
+                .map(it -> card.isAce())
+                .orElseGet(() -> foundationCards.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
     }
 
     protected Stream<Candidate> findMovableCandidates() {
@@ -193,15 +183,21 @@ class KlondikeBoard extends GameBoard {
         return Optional.of(deckPile)
                 .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
-                .map(deckToColumnCandidates)
+                .map(this::deckToColumnCandidates)
                 .orElseGet(Stream::empty);
+    }
+
+    private Stream<Candidate> deckToColumnCandidates(Card card) {
+        return range(0, columns().size())
+                .mapToObj(i -> deckToColumnCandidate(i, card))
+                .filter(isNotNull);
     }
 
     private Candidate deckToColumnCandidate(int colAt, Card card) {
         return Stream.of(column(colAt))
                 .map(it -> it.isNotEmpty() ? it.peek() : null)
                 .filter(it -> isDeckToColumnCandidate(card, it))
-                .map(it -> candidate(card, DECKPILE, -1, COLUMN, colAt))
+                .map(it -> deckToColumn(card, colAt))
                 .findFirst()
                 .orElse(null);
     }
@@ -440,6 +436,18 @@ class KlondikeBoard extends GameBoard {
     @Override
     public List<String> verify() {
         return verifyBoard(columns, deck, deckPile);
+    }
+
+    private static int calcBlocker(List<Card> cards, Card target) {
+        return cards.size() - cards.lastIndexOf(target) - 1;
+    }
+
+    public static int drawNumber() {
+        return drawNumber;
+    }
+
+    public static void drawNumber(int drawNumber) {
+        KlondikeBoard.drawNumber = drawNumber;
     }
 
 }

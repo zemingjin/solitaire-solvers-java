@@ -48,31 +48,31 @@ class KlondikeBoardTest {
 
     @Test
     void test_isNotImmediateFoundationable() {
-        assertTrue(board.isNotImmediateFoundationable.test(0));
+        assertTrue(board.isNotImmediateFoundationable(0));
 
         var card = card("9h");
         board.foundations().get(suitCode(card)).add(card);
-        assertFalse(board.isNotImmediateFoundationable.test(0));
+        assertFalse(board.isNotImmediateFoundationable(0));
 
         card = card("Jh");
         board.foundations().get(suitCode(card)).add(card);
-        assertTrue(board.isNotImmediateFoundationable.test(0));
+        assertTrue(board.isNotImmediateFoundationable(0));
     }
 
     @Test
     void test_fromFoundationToColumn() {
         var card = card("5d");
-        var result = board.fromFoundationToColumn.apply(card);
+        var result = board.fromFoundationToColumn(card);
 
         assertNull(result);
 
         board.column(5).add(card("6s"));
-        result = board.fromFoundationToColumn.apply(card);
+        result = board.fromFoundationToColumn(card);
 
         assertEquals(5, result.getLeft());
 
         board.column(3).remove(3);
-        result = board.fromFoundationToColumn.apply(card);
+        result = board.fromFoundationToColumn(card);
 
         assertNull(result);
     }
@@ -296,13 +296,13 @@ class KlondikeBoardTest {
         var a = card("Ad");
         var b = card("2d");
 
-        assertTrue(board.isFoundationCandidate.test(a));
-        assertFalse(board.isFoundationCandidate.test(b));
+        assertTrue(board.isFoundationCandidate(a));
+        assertFalse(board.isFoundationCandidate(b));
 
         board.foundations().get(suitCode(a)).push(a);
 
-        assertTrue(board.isFoundationCandidate.test(b));
-        assertFalse(board.isFoundationCandidate.test(card("3d")));
+        assertTrue(board.isFoundationCandidate(b));
+        assertFalse(board.isFoundationCandidate(card("3d")));
     }
 
     @Test

@@ -1,9 +1,6 @@
 package org.solitaire.model;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.Collection;
-import java.util.function.Function;
 
 import static java.lang.String.format;
 import static org.solitaire.model.Origin.COLUMN;
@@ -16,9 +13,9 @@ import static org.solitaire.util.CardHelper.toArray;
 
 public record Candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
 
-    public static final Function<Pair<Integer, Card>, Candidate> buildFoundationToColumn =
-            pair -> candidate(pair.getRight(), FOUNDATION, suitCode(pair.getRight()),
-                    COLUMN, pair.getLeft());
+    public static Candidate foundationToColumn(Card card, int to) {
+        return candidate(card, FOUNDATION, suitCode(card), COLUMN, to);
+    }
 
     public static Candidate candidate(Card[] cards, Origin origin, int from, Origin target, int to) {
         return new Candidate(cards, origin, from, target, to);
@@ -40,6 +37,10 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
         return candidate(cards, COLUMN, from, COLUMN, to);
     }
 
+    public static Candidate deckToColumn(Card card, int to) {
+        return candidate(card, DECKPILE, 0, COLUMN, to);
+    }
+
     public static Candidate buildCandidate(Card[] cards, Origin origin, Origin target) {
         return new Candidate(cards, origin, cards[0].at(), target, 0);
     }
@@ -56,7 +57,7 @@ public record Candidate(Card[] cards, Origin origin, int from, Origin target, in
         return originNotation() + targetNotation() + ":" + valueNotation();
     }
 
-    private String originNotation() {
+    public String originNotation() {
         return switch (origin) {
             case COLUMN -> Integer.toString(from);
             case FREECELL -> "f";

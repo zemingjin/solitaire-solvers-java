@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.solitaire.util.BoardHelper;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiPredicate;
@@ -18,17 +19,17 @@ import static java.util.Arrays.copyOfRange;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.stream.IntStream.range;
-import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.CardHelper.toArray;
 
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
     public static final Function<Stream<Candidate>, Stream<Candidate>> flattenStream = it -> it;
-
-    private transient BiPredicate<Card, Card> isInSequence;
     public transient final IntPredicate isNotEmpty = i -> column(i).isNotEmpty();
+    private transient BiPredicate<Card, Card> isInSequence;
     private transient int score = MIN_VALUE;
+    private transient final Card[][] orderedCards;
     private int totalScore;
     protected final Columns columns;
     protected final Path<String> path;
@@ -41,6 +42,7 @@ public class GameBoard implements Board<String, Candidate> {
         this.columns = columns;
         this.path = path;
         this.totalScore = totalScore;
+        orderedCards = new Card[columns.size()][];
     }
 
     protected void removeFromColumn(Candidate candidate) {
@@ -89,31 +91,20 @@ public class GameBoard implements Board<String, Candidate> {
         return range(0, columns().size())
                 .mapToObj(i -> toColumnCandidate(i, to, card))
                 .filter(isNotNull)
-                .filter(this::isNotRepeatingCandidate)
-                .filter(this::isLongerTargetSequence);
+                .filter(this::isNotRepeatingCandidate);
     }
 
     public boolean isNotRepeatingCandidate(Candidate candidate) {
         return !path().contains(candidate.notation());
     }
 
-    public boolean isLongerTargetSequence(Candidate candidate) {
-        var column = column(candidate.to());
-
-        if (column.isNotEmpty()) {
-            return targetSize(candidate) > getOrderedCards(column(candidate.from())).length;
-        }
-        return true;
-    }
-
-    private int targetSize(Candidate candidate) {
-        return getOrderedCards(column(candidate.to())).length + candidate.cards().length;
+    protected int targetLen(Candidate candidate) {
+        return getOrderedCards(candidate.to()).length + candidate.cards().length;
     }
 
     public Candidate toColumnCandidate(int from, int to, Card card) {
         return Optional.of(from)
                 .filter(it -> it != to)
-                .map(this::column)
                 .map(this::getOrderedCards)
                 .filter(BoardHelper.isNotEmpty)
                 .map(it -> toColumnCandidate(it, from, to, card))
@@ -121,17 +112,27 @@ public class GameBoard implements Board<String, Candidate> {
     }
 
     public Candidate toColumnCandidate(Card[] cards, int from, int to, Card card) {
-        if (isMovable(cards, from, to)) {
-            if (isNull(card)) {
-                return candidateToEmptyColumn(cards, from, to);
-            }
-            return range(0, cards.length)
-                    .filter(i -> isInSequence().test(card, cards[i]))
-                    .mapToObj(i -> new Candidate(copyOfRange(cards, i, cards.length), COLUMN, from, COLUMN, to))
-                    .findFirst()
-                    .orElse(null);
+        if (isNull(card)) {
+            return isMovable(cards, from, to) ? candidateToEmptyColumn(cards, from, to) : null;
         }
-        return null;
+        return range(0, cards.length)
+                .filter(i -> isInSequence().test(card, cards[i]))
+                .mapToObj(i -> copyOfRange(cards, i, cards.length))
+                .filter(it -> isMovable(it, from, to))
+                .map(it -> columnToColumn(it, from, to))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public boolean isMovable(Card[] cards, int from, int to) {
+        return cards.length < column(from).size() || column(to).isNotEmpty();
+    }
+
+    public Card[] getOrderedCards(int colAt) {
+        if (isNull(orderedCards(colAt))) {
+            orderedCards[colAt] = getOrderedCards(column(colAt));
+        }
+        return orderedCards(colAt);
     }
 
     public Card[] getOrderedCards(Column column) {
@@ -147,10 +148,6 @@ public class GameBoard implements Board<String, Candidate> {
             }
         }
         return toArray(column.subList(at, column.size()));
-    }
-
-    protected boolean isMovable(Card[] cards, int from, int to) {
-        return cards.length < column(from).size() || column(to).isNotEmpty();
     }
 
     protected Candidate candidateToEmptyColumn(Card[] cards, int from, int to) {
@@ -231,7 +228,7 @@ public class GameBoard implements Board<String, Candidate> {
         return columns().get(colId);
     }
 
-    protected BiPredicate<Card, Card> isInSequence() {
+    public BiPredicate<Card, Card> isInSequence() {
         return isInSequence;
     }
 
@@ -239,4 +236,12 @@ public class GameBoard implements Board<String, Candidate> {
         this.isInSequence = isInSequence;
     }
 
+    public Card[] orderedCards(int colAt) {
+        return orderedCards[colAt];
+    }
+
+    public void resetCache() {
+        Arrays.fill(orderedCards, null);
+        resetScore();
+    }
 }
