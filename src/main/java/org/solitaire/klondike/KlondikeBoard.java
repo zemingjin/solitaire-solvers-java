@@ -9,6 +9,7 @@ import org.solitaire.model.Deck;
 import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -79,15 +80,18 @@ class KlondikeBoard extends GameBoard {
      **************************************************************************************************************/
     @Override
     public List<Candidate> findCandidates() {
-        return Optional.of(findCandidatesFromBoard())
-                .filter(listIsNotEmpty)
-                .orElseGet(this::drawDeck);
-    }
+        var candidates = candidatesToFoundationAndColumn();
 
-    private List<Candidate> findCandidatesFromBoard() {
-        return Optional.of(candidatesToFoundationAndColumn())
-                .filter(listIsNotEmpty)
-                .orElseGet(this::candidatesFromDeckAndFoundation);
+        if (candidates.isEmpty()) {
+            candidates = findDeckToColumnCandidates();
+            if (candidates.isEmpty()) {
+                candidates = drawDeck();
+                if (candidates.isEmpty()) {
+                    candidates = findFoundationToColumnCandidates();
+                }
+            }
+        }
+        return candidates;
     }
 
     private List<Candidate> candidatesToFoundationAndColumn() {
@@ -99,19 +103,13 @@ class KlondikeBoard extends GameBoard {
                 .toList();
     }
 
-    private List<Candidate> candidatesFromDeckAndFoundation() {
-        return Stream.of(findDeckToColumnCandidates(), findFoundationToColumnCandidates())
-                .flatMap(flattenStream)
-                .toList();
-    }
-
-    protected Stream<Candidate> findFoundationToColumnCandidates() {
+    protected List<Candidate> findFoundationToColumnCandidates() {
         return foundations().stream()
                 .filter(BoardHelper.isNotEmpty)
                 .map(Column::peek)
                 .map(this::fromFoundationToColumn)
                 .filter(isNotNull)
-                .findFirst().stream();
+                .toList();
     }
 
     protected Candidate fromFoundationToColumn(Card card) {
@@ -178,12 +176,13 @@ class KlondikeBoard extends GameBoard {
                 .orElse(null);
     }
 
-    protected Stream<Candidate> findDeckToColumnCandidates() {
+    protected List<Candidate> findDeckToColumnCandidates() {
         return Optional.of(deckPile)
                 .filter(BoardHelper.isNotEmpty)
                 .map(Stack::peek)
                 .map(this::deckToColumnCandidates)
-                .orElseGet(Stream::empty);
+                .map(Stream::toList)
+                .orElseGet(Collections::emptyList);
     }
 
     private Stream<Candidate> deckToColumnCandidates(Card card) {

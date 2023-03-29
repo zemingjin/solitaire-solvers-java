@@ -91,22 +91,22 @@ class KlondikeBoardTest {
 
     @Test
     void test_findFoundationToColumnCandidates() {
-        var result = board.findFoundationToColumnCandidates().toList();
+        var result = board.findFoundationToColumnCandidates();
 
         assertEquals(0, result.size());
 
         var card = card("5d");
         board.foundation(suitCode(card)).add(card);
 
-        result = board.findFoundationToColumnCandidates().toList();
+        result = board.findFoundationToColumnCandidates();
         assertEquals(0, result.size());
 
         board.column(5).add(card("6s"));
-        result = board.findFoundationToColumnCandidates().toList();
+        result = board.findFoundationToColumnCandidates();
         assertEquals("$5:5d", result.get(0).notation());
 
         board.column(3).remove(3);
-        result = board.findFoundationToColumnCandidates().toList();
+        result = board.findFoundationToColumnCandidates();
         assertEquals(0, result.size());
     }
 
@@ -115,18 +115,18 @@ class KlondikeBoardTest {
         var card = card("Th");
         board.foundation(suitCode(card)).add(card);
 
-        assertEquals(0, board.findFoundationToColumnCandidates().toList().size());
+        assertEquals(0, board.findFoundationToColumnCandidates().size());
 
         board.column(2).clear();
         board.column(2).add(card("Jc"));
 
-        assertEquals("$2:Th", board.findFoundationToColumnCandidates().toList().get(0).notation());
+        assertEquals("$2:Th", board.findFoundationToColumnCandidates().get(0).notation());
 
         card = card("9h");
         board.foundation(suitCode(card)).add(card);
         board.column(1).add(card("8c"));
 
-        assertEquals("$6:9h", board.findFoundationToColumnCandidates().toList().get(0).notation());
+        assertEquals("$6:9h", board.findFoundationToColumnCandidates().get(0).notation());
     }
 
     @Test
@@ -315,7 +315,7 @@ class KlondikeBoardTest {
     void test_findDeckToColumnCandidates() {
         board.deckPile().pop();
         board.deckPile().pop();
-        var result = board.findDeckToColumnCandidates().toList();
+        var result = board.findDeckToColumnCandidates();
 
         assertEquals(1, result.size());
         assertEquals("^2:Ts", result.get(0).notation());
