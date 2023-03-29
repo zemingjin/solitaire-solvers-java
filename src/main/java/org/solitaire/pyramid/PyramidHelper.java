@@ -3,12 +3,12 @@ package org.solitaire.pyramid;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Stack;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -25,7 +25,7 @@ public class PyramidHelper {
     private static final Function<Card[], PyramidBoard> buildPyramidBoard = cards -> {
         assert cards.length == 52 : "Invalid # of cards: " + cards.length;
 
-        return new PyramidBoard(copyOf(cards, LAST_BOARD), buildDeck(cards), new Stack<>(), new Path<>(), 3);
+        return new PyramidBoard(copyOf(cards, LAST_BOARD), buildDeck(cards), new Column(), new Path<>(), 3);
     };
 
     public static Pyramid build(String[] cards) {
@@ -36,8 +36,8 @@ public class PyramidHelper {
                 .orElseThrow();
     }
 
-    private static Stack<Card> buildDeck(Card[] cards) {
-        var deck = new Stack<Card>();
+    private static Column buildDeck(Card[] cards) {
+        var deck = new Column();
 
         deck.addAll(stream(cards, LAST_BOARD, LAST_DECK).toList());
         return deck;

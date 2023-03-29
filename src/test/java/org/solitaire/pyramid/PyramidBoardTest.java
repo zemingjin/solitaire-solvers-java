@@ -3,10 +3,8 @@ package org.solitaire.pyramid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Candidate;
-import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 import org.solitaire.util.IOHelper;
-
-import java.util.Stack;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
@@ -74,6 +72,7 @@ class PyramidBoardTest {
         assertEquals("[9s, 4c]", stringOfRaws(result.get(0).cards()));
 
         assertEquals(-28, board.score());
+        assertFalse(board.notScored());
     }
 
     @Test
@@ -203,7 +202,7 @@ class PyramidBoardTest {
     @Test
     void test_surePop() {
         var card = card("Ad");
-        var stack = new Stack<Card>();
+        var stack = new Column();
 
         assertFalse(board.surePop(card, stack));
         stack.push(card);
