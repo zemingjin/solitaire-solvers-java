@@ -1,10 +1,12 @@
-package org.solitaire.model;
+package org.solitaire.execution;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.solitaire.model.Board;
+import org.solitaire.model.BoardStack;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -23,8 +25,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.solitaire.model.SolveExecutor.isPrint;
-import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.execution.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelperTest.ONE;
 import static org.solitaire.util.CardHelperTest.THREE;
 import static org.solitaire.util.CardHelperTest.TWO;

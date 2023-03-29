@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.EmptyStackException;
 
 public class Column extends ArrayList<Card> {
-    private int openAt;
+    private int openAt = -1;
 
     public Column() {
         super(8);
@@ -36,6 +36,10 @@ public class Column extends ArrayList<Card> {
             return remove(size() - 1);
         }
         throw new EmptyStackException();
+    }
+
+    public void push(Card card) {
+        add(card);
     }
 
     @Override

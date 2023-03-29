@@ -18,12 +18,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.execution.SolveExecutor.isPrint;
 import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.Origin.COLUMN;
-import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
@@ -38,6 +39,19 @@ class SpiderBoardTest {
     private static final String[] cards = loadFile(TEST_FILE);
 
     private SpiderBoard board;
+
+    private static Column mockRun() {
+        return mockRun(VALUES.length());
+    }
+
+    private static Column mockRun(int length) {
+        var column = new Column();
+
+        for (int i = length; i-- > 0; ) {
+            column.add(card(VALUES.charAt(i) + "s"));
+        }
+        return column;
+    }
 
     @BeforeEach
     void setup() {
@@ -62,8 +76,8 @@ class SpiderBoardTest {
         var result = board.findColumnToColumnCandidates().toList();
 
         assertEquals(6, result.size());
-        assertEquals("30:9s", result.get(0).notation());
-        assertEquals("59:2h", result.get(5).notation());
+        assertEquals("17:5h", result.get(3).notation());
+        assertEquals("59:2h", result.get(result.size() - 1).notation());
     }
 
     @Test
@@ -126,7 +140,7 @@ class SpiderBoardTest {
         board.column(0).remove(0);
         candidates = board.findCandidates();
         assertEquals(16, candidates.size());
-        assertEquals("08:[9d, 8d]", candidates.get(1).notation());
+        assertEquals("16:5h", candidates.get(2).notation());
     }
 
     @Test
@@ -217,14 +231,16 @@ class SpiderBoardTest {
     }
 
     @Test
-    void test_isThereARun() {
-        var cards = Arrays.asList(card("Js"), card("Ts"), card("9s"), card("8s"), card("7s"),
-                card("6s"), card("5s"), card("4s"), card("3s"), card("2s"), card("As"));
-        var column = board.column(0);
+    void test_getRunCandidate() {
+        assertNull(board.getRunCandidate(0));
 
-        assertFalse(board.isThereARun(column));
-        column.addAll(cards);
-        assertFalse(board.isThereARun(column));
+        var cards = Arrays.asList(card("Ks"), card("Qs"), card("Js"), card("Ts"), card("9s"),
+                card("8s"), card("7s"), card("6s"), card("5s"), card("4s"), card("3s"),
+                card("2s"), card("As"));
+        board.column(0).addAll(cards);
+
+        assertEquals("0$:[Ks, Qs, Js, Ts, 9s, 8s, 7s, 6s, 5s, 4s, 3s, 2s, As]",
+                board.getRunCandidate(0).notation());
     }
 
     @Test
@@ -382,6 +398,9 @@ class SpiderBoardTest {
         board.column(7).clear();
         result = board.optimizedCandidates(candidates.stream());
         assertEquals(3, result.size());
+
+        assertEquals("30:9s", result.get(0).notation());
+        assertEquals("30:[9h, 8h, 7h]", result.get(2).notation());
     }
 
     @Test
@@ -422,19 +441,6 @@ class SpiderBoardTest {
 
         assertEquals(0, board.verify().size());
         assertTrue(board.singleSuit());
-    }
-
-    private static Column mockRun() {
-        return mockRun(VALUES.length());
-    }
-
-    private static Column mockRun(int length) {
-        var column = new Column();
-
-        for (int i = length; i-- > 0; ) {
-            column.add(card(VALUES.charAt(i) + "s"));
-        }
-        return column;
     }
 
 }

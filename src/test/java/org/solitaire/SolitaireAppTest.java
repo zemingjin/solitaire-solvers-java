@@ -28,8 +28,8 @@ import static org.solitaire.SolitaireApp.checkPrint;
 import static org.solitaire.SolitaireApp.checkSingleSolution;
 import static org.solitaire.SolitaireApp.checkUseSuits;
 import static org.solitaire.SolitaireApp.main;
-import static org.solitaire.model.SolveExecutor.isPrint;
-import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.execution.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.util.CardHelper.useSuit;
 
 @ExtendWith(MockitoExtension.class)

@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidHelper.cardAt;
 import static org.solitaire.pyramid.PyramidHelper.getScore;
