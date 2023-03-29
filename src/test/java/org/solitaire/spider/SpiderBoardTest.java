@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.execution.SolveExecutor.isPrint;
 import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Candidate.columnToColumn;
 import static org.solitaire.model.Origin.COLUMN;
-import static org.solitaire.execution.SolveExecutor.isPrint;
 import static org.solitaire.spider.SpiderHelper.build;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
@@ -63,7 +63,7 @@ class SpiderBoardTest {
         var result = board.findColumnToColumnCandidates().toList();
 
         assertEquals(6, result.size());
-        assertEquals("30:9s", result.get(0).notation());
+        assertEquals("17:5h", result.get(3).notation());
         assertEquals("59:2h", result.get(result.size() - 1).notation());
     }
 
@@ -127,7 +127,7 @@ class SpiderBoardTest {
         board.column(0).remove(0);
         candidates = board.findCandidates();
         assertEquals(16, candidates.size());
-        assertEquals("08:[9d, 8d]", candidates.get(1).notation());
+        assertEquals("16:5h", candidates.get(2).notation());
     }
 
     @Test
@@ -385,6 +385,9 @@ class SpiderBoardTest {
         board.column(7).clear();
         result = board.optimizedCandidates(candidates.stream());
         assertEquals(3, result.size());
+
+        assertEquals("30:9s", result.get(0).notation());
+        assertEquals("30:[9h, 8h, 7h]", result.get(2).notation());
     }
 
     @Test

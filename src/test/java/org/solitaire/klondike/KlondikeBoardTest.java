@@ -427,53 +427,37 @@ class KlondikeBoardTest {
 
     @Test
     void test_score() {
-        assertEquals(-29, board.score());
+        assertEquals(-36, board.score());
 
         board.column(2).add(0, board.column(2).pop());
         board.column(2).openAt(board.column(2).size() - 1);
         board.resetCache();
-        assertEquals(-28, board.score());
+        assertEquals(-35, board.score());
 
         var card = board.column(6).remove(0);
         board.foundation(suitCode(card)).push(card);
         board.resetCache();
-        assertEquals(-24, board.score());
+        assertEquals(-31, board.score());
 
         range(0, 3).forEach(i -> drawDeckCards());
         board.resetCache();
-        assertEquals(-24, board.score());
+        assertEquals(-31, board.score());
 
         board.column(1).addAll(board.column(0));
         board.column(0).clear();
         board.column(0).add(board.column(6).remove(4));
         board.column(0).add(board.column(5).remove(4));
         board.resetCache();
-        assertEquals(-18, board.score());
+        assertEquals(-25, board.score());
 
         board.column(6).add(board.column(0).remove(0));
         board.column(0).add(board.column(6).remove(4));
         board.resetCache();
-        assertEquals(-17, board.score());
+        assertEquals(-24, board.score());
 
         board.column(5).remove(card("2s"));
         board.resetCache();
         assertThrows(NoSuchElementException.class, () -> board.score());
-    }
-
-    @Test
-    void test_calcSequenceScore() {
-        board.column(1).addAll(board.column(0));
-        board.column(0).clear();
-
-        board.column(0).add(board.column(6).remove(4));
-        board.column(0).add(board.column(5).remove(4));
-        board.resetCache();
-        assertEquals(10, board.calcSequenceScore());
-
-        board.column(6).add(board.column(0).remove(0));
-        board.column(0).add(board.column(6).remove(4));
-        board.resetCache();
-        assertEquals(8, board.calcSequenceScore());
     }
 
     @Test

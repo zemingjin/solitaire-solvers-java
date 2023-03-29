@@ -35,7 +35,6 @@ public class GameBoard implements Board<String, Candidate> {
 
     private transient BiPredicate<Card, Card> isInSequence;
     public transient final IntPredicate isNotEmpty = i -> column(i).isNotEmpty();
-    private transient BiPredicate<Card, Card> isInSequence;
     private transient int score = MIN_VALUE;
     private transient final Card[][] orderedCards;
     private int totalScore;

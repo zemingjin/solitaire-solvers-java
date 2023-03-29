@@ -86,11 +86,22 @@ class KlondikeBoard extends GameBoard {
     }
 
     private List<Candidate> findCandidatesFromBoard() {
-        return Stream.of(findColumnToFoundationCandidates(),
+        return Optional.of(candidatesToFoundationAndColumn())
+                .filter(listIsNotEmpty)
+                .orElseGet(this::candidatesFromDeckAndFoundation);
+    }
+
+    private List<Candidate> candidatesToFoundationAndColumn() {
+        return Stream.of(
+                        findColumnToFoundationCandidates(),
                         findDeckToFoundationCandidates(),
-                        findColumnToColumnCandidates(),
-                        findDeckToColumnCandidates(),
-                        findFoundationToColumnCandidates())
+                        findColumnToColumnCandidates())
+                .flatMap(flattenStream)
+                .toList();
+    }
+
+    private List<Candidate> candidatesFromDeckAndFoundation() {
+        return Stream.of(findDeckToColumnCandidates(), findFoundationToColumnCandidates())
                 .flatMap(flattenStream)
                 .toList();
     }
@@ -108,6 +119,7 @@ class KlondikeBoard extends GameBoard {
         return Optional.of(card)
                 .filter(this::isOneToUncover)
                 .map(this::findOneToReceive)
+                .filter(this::isNotRepeatingCandidate)
                 .orElse(null);
     }
 
@@ -156,7 +168,18 @@ class KlondikeBoard extends GameBoard {
         return Optional.of(foundationCards)
                 .filter(Column::isEmpty)
                 .map(it -> card.isAce())
-                .orElseGet(() -> foundationCards.peek().isLowerWithSameSuit(card) && isImmediateToFoundation(card));
+                .orElseGet(() -> foundationCards.peek().isLowerWithSameSuit(card));
+    }
+
+    protected boolean isImmediateToFoundation(Card card) {
+        if (card.isHigherRank(foundationCard(card))) {
+            if (!stateChanged()) {
+                return true;
+            }
+            return foundations.stream()
+                    .allMatch(it -> rankDifference(card, it.isEmpty() ? null : it.peek()) <= 2);
+        }
+        return false;
     }
 
     @Override
@@ -202,17 +225,6 @@ class KlondikeBoard extends GameBoard {
 
     public boolean isSolved() {
         return foundations.stream().allMatch(it -> it.size() == 13);
-    }
-
-    protected boolean isImmediateToFoundation(Card card) {
-        if (card.isHigherRank(foundationCard(card))) {
-            if (!stateChanged()) {
-                return true;
-            }
-            return foundations.stream()
-                    .allMatch(it -> rankDifference(card, it.isEmpty() ? null : it.peek()) <= 2);
-        }
-        return false;
     }
 
     protected boolean helpOpenCard(Card card) {
@@ -335,29 +347,10 @@ class KlondikeBoard extends GameBoard {
         var blockScore = calcBlockers();
         var uncoveredCards = uncoveredCards();
         // the larger, the better
-        var sequenceScore = calcSequenceScore();
-
         if (isNotScored()) {
-            super.score(sequenceScore - blockScore - uncoveredCards);
+            super.score(-blockScore - uncoveredCards);
         }
         return super.score();
-    }
-
-    protected int calcSequenceScore() {
-        return range(0, columns().size())
-                .filter(i -> column(i).isNotEmpty())
-                .map(this::calcSequenceScore)
-                .sum();
-    }
-
-    private int calcSequenceScore(int colAt) {
-        return Optional.of(getOrderedCards(colAt))
-                .map(it -> isPreferredSequence(colAt, it) ? it.length * 2 : it.length)
-                .orElse(0);
-    }
-
-    private boolean isPreferredSequence(int colAt, Card[] cards) {
-        return cards.length == column(colAt).size() && cards[0].isKing();
     }
 
     // The smaller, the better
