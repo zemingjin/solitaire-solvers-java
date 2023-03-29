@@ -349,7 +349,7 @@ class SpiderBoardTest {
     void test_drawDeck() {
         var candidates = board.drawDeck();
         assertEquals(1, candidates.size());
-        assertEquals("^0:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
+        assertEquals("^^:[5s, 6h, Qh, 7s, Ks, 8s, 7h, 7s, 9h, Qh]", candidates.get(0).notation());
 
         board.column(0).clear();
         assertThrows(RuntimeException.class, () -> board.drawDeck());
