@@ -21,11 +21,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.stream.IntStream.range;
+import static org.solitaire.execution.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.model.SolutionType.Longest;
 import static org.solitaire.model.SolutionType.One;
 import static org.solitaire.model.SolutionType.Shortest;
-import static org.solitaire.model.SolveExecutor.isPrint;
-import static org.solitaire.model.SolveExecutor.singleSolution;
 import static org.solitaire.util.BoardHelper.isNotEmpty;
 
 public class SolitaireApp {

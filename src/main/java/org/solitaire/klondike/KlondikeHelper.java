@@ -1,12 +1,10 @@
 package org.solitaire.klondike;
 
-import org.solitaire.model.Card;
+
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
 
-import java.util.List;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 import static java.util.stream.IntStream.range;
@@ -27,10 +25,10 @@ public class KlondikeHelper {
                 buildFoundation());
     }
 
-    private static List<Stack<Card>> buildFoundation() {
+    private static Columns buildFoundation() {
         return range(0, 4)
-                .mapToObj(i -> new Stack<Card>())
-                .toList();
+                .mapToObj(i -> new Column())
+                .collect(Collectors.toCollection(Columns::new));
     }
 
     private static Deck buildDeck(String[] cards) {

@@ -1,11 +1,11 @@
 package org.solitaire.freecell;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.solitaire.execution.GameBoard;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
-import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 import org.solitaire.util.CardHelper;

@@ -1,6 +1,9 @@
-package org.solitaire.model;
+package org.solitaire.execution;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.solitaire.model.Board;
+import org.solitaire.model.BoardStack;
+import org.solitaire.model.GameSolver;
 
 import java.util.Collection;
 import java.util.LinkedList;

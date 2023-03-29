@@ -1,7 +1,13 @@
-package org.solitaire.model;
+package org.solitaire.execution;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.solitaire.model.Board;
+import org.solitaire.model.Candidate;
+import org.solitaire.model.Card;
+import org.solitaire.model.Column;
+import org.solitaire.model.Columns;
+import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
 import java.util.Arrays;
@@ -26,13 +32,13 @@ import static org.solitaire.util.CardHelper.toArray;
 @Slf4j
 public class GameBoard implements Board<String, Candidate> {
     public static final Function<Stream<Candidate>, Stream<Candidate>> flattenStream = it -> it;
+    protected final Columns columns;
     public transient final IntPredicate isNotEmpty = i -> column(i).isNotEmpty();
+    protected final Path<String> path;
+    private transient final Card[][] orderedCards;
     private transient BiPredicate<Card, Card> isInSequence;
     private transient int score = MIN_VALUE;
-    private transient final Card[][] orderedCards;
     private int totalScore;
-    protected final Columns columns;
-    protected final Path<String> path;
 
     public GameBoard(Columns columns, Path<String> path) {
         this(columns, path, 0);
@@ -46,6 +52,7 @@ public class GameBoard implements Board<String, Candidate> {
     }
 
     protected void removeFromColumn(Candidate candidate) {
+        resetOrderedCards(candidate.from());
         Optional.of(candidate)
                 .map(Candidate::from)
                 .map(columns::get)
@@ -73,6 +80,7 @@ public class GameBoard implements Board<String, Candidate> {
 
         column(candidate.to()).addAll(List.of(cards));
         column.openAt(openAt);
+        resetOrderedCards(candidate.to());
     }
 
     @Override
@@ -238,6 +246,10 @@ public class GameBoard implements Board<String, Candidate> {
 
     public Card[] orderedCards(int colAt) {
         return orderedCards[colAt];
+    }
+
+    public void resetOrderedCards(int colAt) {
+        orderedCards[colAt] = null;
     }
 
     public void resetCache() {

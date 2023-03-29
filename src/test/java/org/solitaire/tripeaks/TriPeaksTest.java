@@ -7,8 +7,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.solitaire.model.SolveExecutor.isPrint;
-import static org.solitaire.model.SolveExecutor.singleSolution;
+import static org.solitaire.execution.SolveExecutor.isPrint;
+import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
 import static org.solitaire.util.CardHelper.card;

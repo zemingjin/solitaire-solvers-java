@@ -1,7 +1,9 @@
-package org.solitaire.model;
+package org.solitaire.execution;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.solitaire.model.Columns;
+import org.solitaire.model.Path;
 import org.solitaire.util.IOHelper;
 
 import java.util.LinkedList;
@@ -79,9 +81,21 @@ public class GameBoardTest {
     @Test
     void test_removeFromColumn_success() {
         var candidate = columnToColumn(board.peek(0), 0, 1);
+        board.getOrderedCards(candidate.from());
 
         board.removeFromColumn(candidate);
-        assertEquals(5, board.columns.get(0).size());
+        assertEquals(5, board.column(candidate.from()).size());
+        assertNull(board.orderedCards(candidate.from()));
+    }
+
+    @Test
+    void test_addToTargetColumn() {
+        var candidate = columnToColumn(board.peek(0), 0, 1);
+
+        board.getOrderedCards(candidate.to());
+        board.addToTargetColumn(candidate);
+        assertEquals(7, board.column(candidate.to()).size());
+        assertNull(board.orderedCards(candidate.to()));
     }
 
     @Test

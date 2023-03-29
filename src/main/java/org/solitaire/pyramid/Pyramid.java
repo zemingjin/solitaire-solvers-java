@@ -1,9 +1,9 @@
 package org.solitaire.pyramid;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.solitaire.execution.SolveExecutor;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
-import org.solitaire.model.SolveExecutor;
 import org.solitaire.util.MaxScore;
 
 import java.util.List;

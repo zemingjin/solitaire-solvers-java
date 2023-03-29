@@ -1,12 +1,12 @@
 package org.solitaire.spider;
 
 import lombok.extern.slf4j.Slf4j;
+import org.solitaire.execution.GameBoard;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
 import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.model.Deck;
-import org.solitaire.model.GameBoard;
 import org.solitaire.model.Path;
 import org.solitaire.util.BoardHelper;
 
@@ -18,25 +18,22 @@ import java.util.stream.Stream;
 import static java.lang.Integer.compare;
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.solitaire.execution.SolveExecutor.isPrint;
 import static org.solitaire.model.Candidate.candidate;
 import static org.solitaire.model.Candidate.columnToColumn;
-import static org.solitaire.model.Origin.COLUMN;
+import static org.solitaire.model.Candidate.columnToFoundation;
 import static org.solitaire.model.Origin.DECKPILE;
-import static org.solitaire.model.Origin.FOUNDATION;
-import static org.solitaire.model.SolveExecutor.isPrint;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.isSingleSuit;
 import static org.solitaire.util.BoardHelper.verifyBoard;
-import static org.solitaire.util.CardHelper.suitCode;
 
 @Slf4j
 public class SpiderBoard extends GameBoard {
-    private transient int candLimit = 2;
     protected Deck deck;
+    private transient int candLimit = 2;
     private int runs = 0;
     private boolean singleSuit;
 
@@ -76,6 +73,7 @@ public class SpiderBoard extends GameBoard {
                 .findFirst()
                 .orElse(null);
     }
+
     @Override
     public Candidate toColumnCandidate(Card[] cards, int from, int to, Card card) {
         if (singleSuit()) {
@@ -160,8 +158,8 @@ public class SpiderBoard extends GameBoard {
         switch (candidate.target()) {
             case DECKPILE -> range(0, columns().size()).forEach(i -> column(i).add(candidate.cards()[i]));
             case COLUMN -> {
-                    addToTargetColumn(candidate);
-                    totalScore(totalScore() - 1);
+                addToTargetColumn(candidate);
+                totalScore(totalScore() - 1);
             }
             case FOUNDATION -> {
                 totalScore(totalScore() + 100);
@@ -176,31 +174,21 @@ public class SpiderBoard extends GameBoard {
 
     protected SpiderBoard checkForRun(int colAt) {
         IntStream.of(colAt)
-                .filter(i -> isThereARun(column(i)))
-                .mapToObj(this::getCandidateForTheRun)
+                .mapToObj(this::getRunCandidate)
+                .filter(isNotNull)
                 .findFirst()
                 .ifPresent(it -> removeFromSource(it).appendToTarget(it));
         return this;
     }
 
-    protected boolean isThereARun(Column column) {
-        if (nonNull(column) && 13 <= column.size()) {
-            for (int i = column.size() - 1, floor = column.size() - 13; i > floor; i--) {
-                if (!column.get(i - 1).isHigherOfSameColor(column.get(i))) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private Candidate getCandidateForTheRun(int colAt) {
+    protected Candidate getRunCandidate(int colAt) {
         return Optional.of(colAt)
                 .map(this::column)
-                .map(it -> it.subList(it.size() - 13, it.size()))
-                .map(it -> candidate(it, COLUMN, colAt, FOUNDATION, suitCode(it.get(0))))
-                .orElseThrow();
+                .filter(it -> 13 <= it.size())
+                .map(it -> getOrderedCards(colAt))
+                .filter(it -> 13 == it.length)
+                .map(it -> columnToFoundation(it, colAt))
+                .orElse(null);
     }
 
     /*****************************************************************************************************************
@@ -222,7 +210,7 @@ public class SpiderBoard extends GameBoard {
 
     // The bigger, the better
     protected int calcSequences() {
-       return range(0, columns().size())
+        return range(0, columns().size())
                 .filter(isNotEmpty)
                 .map(this::calcSequenceScore)
                 .sum();
@@ -256,16 +244,16 @@ public class SpiderBoard extends GameBoard {
         deck = new Deck(deck);
     }
 
+    @Override
+    public boolean isSolved() {
+        return super.isSolved() && deck.isEmpty();
+    }
+
     /***********************************************************************************************************
      * Accessors
      **********************************************************************************************************/
     public Deck deck() {
         return deck;
-    }
-
-    @Override
-    public boolean isSolved() {
-        return super.isSolved() && deck.isEmpty();
     }
 
     public int runs() {
