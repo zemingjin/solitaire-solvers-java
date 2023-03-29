@@ -43,12 +43,8 @@ public class FreeCellBoard extends GameBoard {
     protected static final Function<FreeCellBoard, List<Candidate>> findCandidates = FreeCellBoard::findCandidates;
     protected final Card[] freeCells;
     protected final Card[] foundations;
-    protected final IntPredicate isNotFoundationable = i -> !isFoundationable(peek(i));
-    private final IntPredicate hasMultipleCards = i -> column(i).size() > 1;
-    private final IntPredicate isNotInSequence = i -> {
-        var column = column(i);
-        return !column.get(column.size() - 2).isHigherWithDifferentColor(column.peek());
-    };
+    protected transient final IntPredicate isNotFoundationable = i -> !isFoundationable(peek(i));
+    private transient final IntPredicate hasMultipleCards = i -> column(i).size() > 1;
 
     public FreeCellBoard(Columns columns, Path<String> path, Card[] freeCells, Card[] foundations) {
         super(columns, path);
@@ -85,16 +81,19 @@ public class FreeCellBoard extends GameBoard {
                 .toList();
     }
 
+    /**
+     * For candidates from same origin, toFreeCell or not toFoundation would be filtered out.
+     */
     private Candidate filterCandidate(int i, List<Candidate> candidates) {
-        var it = candidates.get(i);
+        var candidate = candidates.get(i);
 
-        return test(it, candidates, Candidate::isToFreeCell) ||
-                test(it, candidates, Candidate::isNotToFoundation) ? null : it;
+        return test(candidate, candidates, Candidate::isToFreeCell) ||
+                test(candidate, candidates, Candidate::isNotToFoundation) ? null : candidate;
     }
 
     private boolean test(Candidate candidate, List<Candidate> candidates, Predicate<Candidate> toTarget) {
         return toTarget.test(candidate)
-                && candidates.stream().anyMatch(it -> !toTarget.test(it) && it.isSameOrigin(candidate));
+                && candidates.stream().anyMatch(it -> it.isSameOrigin(candidate) && !toTarget.test(it));
     }
 
     @Override
@@ -159,10 +158,15 @@ public class FreeCellBoard extends GameBoard {
 
         if (freeCellAt >= 0) {
             return range(0, columns.size())
-                    .filter(hasMultipleCards.and(isNotInSequence).and(isNotFoundationable))
+                    .filter(hasMultipleCards.and(this::isNotInSequence).and(isNotFoundationable))
                     .mapToObj(i -> candidate(peek(i), COLUMN, i, FREECELL, freeCellAt()));
         }
         return Stream.empty();
+    }
+
+    private boolean isNotInSequence(int i) {
+        var column = column(i);
+        return !column.get(column.size() - 2).isHigherWithDifferentColor(column.peek());
     }
 
     private int freeCellAt() {
