@@ -6,7 +6,7 @@ import org.solitaire.util.IOHelper;
 
 import static java.util.Objects.isNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.solitaire.execution.SolveExecutor.isPrint;
 import static org.solitaire.execution.SolveExecutor.singleSolution;
@@ -28,6 +28,7 @@ class PyramidTest {
             pyramid = build(cards);
             assertThrows(NullPointerException.class, () -> pyramid.maxScore());
             pyramid.solve();
+            assertNotNull(pyramid.maxScore());
         }
     }
 
