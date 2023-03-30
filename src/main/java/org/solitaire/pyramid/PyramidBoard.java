@@ -30,7 +30,6 @@ import static org.solitaire.pyramid.PyramidHelper.isBoardCard;
 import static org.solitaire.pyramid.PyramidHelper.row;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
-import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.toArray;
 
@@ -53,7 +52,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     }
 
     public PyramidBoard(PyramidBoard that) {
-        this(cloneArray(that.cards),
+        this(CardHelper.clone(that.cards),
                 new Column(that.deck),
                 new Column(that.flippedDeck),
                 new Path<>(that.path),

@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,10 +18,10 @@ import static java.util.stream.IntStream.range;
 import static org.solitaire.util.BoardHelper.isNull;
 
 public class CardHelper {
-    public static final String DIAMOND = "♦";   // \u2666
-    public static final String SPADE = "♠";     // \u2660
-    public static final String CLUB = "♣";      // \u2663
-    public static final String HEART = "♥";     // \u2665
+    public static final String DIAMOND = "♦";
+    public static final String SPADE = "♠";
+    public static final String CLUB = "♣";
+    public static final String HEART = "♥";
     public static final String VALUES = "A23456789TJQK";
     private static final Map<String, String> SUITS_MAP = new HashMap<>() {{
         put("d", DIAMOND);
@@ -75,19 +74,11 @@ public class CardHelper {
         return SUITS_MAP.get(c);
     }
 
-    public static Card[] cloneArray(Card[] array) {
-        requireNonNull(array);
-        var buf = new Card[array.length];
+    public static Card[] clone(Card[] array) {
+        var buf = new Card[requireNonNull(array).length];
 
         System.arraycopy(array, 0, buf, 0, array.length);
         return buf;
-    }
-
-    public static <R> Stack<R> cloneStack(Stack<R> stack) {
-        var clone = new Stack<R>();
-
-        clone.addAll(stack);
-        return clone;
     }
 
     public static Card[] toCards(String[] cards) {

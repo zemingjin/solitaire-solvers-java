@@ -34,7 +34,6 @@ import static org.solitaire.util.BoardHelper.isNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.VALUES;
 import static org.solitaire.util.CardHelper.card;
-import static org.solitaire.util.CardHelper.cloneArray;
 import static org.solitaire.util.CardHelper.rank;
 import static org.solitaire.util.CardHelper.suit;
 import static org.solitaire.util.CardHelper.suitCode;
@@ -54,7 +53,7 @@ public class FreeCellBoard extends GameBoard {
     }
 
     protected FreeCellBoard(@Nonnull FreeCellBoard that) {
-        this(new Columns(that.columns), new Path<>(that.path), cloneArray(that.freeCells), cloneArray(that.foundations));
+        this(new Columns(that.columns), new Path<>(that.path), CardHelper.clone(that.freeCells), CardHelper.clone(that.foundations));
     }
 
     /*****************************************************************************************************************
