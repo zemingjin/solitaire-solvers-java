@@ -2,49 +2,53 @@ package org.solitaire.pyramid;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.solitaire.model.Card;
-
-import java.util.List;
-import java.util.Objects;
+import org.solitaire.util.IOHelper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.solitaire.execution.SolveExecutor.singleSolution;
 import static org.solitaire.pyramid.PyramidHelper.build;
 import static org.solitaire.pyramid.PyramidHelper.cardAt;
+import static org.solitaire.pyramid.PyramidHelper.countCardsCleared;
 import static org.solitaire.pyramid.PyramidHelper.getScore;
 import static org.solitaire.pyramid.PyramidHelper.isRowCleared;
 import static org.solitaire.pyramid.PyramidHelper.row;
-import static org.solitaire.pyramid.PyramidTest.cards;
+import static org.solitaire.pyramid.PyramidHelper.scoringOnly;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.toArray;
 import static org.solitaire.util.CardHelper.useSuit;
 
 class PyramidHelperTest {
-    private Pyramid pyramid;
+    protected static final String TEST_FILE = "games/pyramid/pyramid-expert-030523.txt";
+    private static final String[] cards = IOHelper.loadFile(TEST_FILE);
+
+    private static Pyramid pyramid;
 
     @BeforeEach
     void setup() {
         useSuit(false);
-        singleSolution(false);
-        pyramid = build(cards);
-        Pyramid.isPrint(false);
+        if (pyramid == null) {
+            pyramid = build(cards);
+            singleSolution(false);
+            Pyramid.isPrint(false);
+            pyramid.solve();
+        }
     }
 
     @Test
     void test_build() {
         assertNotNull(pyramid);
-        assertEquals(28, Objects.requireNonNull(pyramid.stack().peek().peek()).cards().length);
-        assertEquals(23, Objects.requireNonNull(pyramid.stack().peek().peek()).deck().size());
-        assertEquals(1, Objects.requireNonNull(pyramid.stack().peek().peek()).flippedDeck().size());
 
-        pyramid.solve();
+        assertEquals(46, pyramid.longestPath().size());
+        assertEquals(44, pyramid.shortestPath().size());
+
         var maxScore = pyramid.maxScore();
         assertNotNull(maxScore);
         assertEquals(1290, maxScore.getLeft());
-        assertEquals(28, maxScore.getRight().size());
+        assertEquals(45, maxScore.getRight().size());
     }
 
     @Test
@@ -69,21 +73,30 @@ class PyramidHelperTest {
 
     @Test
     void test_getScore() {
-        pyramid.solve();
-        var list = (List<Card[]>) pyramid.shortestPath();
+        var list = scoringOnly(pyramid.shortestPath());
 
-        assertEquals(30, getScore(row(cardAt(list.get(9)).at()), 9, list));
-        assertEquals(55, getScore(row(cardAt(list.get(16)).at()), 16, list));
-        assertEquals(5, getScore(row(cardAt(list.get(17)).at()), 17, list));
+//        var total = new AtomicInteger(0);
+//
+//        for (int i = 0; i < list.size(); i++) {
+//            total.set(total.get() + getClickScore(i, list));
+//            System.out.printf("%d: %d%s\n", i, total.get(), Arrays.toString(list.get(i)));
+//        }
+//
+        assertEquals(5, getScore(row(cardAt(list.get(3)).at()), 3, list));
+        assertEquals(30, getScore(row(cardAt(list.get(12)).at()), 12, list));
+        assertEquals(55, getScore(row(cardAt(list.get(15)).at()), 15, list));
+
+        assertEquals(1290, getScore(pyramid.shortestPath()).getLeft());
     }
 
     @Test
     void test_isRowCleared() {
-        pyramid.solve();
-        var list = (List<Card[]>) pyramid.shortestPath();
+        var list = scoringOnly(pyramid.shortestPath());
 
-        assertTrue(isRowCleared(row(cardAt(list.get(9)).at()), 9, list));
-        assertTrue(isRowCleared(row(cardAt(list.get(16)).at()), 16, list));
+        assertEquals(7, countCardsCleared(7, 12, list));
+        assertTrue(isRowCleared(row(cardAt(list.get(12)).at()), 12, list));
+        assertEquals(7, countCardsCleared(7, 25, list));
+        assertTrue(isRowCleared(row(cardAt(list.get(19)).at()), 19, list));
     }
 
     @Test
@@ -95,6 +108,8 @@ class PyramidHelperTest {
         assertEquals(3, row(3));
         assertEquals(2, row(1));
         assertEquals(1, row(0));
+        assertThrows(RuntimeException.class, () -> row(-1));
+        assertThrows(RuntimeException.class, () -> row(28));
     }
 
 }

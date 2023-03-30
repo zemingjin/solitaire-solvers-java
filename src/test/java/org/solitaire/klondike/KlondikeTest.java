@@ -36,7 +36,7 @@ import static org.solitaire.util.CardHelperTest.ZERO;
 
 @ExtendWith(MockitoExtension.class)
 class KlondikeTest {
-    private static final String TEST_FILE = "games/klondike/event-dark-klondike-expert.txt";
+    private static final String TEST_FILE = "games/klondike/sc-dark-klondike-expert.txt";
 
     @Mock private KlondikeBoard board;
 

@@ -3,6 +3,7 @@ package org.solitaire.klondike;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 import org.solitaire.model.Columns;
 import org.solitaire.util.IOHelper;
 
@@ -137,9 +138,14 @@ class KlondikeBoardTest {
         assertEquals(3, result.size());
         assertEquals("10:9s", result.get(0).notation());
 
-        range(0, board.columns().size()).forEach(i -> board.column(i).clear());
+        board.columns().forEach(Column::clear);
         result = board.findCandidates();
         assertEquals("^^:[4s, 9c, Kd]", result.get(0).notation());
+
+        board.deck().clear();
+        board.deckPile().clear();
+        result = board.findCandidates();
+        assertEquals(0, result.size());
     }
 
     @Test
@@ -315,7 +321,7 @@ class KlondikeBoardTest {
     void test_findDeckToColumnCandidates() {
         board.deckPile().pop();
         board.deckPile().pop();
-        var result = board.findDeckToColumnCandidates();
+        var result = board.findDeckToColumnCandidates().toList();
 
         assertEquals(1, result.size());
         assertEquals("^2:Ts", result.get(0).notation());

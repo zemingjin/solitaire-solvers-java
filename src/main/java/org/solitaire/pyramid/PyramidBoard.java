@@ -3,23 +3,22 @@ package org.solitaire.pyramid;
 import org.solitaire.model.Board;
 import org.solitaire.model.Candidate;
 import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 import org.solitaire.model.Path;
 import org.solitaire.util.CardHelper;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Stack;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.Integer.MIN_VALUE;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.solitaire.model.Candidate.buildCandidate;
 import static org.solitaire.model.Origin.BOARD;
@@ -32,15 +31,69 @@ import static org.solitaire.pyramid.PyramidHelper.row;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
 import static org.solitaire.util.CardHelper.cloneArray;
-import static org.solitaire.util.CardHelper.cloneStack;
+import static org.solitaire.util.CardHelper.stringOfRaws;
 import static org.solitaire.util.CardHelper.toArray;
 
 public class PyramidBoard implements Board<Card[], Candidate> {
     private final Card[] cards;
-    private final Stack<Card> deck;
-    private final Stack<Card> flippedDeck;
+    private final Column deck;
+    private final Column flippedDeck;
     private final Path<Card[]> path;
-    private transient final Function<List<Card>, IntFunction<Stream<Candidate>>> cardsOf13s = openCards -> i -> {
+    private int recycleCount;
+    private transient int score;
+    private transient List<Candidate> candidates;
+
+    public PyramidBoard(Card[] cards, Column deck, Column flippedDeck, Path<Card[]> path, int recycleCount) {
+        this.cards = cards;
+        this.deck = deck;
+        this.flippedDeck = flippedDeck;
+        this.path = path;
+        this.recycleCount = recycleCount;
+        resetScore();
+    }
+
+    public PyramidBoard(PyramidBoard that) {
+        this(cloneArray(that.cards),
+                new Column(that.deck),
+                new Column(that.flippedDeck),
+                new Path<>(that.path),
+                that.recycleCount);
+    }
+
+    /***************************************************************************************************************
+     * Find Candidates
+     **************************************************************************************************************/
+    @Override
+    public List<Candidate> findCandidates() {
+        return Optional.ofNullable(candidates())
+                .filter(listIsNotEmpty)
+                .map(it -> candidates(null))
+                .orElseGet(() -> Optional.of(findCandidatesOf13s())
+                        .filter(listIsNotEmpty)
+                        .orElseGet(this::drawDeckCards));
+    }
+
+    private List<Candidate> drawDeckCards() {
+        return Optional.ofNullable(drawDeckCard())
+                .map(List::of)
+                .orElseGet(Collections::emptyList);
+    }
+
+    private List<Candidate> findCandidatesOf13s() {
+        return Optional.of(findOpenCards())
+                .filter(listIsNotEmpty)
+                .map(this::findCardsOf13s)
+                .orElseGet(Collections::emptyList);
+    }
+
+    private List<Candidate> findCardsOf13s(List<Card> openCards) {
+        return range(0, openCards.size())
+                .mapToObj(i -> cardsOf13s(openCards, i))
+                .flatMap(it -> it)
+                .toList();
+    }
+
+    private Stream<Candidate> cardsOf13s(List<Card> openCards, int i) {
         var card = openCards.get(i);
 
         if (card.isKing()) {
@@ -51,58 +104,16 @@ public class PyramidBoard implements Board<Card[], Candidate> {
                 .filter(it -> card.rank() + it.rank() == 13)
                 .map(it -> toArray(card, it))
                 .map(it -> buildCandidate(it, BOARD, REMOVE));
-    };
-    private transient final Function<List<Card>, List<Candidate>> findCardsOf13s = openCards -> {
-        IntFunction<Stream<Candidate>> getCardsOf13s = cardsOf13s.apply(openCards);
-
-        return range(0, openCards.size())
-                .mapToObj(getCardsOf13s)
-                .flatMap(it -> it)
-                .toList();
-    };
-    private int recycleCount;
-    private transient final Supplier<List<Candidate>> drawDeckCards = () ->
-            Optional.ofNullable(drawDeckCard())
-                    .map(List::of)
-                    .orElseGet(Collections::emptyList);
-    private transient int score = 0;
-
-    public PyramidBoard(Card[] cards, Stack<Card> deck, Stack<Card> flippedDeck, Path<Card[]> path, int recycleCount) {
-        this.cards = cards;
-        this.deck = deck;
-        this.flippedDeck = flippedDeck;
-        this.path = path;
-        this.recycleCount = recycleCount;
-    }
-
-    public PyramidBoard(PyramidBoard that) {
-        this(cloneArray(that.cards),
-                cloneStack(that.deck),
-                cloneStack(that.flippedDeck),
-                new Path<>(that.path),
-                that.recycleCount);
-    }
-
-    /***************************************************************************************************************
-     * Find Candidates
-     **************************************************************************************************************/
-    @Override
-    public List<Candidate> findCandidates() {
-        return Optional.of(findOpenCards())
-                .filter(listIsNotEmpty)
-                .map(findCardsOf13s)
-                .filter(listIsNotEmpty)
-                .orElseGet(drawDeckCards);
     }
 
     protected List<Card> findOpenCards() {
-        return Stream.concat(getBoardOpenCards(), getDeckCards()).toList();
+        return concat(getBoardOpenCards(), getDeckCards()).toList();
     }
 
     private Stream<Card> getDeckCards() {
         return Stream.of(deck(), flippedDeck())
                 .filter(listIsNotEmpty)
-                .map(Stack::peek);
+                .map(Column::peek);
     }
 
     private Stream<Card> getBoardOpenCards() {
@@ -114,14 +125,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
     }
 
     protected boolean isOpen(Card card) {
-        return isOpenBoardCard(card.at()) || isOpenDeckCard(card);
-    }
-
-    protected boolean isOpenDeckCard(@Nonnull Card card) {
-        return !deck.isEmpty() && card.equals(deck.peek());
-    }
-
-    protected boolean isOpenBoardCard(int at) {
+        var at = card.at();
         return 0 <= at && at < LAST_BOARD && nonNull(cards[at]) && isOpenAt(at);
     }
 
@@ -160,10 +164,9 @@ public class PyramidBoard implements Board<Card[], Candidate> {
 
     private void updateTargets(Candidate candidate) {
         var cards = candidate.cards();
+        path.add(cards);
         if (candidate.target() == DECKPILE) {
             flippedDeck.push(cards[0]);
-        } else {
-            path.add(cards);
         }
     }
 
@@ -179,7 +182,7 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         }
     }
 
-    protected boolean surePop(Card card, Stack<Card> stack) {
+    protected boolean surePop(Card card, Column stack) {
         if (isNotEmpty(stack) && stack.peek().equals(card)) {
             stack.pop();
             return true;
@@ -192,18 +195,23 @@ public class PyramidBoard implements Board<Card[], Candidate> {
      **************************************************************************************************************/
     @Override
     public int score() {
-        if (score == 0) {
-            score(-calcBlockers());
+        if (notScored()) {
+            candidates(findCandidatesOf13s());
+            score(candidates().size());
         }
         return score;
     }
 
-    private int calcBlockers() {
-        return (int) Stream.of(cards).filter(isNotNull).count();
-    }
-
     protected void score(int score) {
         this.score = score;
+    }
+
+    public void resetScore() {
+        score(MIN_VALUE);
+    }
+
+    public boolean notScored() {
+        return score == MIN_VALUE;
     }
 
     /***************************************************************************************************************
@@ -222,11 +230,11 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         return cards;
     }
 
-    public Stack<Card> deck() {
+    public Column deck() {
         return deck;
     }
 
-    public Stack<Card> flippedDeck() {
+    public Column flippedDeck() {
         return flippedDeck;
     }
 
@@ -246,4 +254,20 @@ public class PyramidBoard implements Board<Card[], Candidate> {
         return CardHelper.isCleared(cards);
     }
 
+    public List<Candidate> candidates() {
+        return candidates;
+    }
+
+    public List<Candidate> candidates(List<Candidate> candidates) {
+        var old = this.candidates;
+
+        this.candidates = candidates;
+        return old;
+    }
+
+    public static String toString(List<Card[]> path) {
+        return path.stream()
+                .map(it -> it.length == 1 && it[0].isNotKing() ? '^'+it[0].raw() : stringOfRaws(it))
+                .collect(Collectors.joining(", "));
+    }
 }

@@ -12,12 +12,19 @@ public class Pyramid extends SolveExecutor<Card[], Candidate, PyramidBoard> {
     public static final String KING = "K";
     public static final String ACE = "A";
 
-    private final MaxScore maxScore = new MaxScore(PyramidHelper::getScore);
+    private MaxScore maxScore;
 
     public Pyramid(PyramidBoard board) {
         super(board, PyramidBoard::new);
         addSolutionConsumer(this::solutionConsumer);
         board.updateBoard(board.drawDeckCard());
+    }
+
+    private void solutionConsumer(List<Card[]> path) {
+        if (maxScore == null) {
+            maxScore = new MaxScore(PyramidHelper::getScore);
+        }
+        maxScore.score(path);
     }
 
     @SuppressWarnings("rawtypes")
@@ -26,8 +33,9 @@ public class Pyramid extends SolveExecutor<Card[], Candidate, PyramidBoard> {
         return maxScore.maxScore();
     }
 
-    @SuppressWarnings("rawtypes")
-    private void solutionConsumer(List path) {
-        maxScore.score(path);
+    @SuppressWarnings("rawtypes unchecked")
+    @Override
+    public String pathString(List path) {
+        return PyramidBoard.toString((List<Card[]>) path);
     }
 }
