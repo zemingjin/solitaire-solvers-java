@@ -6,7 +6,6 @@ import org.solitaire.model.Column;
 import org.solitaire.util.CardHelper;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
@@ -27,7 +26,6 @@ import static org.solitaire.tripeaks.TriPeaksHelper.LAST_DECK;
 import static org.solitaire.tripeaks.TriPeaksHelper.calcCoveredAt;
 import static org.solitaire.util.BoardHelper.isNotNull;
 import static org.solitaire.util.BoardHelper.verifyBoard;
-import static org.solitaire.util.CardHelper.cloneArray;
 
 public class TriPeaksBoard implements Board<Card, Card> {
     private static final int C = LAST_BOARD + LAST_DECK - 1;
@@ -44,7 +42,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
     }
 
     protected TriPeaksBoard(TriPeaksBoard that) {
-        this(cloneArray(that.cards), that.wastePile);
+        this(CardHelper.clone(that.cards), that.wastePile);
     }
 
     @Override
@@ -62,31 +60,28 @@ public class TriPeaksBoard implements Board<Card, Card> {
      ***********************************************************************************************************/
     @Override
     public List<Card> findCandidates() {
-        return Optional.of(getCandidatesViaWastePile())
-                .filter(listIsNotEmpty)
-                .orElseGet(this::getCandidatesFromDeck);
+        return Stream.of(getCandidatesViaWastePile(), getCandidatesFromDeck())
+                .flatMap(it -> it)
+                .toList();
     }
 
-    private List<Card> getCandidatesFromDeck() {
-        return Optional.ofNullable(getTopDeckCard())
-                .map(List::of)
-                .orElseGet(Collections::emptyList);
+    private Stream<Card> getCandidatesFromDeck() {
+        return Optional.ofNullable(getTopDeckCard()).stream();
     }
 
-    private List<Card> getCandidatesViaWastePile() {
+    private Stream<Card> getCandidatesViaWastePile() {
         return Optional.of(wastePile.peek())
                 .map(this::findAdjacentCardsFromBoard)
-                .orElseGet(Collections::emptyList);
+                .orElseGet(Stream::empty);
     }
 
-    private List<Card> findAdjacentCardsFromBoard(Card target) {
+    private Stream<Card> findAdjacentCardsFromBoard(Card target) {
         return range(0, min(cards.length, LAST_BOARD))
                 .map(reverseBoard)
                 .mapToObj(i -> cards[i])
                 .filter(isNotNull)
                 .filter(this::isOpenCard)
-                .filter(target::isAdjacent)
-                .toList();
+                .filter(target::isAdjacent);
     }
 
     private Card getTopDeckCard() {
