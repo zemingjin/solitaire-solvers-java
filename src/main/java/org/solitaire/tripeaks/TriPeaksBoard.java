@@ -6,6 +6,7 @@ import org.solitaire.model.Column;
 import org.solitaire.util.CardHelper;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
@@ -60,28 +61,31 @@ public class TriPeaksBoard implements Board<Card, Card> {
      ***********************************************************************************************************/
     @Override
     public List<Card> findCandidates() {
-        return Stream.of(getCandidatesViaWastePile(), getCandidatesFromDeck())
-                .flatMap(it -> it)
-                .toList();
+        return Optional.of(getCandidatesViaWastePile())
+                .filter(listIsNotEmpty)
+                .orElseGet(this::getCandidatesFromDeck);
     }
 
-    private Stream<Card> getCandidatesFromDeck() {
-        return Optional.ofNullable(getTopDeckCard()).stream();
+    private List<Card> getCandidatesFromDeck() {
+        return Optional.ofNullable(getTopDeckCard())
+                .map(List::of)
+                .orElseGet(Collections::emptyList);
     }
 
-    private Stream<Card> getCandidatesViaWastePile() {
+    private List<Card> getCandidatesViaWastePile() {
         return Optional.of(wastePile.peek())
                 .map(this::findAdjacentCardsFromBoard)
-                .orElseGet(Stream::empty);
+                .orElseGet(Collections::emptyList);
     }
 
-    private Stream<Card> findAdjacentCardsFromBoard(Card target) {
+    private List<Card> findAdjacentCardsFromBoard(Card target) {
         return range(0, min(cards.length, LAST_BOARD))
                 .map(reverseBoard)
                 .mapToObj(i -> cards[i])
                 .filter(isNotNull)
                 .filter(this::isOpenCard)
-                .filter(target::isAdjacent);
+                .filter(target::isAdjacent)
+                .toList();
     }
 
     private Card getTopDeckCard() {
