@@ -9,8 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.solitaire.tripeaks.TriPeaksHelper.INI_COVERED;
+import static org.solitaire.tripeaks.TriPeaksHelper.LAST_BOARD;
 import static org.solitaire.tripeaks.TriPeaksHelper.build;
 import static org.solitaire.tripeaks.TriPeaksHelper.isFromDeck;
+import static org.solitaire.tripeaks.TriPeaksHelper.row;
 import static org.solitaire.tripeaks.TriPeaksHelper.toCards;
 import static org.solitaire.util.CardHelper.buildCard;
 import static org.solitaire.util.CardHelper.toArray;
@@ -46,5 +49,19 @@ class TriPeaksHelperTest {
         assertTrue(isFromDeck(buildCard(28, "Ac")));
         assertTrue(isFromDeck(buildCard(29, "Ac")));
         assertFalse(isFromDeck(buildCard(2, "Ac")));
+    }
+
+    @Test
+    void test_row() {
+        assertEquals(1, row(0));
+        assertEquals(1, row(2));
+        assertEquals(2, row(3));
+        assertEquals(2, row(8));
+        assertEquals(3, row(9));
+        assertEquals(3, row(INI_COVERED - 1));
+        assertEquals(4, row(INI_COVERED));
+        assertEquals(4, row(LAST_BOARD - 1));
+        assertThrows(RuntimeException.class, () -> row(LAST_BOARD));
+        assertThrows(RuntimeException.class, () -> row(-1));
     }
 }

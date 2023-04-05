@@ -1,8 +1,8 @@
 package org.solitaire.tripeaks;
 
 import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 
-import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,10 +25,10 @@ public class TriPeaksHelper {
         return new TriPeaks(toCards(cards), toWastePile(cards));
     }
 
-    protected static Stack<Card> toWastePile(String[] cards) {
+    protected static Column toWastePile(String[] cards) {
         assert 0 < cards.length && cards.length <= 52;
 
-        return Stream.of(buildCard(51, cards[cards.length - 1])).collect(Collectors.toCollection(Stack::new));
+        return Stream.of(buildCard(51, cards[cards.length - 1])).collect(Collectors.toCollection(Column::new));
     }
 
     protected static Card[] toCards(String[] cards) {
@@ -43,4 +43,29 @@ public class TriPeaksHelper {
 
         return 28 <= card.at();
     }
+
+    protected static int calcCoveredAt(Card card) {
+        var at = card.at();
+
+        return switch (row(at)) {
+            case 4 -> 0;
+            case 3 -> at + 9;
+            case 2 -> at + (at - 3) / 2 + 6;
+            default -> at * 2 + 3;
+        };
+    }
+
+    protected static int row(int at) {
+        if (at < 0 || at >= LAST_BOARD) {
+            throw new RuntimeException("Invalid card position: " + at);
+        } else if (at >= INI_COVERED) {
+            return 4;
+        } else if (at >= 9) {
+            return 3;
+        } else if (at >= 3) {
+            return 2;
+        }
+        return 1;
+    }
+
 }

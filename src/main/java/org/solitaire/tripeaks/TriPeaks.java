@@ -3,10 +3,10 @@ package org.solitaire.tripeaks;
 import org.apache.commons.lang3.tuple.Pair;
 import org.solitaire.execution.SolveExecutor;
 import org.solitaire.model.Card;
+import org.solitaire.model.Column;
 import org.solitaire.util.MaxScore;
 
 import java.util.List;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 import static java.util.stream.IntStream.rangeClosed;
@@ -18,24 +18,13 @@ public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
 
     private final MaxScore maxScore = new MaxScore(this::getScore);
 
-    public TriPeaks(Card[] cards, Stack<Card> wastePile) {
+    public TriPeaks(Card[] cards, Column wastePile) {
         super(new TriPeaksBoard(cards, wastePile), TriPeaksBoard::new);
         addSolutionConsumer(this::solutionConsumer);
     }
 
     protected void solutionConsumer(List<Card> path) {
         maxScore.score(path);
-    }
-
-    @Override
-    public void solve() {
-        var verify = board().verify();
-
-        if (verify.isEmpty()) {
-            super.solve();
-        } else {
-            throw new RuntimeException(verify.toString());
-        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -71,11 +60,8 @@ public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
     protected int checkPeakBonus(Card card, List<Card> list) {
         if (isPeakCard(card)) {
             var num = numOfPeeksCleared(card, list);
-            if (num < 3) {
-                return 500 * num;
-            } else {
-                return BOARD_BONUS;
-            }
+
+            return (num < 3) ? 500 * num : BOARD_BONUS;
         }
         return 0;
     }
@@ -83,7 +69,7 @@ public class TriPeaks extends SolveExecutor<Card, Card, TriPeaksBoard> {
     private int numOfPeeksCleared(Card card, List<Card> list) {
         return (int) rangeClosed(0, list.indexOf(card))
                 .mapToObj(list::get)
-                .filter(it -> it.at() < 3)
+                .filter(this::isPeakCard)
                 .count();
     }
 
