@@ -43,7 +43,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
     }
 
     protected TriPeaksBoard(TriPeaksBoard that) {
-        this(CardHelper.clone(that.cards), that.wastePile);
+        this(CardHelper.clone(that.cards), new Column(that.wastePile));
     }
 
     @Override
@@ -104,42 +104,10 @@ public class TriPeaksBoard implements Board<Card, Card> {
     public TriPeaksBoard updateBoard(Card card) {
         if (nonNull(card)) {
             cards[card.at()] = null;
-            wastePile(new Column(wastePile));
             wastePile.push(card);
             return this;
         }
         return null;
-    }
-
-    private boolean isNotCovered(int at) {
-        return isNull(cards[at]) && isNull(cards[at + 1]);
-    }
-
-    public Card[] cards() {
-        return cards;
-    }
-
-    public void cards(Card[] cards) {
-        this.cards = cards;
-    }
-
-    public Column wastePile() {
-        return wastePile;
-    }
-
-    public void wastePile(Column wastePile) {
-        this.wastePile = wastePile;
-    }
-
-    @Override
-    public List<String> verify() {
-        return verifyBoard(allCards());
-    }
-
-    private Card[] allCards() {
-        return Optional.of(Stream.concat(Stream.of(cards), wastePile.stream()))
-                .map(CardHelper::toArray)
-                .orElseThrow();
     }
 
     /***************************************************************************************************************
@@ -147,7 +115,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
      **************************************************************************************************************/
     @Override
     public int score() {
-        if (isScoreNotSet()) {
+        if (isNotScored()) {
             score(-calcBlockers());
         }
         return score;
@@ -157,7 +125,7 @@ public class TriPeaksBoard implements Board<Card, Card> {
         this.score = score;
     }
 
-    protected boolean isScoreNotSet() {
+    protected boolean isNotScored() {
         return score == MIN_VALUE;
     }
 
@@ -247,4 +215,39 @@ public class TriPeaksBoard implements Board<Card, Card> {
 
         return at == 0 || isNotCovered(at);
     }
+
+    private boolean isNotCovered(int at) {
+        return isNull(cards[at]) && isNull(cards[at + 1]);
+    }
+
+    /***************************************************************************************************************
+     * Accessor/Helper's
+     **************************************************************************************************************/
+    public Card[] cards() {
+        return cards;
+    }
+
+    public void cards(Card[] cards) {
+        this.cards = cards;
+    }
+
+    public Column wastePile() {
+        return wastePile;
+    }
+
+    public void wastePile(Column wastePile) {
+        this.wastePile = wastePile;
+    }
+
+    @Override
+    public List<String> verify() {
+        return verifyBoard(allCards());
+    }
+
+    private Card[] allCards() {
+        return Optional.of(Stream.concat(Stream.of(cards), wastePile.stream()))
+                .map(CardHelper::toArray)
+                .orElseThrow();
+    }
+
 }

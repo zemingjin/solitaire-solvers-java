@@ -37,7 +37,7 @@ class FreeCellTest {
 
     @Test
     void test_solveByHSD() {
-        freeCell.solveByHSD(freeCell.stack().pop().peek());
+        freeCell.solveByHSD(freeCell.board());
 
         assertEquals(31192, freeCell.totalScenarios());
         assertFalse(freeCell.stack().isEmpty());

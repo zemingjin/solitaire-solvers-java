@@ -47,30 +47,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         cloner(cloner);
     }
 
-    public static boolean singleSolution() {
-        return singleSolution;
-    }
-
-    public static void singleSolution(boolean singleSolution) {
-        SolveExecutor.singleSolution = singleSolution;
-    }
-
-    public static int hsdDepth() {
-        return hsdDepth;
-    }
-
-    public static void hsdDepth(int hsdDepth) {
-        SolveExecutor.hsdDepth = hsdDepth;
-    }
-
-    public static boolean isPrint() {
-        return isPrint;
-    }
-
-    public static void isPrint(boolean isPrint) {
-        SolveExecutor.isPrint = isPrint;
-    }
-
     /**************************************************************************************************************
      * Execution routines
      *************************************************************************************************************/
@@ -93,7 +69,6 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         Optional.of(board)
                 .map(this::searchBoard)
                 .map(it -> it.sorted(comparingInt(T::score)).toList())
-                .filter(isNotEmpty)
                 .ifPresent(this::addBoards);
     }
 
@@ -105,13 +80,12 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
         }
         Optional.of(boards)
                 .filter(isNotEmpty)
-                .map(List::stream)
                 .map(this::getBestBoard)
                 .ifPresent(this::addBoard);
     }
 
-    private T getBestBoard(Stream<T> boards) {
-        return boards.reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
+    private T getBestBoard(List<T> boards) {
+        return boards.stream().reduce((a, b) -> b.score() >= a.score() ? b : a).orElseThrow();
     }
 
     private Stream<T> searchBoard(T board) {
@@ -296,6 +270,30 @@ public class SolveExecutor<S, U, T extends Board<S, U>> implements GameSolver {
 
     public void totalSolutions(int totalSolutions) {
         this.totalSolutions = totalSolutions;
+    }
+
+    public static boolean singleSolution() {
+        return singleSolution;
+    }
+
+    public static void singleSolution(boolean singleSolution) {
+        SolveExecutor.singleSolution = singleSolution;
+    }
+
+    public static int hsdDepth() {
+        return hsdDepth;
+    }
+
+    public static void hsdDepth(int hsdDepth) {
+        SolveExecutor.hsdDepth = hsdDepth;
+    }
+
+    public static boolean isPrint() {
+        return isPrint;
+    }
+
+    public static void isPrint(boolean isPrint) {
+        SolveExecutor.isPrint = isPrint;
     }
 
 }

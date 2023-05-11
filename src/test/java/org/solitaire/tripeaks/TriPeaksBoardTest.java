@@ -59,9 +59,9 @@ class TriPeaksBoardTest {
 
     @Test
     void test_score() {
-        assertTrue(board.isScoreNotSet());
+        assertTrue(board.isNotScored());
         assertEquals(-70, board.score());
-        assertFalse(board.isScoreNotSet());
+        assertFalse(board.isNotScored());
 
         board.updateBoard(board.findCandidates().get(0));
         board.resetScore();
